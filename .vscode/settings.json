@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.py.typed": "python",
+        "*.py.bak": "python",
+        "*.fsh": "glsl",
+        "*.vsh": "glsl",
+        "unordered_set": "cpp",
+        "memory": "cpp",
+        "unordered_map": "cpp"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false
+}
