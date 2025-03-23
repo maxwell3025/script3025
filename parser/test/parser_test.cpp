@@ -150,4 +150,88 @@ namespace parser {
 
     EXPECT_EQ(first_set, expected);
   }
+
+  TEST(FollowSet, dyck) {
+    TotalRuleset<char> ruleset = get_dyck_ruleset();
+
+    std::unordered_set<char> nonterminals = std::unordered_set({
+      'G'
+    });
+
+    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
+
+    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
+
+    std::unordered_map<char, std::unordered_set<char>> follow_set = get_follow_set(
+        'G',
+        '$',
+        ruleset,
+        nonterminals,
+        empty_set,
+        first_set);
+
+    std::unordered_map<char, std::unordered_set<char>> expected({
+      {'G', std::unordered_set({'$', ')'})},
+    });
+
+    EXPECT_EQ(follow_set, expected);
+  }
+
+  TEST(FollowSet, arithmetic) {
+    TotalRuleset<char> ruleset = get_arith_ruleset();
+
+    std::unordered_set<char> nonterminals = std::unordered_set({
+      'E',
+      'T',
+      'F'
+    });
+
+    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
+
+    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
+
+    std::unordered_map<char, std::unordered_set<char>> follow_set = get_follow_set(
+        'E',
+        '$',
+        ruleset,
+        nonterminals,
+        empty_set,
+        first_set);
+
+    std::unordered_map<char, std::unordered_set<char>> expected({
+      {'E', std::unordered_set({'$', ')'})},
+      {'T', std::unordered_set({'$', ')', '+'})},
+      {'F', std::unordered_set({'$', ')', '+', '*'})},
+    });
+
+    EXPECT_EQ(follow_set, expected);
+  }
+
+  TEST(FollowSet, parity) {
+    TotalRuleset<char> ruleset = get_parity_ruleset();
+
+    std::unordered_set<char> nonterminals = std::unordered_set({
+      'E',
+      'O',
+    });
+
+    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
+
+    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
+
+    std::unordered_map<char, std::unordered_set<char>> follow_set = get_follow_set(
+        'E',
+        '$',
+        ruleset,
+        nonterminals,
+        empty_set,
+        first_set);
+
+    std::unordered_map<char, std::unordered_set<char>> expected({
+      {'E', std::unordered_set({'$'})},
+      {'O', std::unordered_set({'$'})},
+    });
+
+    EXPECT_EQ(follow_set, expected);
+  }
 }

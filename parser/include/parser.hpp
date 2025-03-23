@@ -125,6 +125,73 @@ namespace parser {
       }
       return first_set;
     }
+
+    // Returns `true` if the follow set was changed.
+    template <typename T>
+    bool update_follow_set(
+        const T &goal_symbol,
+        const TotalRuleset<T> &ruleset,
+        const std::unordered_set<T> &nonterminals,
+        const std::unordered_set<T> &possibly_empty,
+        const std::unordered_map<T, std::unordered_set<T>> &first_set,
+        std::unordered_map<T, std::unordered_set<T>> &follow_set) {
+      bool changed = false;
+      for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
+        const PartialRuleset<T> &symbol_ruleset = it -> second;
+        for (auto it2 = symbol_ruleset.begin(); it2 != symbol_ruleset.end(); ++it2) {
+          const std::vector<T> &sentence = *it2;
+          std::unordered_set<T> prev;
+          for (auto it3 = sentence.begin(); it3 != sentence.end(); ++it3) {
+            const T &symbol = *it3;
+            for (auto it4 = prev.begin(); it4 != prev.end(); ++it4) {
+              const T &prev_symbol = *it4;
+              if (nonterminals.find(prev_symbol) != nonterminals.end()) {
+                size_t original_size = follow_set[prev_symbol].size();
+                if (nonterminals.find(symbol) != nonterminals.end()) {
+                  follow_set[prev_symbol].merge(
+                      std::unordered_set(first_set.at(symbol)));
+                } else {
+                  follow_set[prev_symbol].insert(symbol);
+                }
+                if (follow_set[prev_symbol].size() != original_size) {
+                  changed = true;
+                }
+              }
+            }
+            if (possibly_empty.find(symbol) == possibly_empty.end()) {
+              prev.clear();
+            }
+            if (nonterminals.find(symbol) != nonterminals.end()) {
+              prev.insert(symbol);
+            }
+          }
+          for (auto it3 = prev.begin(); it3 != prev.end(); ++it3) {
+            size_t original_size = follow_set[*it3].size();
+            follow_set[*it3].merge(std::unordered_set(follow_set[it -> first]));
+            if (follow_set[*it3].size() != original_size) {
+              changed = true;
+            }
+          }
+        }
+      }
+      return changed;
+    }
+
+    // Generates the follow set for each nonterminal symbol.
+    template <typename T>
+    std::unordered_map<T, std::unordered_set<T>> get_follow_set(
+        const T &goal_symbol,
+        const T &terminal_symbol,
+        const TotalRuleset<T> &ruleset,
+        const std::unordered_set<T> &nonterminals,
+        const std::unordered_set<T> &possibly_empty,
+        const std::unordered_map<T, std::unordered_set<T>> &first_set) {
+      std::unordered_map<T, std::unordered_set<T>> follow_set;
+      follow_set[goal_symbol].insert(terminal_symbol);
+      while (update_follow_set(goal_symbol, ruleset, nonterminals,
+                               possibly_empty, first_set, follow_set));
+      return follow_set;
+    }
   }
 
   template <typename T>
