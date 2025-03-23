@@ -6,54 +6,36 @@
 #include "parser.hpp"
 
 namespace parser {
-  TotalRuleset<char> get_dyck_ruleset() {
-    TotalRuleset<char> ruleset;
-    ruleset['G'] = std::unordered_set<std::vector<char>, VectorHash<char>>({
-      std::vector<char>(),
-      std::vector<char>({'(', 'G', ')', 'G'})
-    });
-    return ruleset;
+  ParserBuilder<char> get_dyck_ruleset() {
+    return ParserBuilder('G', '$')
+      .rule('G')
+      .rule('G', '(', 'G', ')', 'G');
   }
   
-  TotalRuleset<char> get_arith_ruleset() {
-    TotalRuleset<char> ruleset;
-    ruleset['E'] = std::unordered_set<std::vector<char>, VectorHash<char>>({
-      std::vector<char>({'T'}),
-      std::vector<char>({'T', '+', 'E'})
-    });
-    ruleset['T'] = std::unordered_set<std::vector<char>, VectorHash<char>>({
-      std::vector<char>({'F'}),
-      std::vector<char>({'F', '*', 'T'}),
-    });
-    ruleset['F'] = std::unordered_set<std::vector<char>, VectorHash<char>>({
-      std::vector<char>({'n'}),
-      std::vector<char>({'(', 'E', ')'}),
-    });
-    return ruleset;
+  ParserBuilder<char> get_arith_ruleset() {
+    return ParserBuilder('E', '$')
+      .rule('E', 'T')
+      .rule('E', 'T', '+', 'E')
+      .rule('T', 'F')
+      .rule('T', 'F', '*', 'T')
+      .rule('F', 'n')
+      .rule('F', '(', 'E', ')');
   }
 
-  TotalRuleset<char> get_parity_ruleset() {
-    TotalRuleset<char> ruleset;
-    ruleset['E'] = std::unordered_set<std::vector<char>, VectorHash<char>>({
-      std::vector<char>({}),
-      std::vector<char>({'0', 'E'}),
-      std::vector<char>({'1', 'O'})
-    });
-    ruleset['O'] = std::unordered_set<std::vector<char>, VectorHash<char>>({
-      std::vector<char>({'0', 'O'}),
-      std::vector<char>({'1', 'E'})
-    });
-    return ruleset;
+  ParserBuilder<char> get_parity_ruleset() {
+    return ParserBuilder('E', '$')
+      .rule('E')
+      .rule('E', '0', 'E')
+      .rule('E', '1', 'O')
+      .rule('O', '0', 'O')
+      .rule('O', '1', 'E');
   }
 
   TEST(EmptyTest, dyck) {
-    TotalRuleset<char> ruleset = get_dyck_ruleset();
+    ParserBuilder<char> parser = get_dyck_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'G'
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
+    parser.infer_types();
+    auto empty_set = parser.get_empty_set();
 
     std::unordered_set<char> expected({'G'});
 
@@ -61,15 +43,10 @@ namespace parser {
   }
 
   TEST(EmptyTest, arithmetic) {
-    TotalRuleset<char> ruleset = get_arith_ruleset();
+    ParserBuilder<char> parser = get_arith_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'E',
-      'T',
-      'F'
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
+    parser.infer_types();
+    auto empty_set = parser.get_empty_set();
 
     std::unordered_set<char> expected;
 
@@ -77,14 +54,10 @@ namespace parser {
   }
 
   TEST(EmptyTest, parity) {
-    TotalRuleset<char> ruleset = get_parity_ruleset();
+    ParserBuilder<char> parser = get_parity_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'E',
-      'O',
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
+    parser.infer_types();
+    auto empty_set = parser.get_empty_set();
 
     std::unordered_set<char> expected({'E'});
 
@@ -92,15 +65,11 @@ namespace parser {
   }
 
   TEST(FirstSet, dyck) {
-    TotalRuleset<char> ruleset = get_dyck_ruleset();
+    ParserBuilder<char> parser = get_dyck_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'G'
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
-
-    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
+    parser.infer_types();
+    parser.get_empty_set();
+    auto first_set = parser.get_first_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
       {'G', std::unordered_set({'('})},
@@ -110,17 +79,11 @@ namespace parser {
   }
 
   TEST(FirstSet, arithmetic) {
-    TotalRuleset<char> ruleset = get_arith_ruleset();
+    ParserBuilder<char> parser = get_arith_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'E',
-      'T',
-      'F'
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
-
-    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
+    parser.infer_types();
+    parser.get_empty_set();
+    auto first_set = parser.get_first_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
       {'E', std::unordered_set({'(', 'n'})},
@@ -132,16 +95,11 @@ namespace parser {
   }
 
   TEST(FirstSet, parity) {
-    TotalRuleset<char> ruleset = get_parity_ruleset();
+    ParserBuilder<char> parser = get_parity_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'E',
-      'O',
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
-
-    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
+    parser.infer_types();
+    parser.get_empty_set();
+    auto first_set = parser.get_first_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
       {'E', std::unordered_set({'0', '1'})},
@@ -152,23 +110,12 @@ namespace parser {
   }
 
   TEST(FollowSet, dyck) {
-    TotalRuleset<char> ruleset = get_dyck_ruleset();
+    ParserBuilder<char> parser = get_dyck_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'G'
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
-
-    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
-
-    std::unordered_map<char, std::unordered_set<char>> follow_set = get_follow_set(
-        'G',
-        '$',
-        ruleset,
-        nonterminals,
-        empty_set,
-        first_set);
+    parser.infer_types();
+    parser.get_empty_set();
+    parser.get_first_set();
+    auto follow_set = parser.get_follow_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
       {'G', std::unordered_set({'$', ')'})},
@@ -178,25 +125,12 @@ namespace parser {
   }
 
   TEST(FollowSet, arithmetic) {
-    TotalRuleset<char> ruleset = get_arith_ruleset();
+    ParserBuilder<char> parser = get_arith_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'E',
-      'T',
-      'F'
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
-
-    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
-
-    std::unordered_map<char, std::unordered_set<char>> follow_set = get_follow_set(
-        'E',
-        '$',
-        ruleset,
-        nonterminals,
-        empty_set,
-        first_set);
+    parser.infer_types();
+    parser.get_empty_set();
+    parser.get_first_set();
+    auto follow_set = parser.get_follow_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
       {'E', std::unordered_set({'$', ')'})},
@@ -208,24 +142,12 @@ namespace parser {
   }
 
   TEST(FollowSet, parity) {
-    TotalRuleset<char> ruleset = get_parity_ruleset();
+    ParserBuilder<char> parser = get_parity_ruleset();
 
-    std::unordered_set<char> nonterminals = std::unordered_set({
-      'E',
-      'O',
-    });
-
-    std::unordered_set<char> empty_set = get_empty_set(nonterminals, ruleset);
-
-    std::unordered_map<char, std::unordered_set<char>> first_set = get_first_set(ruleset, nonterminals, empty_set);
-
-    std::unordered_map<char, std::unordered_set<char>> follow_set = get_follow_set(
-        'E',
-        '$',
-        ruleset,
-        nonterminals,
-        empty_set,
-        first_set);
+    parser.infer_types();
+    parser.get_empty_set();
+    parser.get_first_set();
+    auto follow_set = parser.get_follow_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
       {'E', std::unordered_set({'$'})},

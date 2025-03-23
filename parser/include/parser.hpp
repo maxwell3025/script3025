@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -31,13 +32,78 @@ namespace parser {
     template <typename T>
     using TotalRuleset = std::unordered_map<T, PartialRuleset<T>>;
 
+    template<typename T>
+    void vectorize(std::vector<T> &vector) { }
+
+    template<typename T, typename... Args>
+    void vectorize(std::vector<T> &vector, T first_element, Args... remaining_elements) {
+      vector.push_back(first_element);
+      vectorize<T>(vector, remaining_elements...);
+    }
+
+    template<typename T, typename... Args>
+    std::vector<T> vectorize(Args... elements) {
+      std::vector<T> output;
+      vectorize<T>(output, elements...);
+      return output;
+    }
+  }
+
+  template <typename T>
+  struct Rule {
+    T symbol;
+    std::vector<T> sentence;
+  };
+
+  template <typename T>
+  class ConcreteSyntaxtree {
+    T symbol;
+    std::unique_ptr<ConcreteSyntaxtree> parent;
+    std::vector<std::unique_ptr<ConcreteSyntaxtree>> children;
+  };
+
+  template <typename T>
+  class ParserBuilder {
+   public:
+    T goal_symbol;
+    T terminal_symbol;
+    TotalRuleset<T> ruleset;
+    std::unordered_set<T> terminals;
+    std::unordered_set<T> nonterminals;
+    std::unordered_set<T> possibly_empty;
+    std::unordered_map<T, std::unordered_set<T>> first_set;
+    std::unordered_map<T, std::unordered_set<T>> follow_set;
+
+    ParserBuilder(T goal, T end) : goal_symbol(goal), terminal_symbol(end) {}
+
+    template<typename... Args>
+    ParserBuilder<T> &rule(T nonterminal, Args... sentence) {
+      std::vector<T> sentence_vector = vectorize<T>(sentence...);
+      ruleset[nonterminal].insert(sentence_vector);
+      return *this;
+    }
+
+    void infer_types() {
+      for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
+        PartialRuleset<T> &symbol_ruleset = it -> second;
+        for (auto it2 = symbol_ruleset.begin(); it2 != symbol_ruleset.end(); ++it2) {
+          std::copy(it2 -> begin(), it2 -> end(),
+                    std::inserter(terminals, terminals.end()));
+        }
+      }
+
+      for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
+        const T &nonterminal = it -> first;
+        nonterminals.insert(nonterminal);
+        terminals.erase(nonterminal);
+      }
+    }
+
     // Returns `true` if `sentence` might produce an empty string according to
     // `possibly_empty`.
     // `possibly_empty` should be a superset of the non-terminals that can
     // actually evaluate to the empty string.
-    template<typename T>
-    bool is_sentence_empty(const std::vector<T> &sentence,
-                           const std::unordered_set<T> &possibly_empty) {
+    bool is_sentence_empty(const std::vector<T> &sentence) {
       for (auto it = sentence.begin(); it != sentence.end(); it++) {
         if (possibly_empty.find(*it) == possibly_empty.end()) {
           return false;
@@ -49,15 +115,12 @@ namespace parser {
     // Returns `true` if `possibly_empty` and the rules for `symbol` guarantee
     // that `symbol` produces a nonempty string.
     // Otherwise, returns `false`.
-    template <typename T>
-    bool definitely_nonempty(const T &symbol,
-                             std::unordered_set<T> &possibly_empty,
-                             const TotalRuleset<T> &ruleset) {
+    bool definitely_nonempty(const T &symbol) {
       const PartialRuleset<T> &productions = ruleset.find(symbol) == ruleset.end() ?
       PartialRuleset<T>() : ruleset.at(symbol);
       
       for (auto it = productions.begin(); it != productions.end(); it++) {
-        if (is_sentence_empty(*it, possibly_empty)) {
+        if (is_sentence_empty(*it)) {
           return false;
         }
       }
@@ -66,17 +129,14 @@ namespace parser {
 
     // Determines the set of non-terminals in a set that could produce the empty
     // string.
-    template <typename T>
-    std::unordered_set<T> get_empty_set(
-        const std::unordered_set<T> &nonterminals,
-        const TotalRuleset<T> &ruleset) {
-      std::unordered_set<T> possibly_empty = nonterminals;
+    std::unordered_set<T> get_empty_set() {
+      possibly_empty = nonterminals;
       bool changed = true;
       while (changed) {
         changed = false;
         std::unordered_set<T> nonempty;
         for (auto it = possibly_empty.begin(); it != possibly_empty.end(); it++) {
-          if (definitely_nonempty(*it, possibly_empty, ruleset)) {
+          if (definitely_nonempty(*it)) {
             changed = true;
             nonempty.insert(*it);
           }
@@ -89,12 +149,7 @@ namespace parser {
     }
 
     // Generates the first set for each nonterminal symbol.
-    template <typename T>
-    std::unordered_map<T, std::unordered_set<T>> get_first_set(
-        const TotalRuleset<T> &ruleset,
-        const std::unordered_set<T> &nonterminals,
-        const std::unordered_set<T> &possibly_empty) {
-      std::unordered_map<T, std::unordered_set<T>> first_set;
+    std::unordered_map<T, std::unordered_set<T>> get_first_set() {
       bool changed = true;
       while (changed) {
         changed = false;
@@ -127,14 +182,7 @@ namespace parser {
     }
 
     // Returns `true` if the follow set was changed.
-    template <typename T>
-    bool update_follow_set(
-        const T &goal_symbol,
-        const TotalRuleset<T> &ruleset,
-        const std::unordered_set<T> &nonterminals,
-        const std::unordered_set<T> &possibly_empty,
-        const std::unordered_map<T, std::unordered_set<T>> &first_set,
-        std::unordered_map<T, std::unordered_set<T>> &follow_set) {
+    bool update_follow_set() {
       bool changed = false;
       for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
         const PartialRuleset<T> &symbol_ruleset = it -> second;
@@ -178,33 +226,12 @@ namespace parser {
     }
 
     // Generates the follow set for each nonterminal symbol.
-    template <typename T>
-    std::unordered_map<T, std::unordered_set<T>> get_follow_set(
-        const T &goal_symbol,
-        const T &terminal_symbol,
-        const TotalRuleset<T> &ruleset,
-        const std::unordered_set<T> &nonterminals,
-        const std::unordered_set<T> &possibly_empty,
-        const std::unordered_map<T, std::unordered_set<T>> &first_set) {
-      std::unordered_map<T, std::unordered_set<T>> follow_set;
+    std::unordered_map<T, std::unordered_set<T>> get_follow_set() {
       follow_set[goal_symbol].insert(terminal_symbol);
-      while (update_follow_set(goal_symbol, ruleset, nonterminals,
-                               possibly_empty, first_set, follow_set));
+      while (update_follow_set());
       return follow_set;
     }
-  }
-
-  template <typename T>
-  class ConcreteSyntaxtree {
-    T symbol;
-    std::unique_ptr<ConcreteSyntaxtree> parent;
-    std::vector<std::unique_ptr<ConcreteSyntaxtree>> children;
-  };
-
-  template <typename T>
-  struct Rule {
-    T symbol;
-    std::vector<T> sentence;
+   private:
   };
 
   template <typename T>
