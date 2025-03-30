@@ -84,10 +84,9 @@ namespace parser {
     }
 
     void infer_types() {
-      for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
-        PartialRuleset<T> &symbol_ruleset = it -> second;
-        for (auto it2 = symbol_ruleset.begin(); it2 != symbol_ruleset.end(); ++it2) {
-          std::copy(it2 -> begin(), it2 -> end(),
+      for (std::pair<T, PartialRuleset<T>> symbol_ruleset : ruleset) {
+        for (std::vector<T> sentence : symbol_ruleset.second) {
+          std::copy(sentence.begin(), sentence.end(),
                     std::inserter(terminals, terminals.end()));
         }
       }
@@ -104,8 +103,8 @@ namespace parser {
     // `possibly_empty` should be a superset of the non-terminals that can
     // actually evaluate to the empty string.
     bool is_sentence_empty(const std::vector<T> &sentence) {
-      for (auto it = sentence.begin(); it != sentence.end(); it++) {
-        if (possibly_empty.find(*it) == possibly_empty.end()) {
+      for (const T &character : sentence) {
+        if (possibly_empty.find(character) == possibly_empty.end()) {
           return false;
         }
       }
@@ -116,14 +115,16 @@ namespace parser {
     // that `symbol` produces a nonempty string.
     // Otherwise, returns `false`.
     bool definitely_nonempty(const T &symbol) {
-      const PartialRuleset<T> &productions = ruleset.find(symbol) == ruleset.end() ?
-      PartialRuleset<T>() : ruleset.at(symbol);
+      bool symbol_has_rule = ruleset.find(symbol) == ruleset.end();
+      const PartialRuleset<T> &productions = symbol_has_rule ?
+          PartialRuleset<T>() : ruleset.at(symbol);
       
-      for (auto it = productions.begin(); it != productions.end(); it++) {
-        if (is_sentence_empty(*it)) {
+      for (const std::vector<T> &sentence : productions) {
+        if (is_sentence_empty(sentence)) {
           return false;
         }
       }
+
       return true;
     }
 
@@ -135,10 +136,10 @@ namespace parser {
       while (changed) {
         changed = false;
         std::unordered_set<T> nonempty;
-        for (auto it = possibly_empty.begin(); it != possibly_empty.end(); it++) {
-          if (definitely_nonempty(*it)) {
+        for (const T &symbol : possibly_empty) {
+          if (definitely_nonempty(symbol)) {
             changed = true;
-            nonempty.insert(*it);
+            nonempty.insert(symbol);
           }
         }
         for (auto it = nonempty.begin(); it != nonempty.end(); it++) {
@@ -153,21 +154,19 @@ namespace parser {
       bool changed = true;
       while (changed) {
         changed = false;
-        for (auto it = nonterminals.begin(); it != nonterminals.end(); ++it) {
-          const T &symbol = *it;
+        for (const T &symbol : nonterminals) {
           const PartialRuleset<T> &symbol_ruleset = ruleset.at(symbol);
           size_t original_size = first_set[symbol].size();
-          for (auto it2 = symbol_ruleset.begin(); it2 != symbol_ruleset.end();
-              ++it2) {
-            std::vector<T> sentence = *it2;
+          for (const std::vector<T> &sentence : symbol_ruleset) {
             if (sentence.size() == 0) {
               continue;
             } else if (nonterminals.find(sentence[0]) == nonterminals.end()) {
               first_set[symbol].insert(sentence[0]);
             } else {
-              for (auto it3 = sentence.begin(); it3 != sentence.end(); ++it) {
-                first_set[symbol].merge(first_set[*it3]);
-                if (possibly_empty.find(*it3) == possibly_empty.end()) {
+
+              for (const T &prefix_symbol : sentence) {
+                first_set[symbol].merge(first_set[prefix_symbol]);
+                if (possibly_empty.find(prefix_symbol) == possibly_empty.end()) {
                   break;
                 }
               }
@@ -184,15 +183,11 @@ namespace parser {
     // Returns `true` if the follow set was changed.
     bool update_follow_set() {
       bool changed = false;
-      for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
-        const PartialRuleset<T> &symbol_ruleset = it -> second;
-        for (auto it2 = symbol_ruleset.begin(); it2 != symbol_ruleset.end(); ++it2) {
-          const std::vector<T> &sentence = *it2;
+      for (const std::pair<T, PartialRuleset<T>> &symbol_ruleset : ruleset) {
+        for (const std::vector<T> &sentence : symbol_ruleset.second) {
           std::unordered_set<T> prev;
-          for (auto it3 = sentence.begin(); it3 != sentence.end(); ++it3) {
-            const T &symbol = *it3;
-            for (auto it4 = prev.begin(); it4 != prev.end(); ++it4) {
-              const T &prev_symbol = *it4;
+          for (const T &symbol : sentence) {
+            for (const T &prev_symbol : prev) {
               if (nonterminals.find(prev_symbol) != nonterminals.end()) {
                 size_t original_size = follow_set[prev_symbol].size();
                 if (nonterminals.find(symbol) != nonterminals.end()) {
@@ -213,10 +208,12 @@ namespace parser {
               prev.insert(symbol);
             }
           }
-          for (auto it3 = prev.begin(); it3 != prev.end(); ++it3) {
-            size_t original_size = follow_set[*it3].size();
-            follow_set[*it3].merge(std::unordered_set(follow_set[it -> first]));
-            if (follow_set[*it3].size() != original_size) {
+          for (const T &prev_symbol : prev) {
+            size_t original_size = follow_set[prev_symbol].size();
+            follow_set[prev_symbol].merge(
+                std::unordered_set(follow_set[symbol_ruleset.first])
+            );
+            if (follow_set[prev_symbol].size() != original_size) {
               changed = true;
             }
           }
@@ -243,17 +240,14 @@ namespace parser {
         std::unordered_set<T> nonterminals;
         std::unordered_map<T, std::unordered_set<Sentence>> ruleset;
 
-        for (auto it = rules.begin(); it != rules.end(); it++) {
-            Rule<T> &rule = *it;
+        for (Rule<T> &rule : rules) {
             std::vector<T> &sentence = rule.sentence;
-            for (auto it2 = sentence.begin(); it2 != sentence.end(); it2++) {
-                T &sentence_symbol = *it2;
+            for (T &sentence_symbol : sentence) {
                 terminals.insert(sentence_symbol);
             }
         }
 
-        for(auto it = rules.begin(); it != rules.end(); it++) {
-            Rule<T> &rule = *it;
+        for(Rule<T> &rule : rules) {
             terminals.erase(rule.symbol);
             nonterminals.insert(rule.symbol);
             ruleset[rule.symbol].insert(rule.sentence);
