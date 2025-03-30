@@ -46,7 +46,7 @@ namespace parser {
       std::vector<T> output;
       vectorize<T>(output, elements...);
       return output;
-    }
+    } // LCOV_EXCL_LINE
   }
 
   template <typename T>

@@ -9,7 +9,7 @@ namespace parser {
   ParserBuilder<char> get_dyck_ruleset() {
     return ParserBuilder('G', '$')
       .rule('G')
-      .rule('G', '(', 'G', ')', 'G');
+      .rule('G', '(', 'G', ')', 'G', 'G');
   }
   
   ParserBuilder<char> get_arith_ruleset() {
@@ -118,7 +118,7 @@ namespace parser {
     auto follow_set = parser.get_follow_set();
 
     std::unordered_map<char, std::unordered_set<char>> expected({
-      {'G', std::unordered_set({'$', ')'})},
+      {'G', std::unordered_set({'$', ')', '('})},
     });
 
     EXPECT_EQ(follow_set, expected);
