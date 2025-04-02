@@ -1,3 +1,4 @@
+#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -31,6 +32,13 @@ namespace parser {
       .rule('O', '1', 'E');
   }
 
+  ParserBuilder<char> get_dyck_ruleset_lr1() {
+    return ParserBuilder('G', '$')
+      .rule('G', 'D', 'G')
+      .rule('G')
+      .rule('D', '(', 'G', ')');
+  }
+  
   TEST(EmptyTest, dyck) {
     ParserBuilder<char> parser = get_dyck_ruleset();
 
@@ -155,5 +163,11 @@ namespace parser {
     });
 
     EXPECT_EQ(follow_set, expected);
+  }
+
+  TEST(Build, dyck) {
+    Parser<char> parser = get_dyck_ruleset_lr1().build();
+    std::string my_text = "()()(())";
+    parser.parse(my_text.begin(), my_text.end());
   }
 }
