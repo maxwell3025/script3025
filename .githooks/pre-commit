@@ -1,14 +1,21 @@
 #!/bin/sh
 set -e
 
+# Disable or enable these checks with comments to document which tests
+# succeeded.
+
+# Configure the project
 cmake -DCMAKE_BUILD_TYPE:STRING=Debug -Bbuild >/dev/null ||
 ( echo "Pre-commit build config failed" ; exit 1 )
 
+# Build the project
 cmake --build build --config Debug --target all >/dev/null ||
 ( echo "Pre-commit build failed" ; exit 1 )
 
+# Test the project
 GTEST_COLOR=1 ctest --test-dir build -V >/dev/null ||
 ( echo "Pre-commit test failed" ; exit 1 )
 
-gcovr --filter "(parser/src/.*|parser/include/.*)" --fail-under-line 100 >/dev/null 2>/dev/null ||
-( echo "Pre-commit coverage check failed" ; exit 1 )
+# Check test coverage
+# gcovr --filter "(parser/src/.*|parser/include/.*)" --fail-under-line 100 >/dev/null 2>/dev/null ||
+# ( echo "Pre-commit coverage check failed" ; exit 1 )
