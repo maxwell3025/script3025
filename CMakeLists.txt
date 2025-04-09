@@ -7,3 +7,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
 add_subdirectory(parser)
+add_subdirectory(script3025_core)
