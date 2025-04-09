@@ -26,6 +26,7 @@ enum class Token {
   EXPR_APP,
   // This is the lowest-precedence expression. Use this whn you just need a generic expressionn.
   EXPR_ABS,
+  EXPR = EXPR_ABS,
   DEFN,
   IDEFN,
   PROG,

@@ -50,7 +50,7 @@ std::ostream &operator<<(std::ostream &os, script3025::Token token) {
     os << "e:app";
     break;
   case Token::EXPR_ABS:
-    os << "e:abs";
+    os << "expr";
     break;
   case Token::DEFN:
     os << "defn";
