@@ -171,6 +171,8 @@ struct AnnotatedNode {
 
 template <typename T>
 struct ConcreteSyntaxTree {
+  template <typename U>
+  friend std::ostream &operator<<(std::ostream &os, const ConcreteSyntaxTree<U> &tree);
  public:
   T symbol;
   std::vector<std::unique_ptr<ConcreteSyntaxTree<T>>> children;
@@ -179,7 +181,41 @@ struct ConcreteSyntaxTree {
 
   ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other) : symbol(other.symbol),
       children(std::move(other.children)){}
+
+ private:
+  void stringify_internal(std::ostream &os, std::vector<std::string> &current_stack, bool is_last) const {
+    for (const std::string &c : current_stack) {
+      os << c;
+    }
+    if (is_last) {
+      os << "└";
+      current_stack.push_back(" ");
+    } else {
+      os << "├";
+      current_stack.push_back("│");
+    }
+
+    if (children.size() != 0) {
+      os << "┬";
+    } else {
+      os << "─";
+    }
+
+    os << symbol << std::endl;
+    for(size_t child_index = 0; child_index < children.size(); ++child_index) {
+      children[child_index] -> stringify_internal(
+          os, current_stack, child_index == children.size() - 1);
+    }
+    current_stack.pop_back();
+  }
 };
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const ConcreteSyntaxTree<T> &tree) {
+  std::vector<std::string> character_stack;
+  tree.stringify_internal(os, character_stack, true);
+  return os;
+}
 
 template <typename T>
 class ParserBuilder;
@@ -193,6 +229,7 @@ class Parser {
   // Parse a token iterator into a `ConcreteSyntaxTree`.
   template<typename Iterator>
   ConcreteSyntaxTree<T> parse(Iterator begin, Iterator end){
+    std::vector<AnnotatedNode<T>> stack;
     while (true) {
       // Log current derivation
       std::cout << " 0 ";
@@ -206,7 +243,6 @@ class Parser {
       std::cout << std::endl;
 
       if (begin == end && stack.size() == 1) {
-        // ConcreteSyntaxTree<T> return_value = *stack[0].symbol
         return std::move(*stack[0].symbol);
       }
 
@@ -288,7 +324,6 @@ class Parser {
         stack.push_back(AnnotatedNode<T>(std::move(node),
                                           shift_action.resulting_state));
       }
-
     }
   }
 
@@ -300,7 +335,6 @@ class Parser {
   T goal_symbol;
   T terminal_symbol;
   std::vector<std::unordered_map<T, Action<T>>> action_table;
-  std::vector<AnnotatedNode<T>> stack;
 };
 
 template <typename T>
@@ -458,7 +492,8 @@ std::unordered_map<T, std::unordered_set<T>>
         } else {
 
           for (const T &prefix_symbol : sentence) {
-            first_set[symbol].merge(first_set[prefix_symbol]);
+            first_set[symbol].merge(std::unordered_set<T>(
+                first_set[prefix_symbol]));
             if (possibly_empty.find(prefix_symbol) == possibly_empty.end()) {
               break;
             }
