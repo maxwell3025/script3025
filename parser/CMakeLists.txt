@@ -15,28 +15,13 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_library(
-  parser
-  src/parser.cpp
-)
+add_library(parser INTERFACE)
 
 target_include_directories(parser
-  PRIVATE src
-  PUBLIC include
+  INTERFACE include
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_options(parser
-    PRIVATE -fprofile-arcs
-    PRIVATE -ftest-coverage
-  )
-  target_link_options(parser
-    PRIVATE -lgcov
-  )
-endif()
-
-add_executable(
-  parser_test
+add_executable(parser_test
   test/parser_test.cpp
 )
 
