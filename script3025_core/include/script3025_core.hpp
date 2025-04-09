@@ -1,3 +1,6 @@
+#ifndef SCRIPT3025_CORE_HPP
+#define SCRIPT3025_CORE_HPP
+
 #include <string>
 #include <unordered_map>
 
@@ -36,3 +39,5 @@ class Environment {
 };
 
 }
+
+#endif

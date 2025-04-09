@@ -1,5 +1,8 @@
+#ifndef PARSING_UTILITY_HPP
+#define PARSING_UTILITY_HPP
+
 #include "parser.hpp"
-#include<unordered_set>
+#include <unordered_set>
 
 namespace script3025 {
 
@@ -43,3 +46,5 @@ class ParsedCode {
 ParsedCode parse(std::string text);
 
 } // namespace script3025
+
+#endif

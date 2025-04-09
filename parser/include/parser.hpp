@@ -1,3 +1,6 @@
+#ifndef PARSER_HPP
+#define PARSER_HPP
+
 #include <algorithm>
 #include <deque>
 #include <iostream>
@@ -707,3 +710,5 @@ std::string ParserBuilder<T>::stringify(
 }
 
 } // namespace parser
+
+#endif
