@@ -158,13 +158,12 @@ using Action = std::variant<ShiftAction<T>, ReduceAction<T>>;
 
 template <typename T>
 struct AnnotatedNode {
-  std::unique_ptr<ConcreteSyntaxTree<T>> symbol;
+  ConcreteSyntaxTree<T> symbol;
   size_t annotation;
 
   // TODO also try doing this with a non-reference type ans see if it breaks.
-  AnnotatedNode(std::unique_ptr<ConcreteSyntaxTree<T>> &&symbol,
-                size_t annotation) : symbol(std::move(symbol)),
-                annotation(annotation) {}
+  AnnotatedNode(ConcreteSyntaxTree<T> &&symbol, size_t annotation) :
+                symbol(std::move(symbol)), annotation(annotation) {}
   
   AnnotatedNode(AnnotatedNode &&other) : symbol(std::move(other.symbol)),
                                         annotation(other.annotation) {}
@@ -178,7 +177,7 @@ struct ConcreteSyntaxTree {
   friend std::ostream &operator<<(std::ostream &os, const ConcreteSyntaxTree<U> &tree);
  public:
   T symbol;
-  std::vector<std::unique_ptr<ConcreteSyntaxTree<T>>> children;
+  std::vector<ConcreteSyntaxTree<T>> children;
 
   ConcreteSyntaxTree(T symbol) : symbol(symbol) {}
 
@@ -206,7 +205,7 @@ struct ConcreteSyntaxTree {
 
     os << symbol << std::endl;
     for(size_t child_index = 0; child_index < children.size(); ++child_index) {
-      children[child_index] -> stringify_internal(
+      children[child_index].stringify_internal(
           os, current_stack, child_index == children.size() - 1);
     }
     current_stack.pop_back();
@@ -231,109 +230,11 @@ class Parser {
   // @brief
   // Parse a token iterator into a `ConcreteSyntaxTree`.
   template<typename Iterator>
-  ConcreteSyntaxTree<T> parse(Iterator begin, Iterator end){
-    std::vector<AnnotatedNode<T>> stack;
-    while (true) {
-      // Log current derivation
-      std::cout << " 0 ";
-      for (AnnotatedNode<T> &node : stack) {
-        std::cout << node.symbol -> symbol << " " << node.annotation << " ";
-      }
-      std::cout << "        ";
-      for (auto it = begin; it != end; ++it) {
-        std::cout << *it;
-      }
-      std::cout << std::endl;
-
-      if (begin == end && stack.size() == 1) {
-        return std::move(*stack[0].symbol);
-      }
-
-      T current_lookahead;
-      if (begin == end) {
-        current_lookahead = terminal_symbol;
-      } else {
-        current_lookahead = *begin;
-      }
-
-      size_t current_state = 0;
-      if (!stack.empty()) {
-        current_state = stack[stack.size() - 1].annotation;
-      }
-
-      if (action_table[current_state].find(current_lookahead) ==
-          action_table[current_state].end()) {
-        std::cerr << "Error: no action for state " << current_state <<
-                      " on lookahead " << current_lookahead << std::endl;
-      }
-
-      Action<T> current_action =
-          action_table[current_state].at(current_lookahead);
-      
-      if (std::holds_alternative<ShiftAction<T>>(current_action)) {
-        ShiftAction<T> shift_action = std::get<ShiftAction<T>>(current_action);
-
-        std::unique_ptr<ConcreteSyntaxTree<T>> node =
-            std::make_unique<ConcreteSyntaxTree<T>>(current_lookahead);
-
-        stack.push_back(AnnotatedNode<T>(std::move(node),
-                                         shift_action.resulting_state));
-
-        ++begin;
-      } else if (std::holds_alternative<ReduceAction<T>>(current_action)) {
-        ReduceAction<T> reduce_action = std::get<ReduceAction<T>>(
-            current_action);
-        
-        std::unique_ptr<ConcreteSyntaxTree<T>> node =
-            std::make_unique<ConcreteSyntaxTree<T>>(reduce_action.result);
-
-        if (stack.size() < reduce_action.pop_qty) {
-          std::cerr << "Error: trying to reduce " << reduce_action.pop_qty <<
-                        " from stack of size " << stack.size() << std::endl;
-        }
-
-        for (size_t i = 0; i < reduce_action.pop_qty; i++) {
-          (node -> children).emplace_back(std::move(
-              stack[stack.size() - reduce_action.pop_qty + i].symbol));
-          stack[stack.size() - reduce_action.pop_qty + i].symbol;
-        }
-
-        for (size_t i = 0; i < reduce_action.pop_qty; i++) {
-          stack.pop_back();
-        }
-
-        // Try to shift
-        size_t pre_reduce_state = 0;
-        if (!stack.empty()) {
-          pre_reduce_state = stack.back().annotation;
-        }
-
-        if (action_table[pre_reduce_state].find(reduce_action.result) ==
-            action_table[pre_reduce_state].end()) {
-          std::cerr << "Error: no action on state " <<
-                        pre_reduce_state << " with symbol " <<
-                        reduce_action.result << std::endl;
-        }
-        Action<T> action = action_table[pre_reduce_state].at(
-            reduce_action.result);
-
-        if (!std::holds_alternative<ShiftAction<T>>(action)) {
-          std::cerr << "Error: non-shift action on state " <<
-                        pre_reduce_state << " with symbol " <<
-                        reduce_action.result << std::endl;
-        }
-        ShiftAction<T> shift_action = std::get<ShiftAction<T>>(action);
-
-        stack.push_back(AnnotatedNode<T>(std::move(node),
-                                          shift_action.resulting_state));
-      }
-    }
-  }
+  ConcreteSyntaxTree<T> parse(Iterator begin, Iterator end);
 
  private:
   Parser(const std::vector<std::unordered_map<T, Action<T>>> &action_table,
-          T goal, T end)
-    : goal_symbol(goal), terminal_symbol(end), action_table(action_table) {}
+          T goal, T end);
 
   T goal_symbol;
   T terminal_symbol;
@@ -708,6 +609,112 @@ std::string ParserBuilder<T>::stringify(
   }
   return output.str();
 }
+
+template<typename T>
+template<typename Iterator>
+ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
+  std::vector<AnnotatedNode<T>> stack;
+  while (true) {
+    // Log current derivation
+    std::cout << " 0 ";
+    for (AnnotatedNode<T> &node : stack) {
+      std::cout << node.symbol.symbol << " " << node.annotation << " ";
+    }
+    std::cout << "        ";
+    for (auto it = begin; it != end; ++it) {
+      std::cout << *it;
+    }
+    std::cout << std::endl;
+
+    if (begin == end && stack.size() == 1) {
+      ConcreteSyntaxTree<T> return_value = std::move(stack[0].symbol);
+      stack.pop_back();
+      return return_value;
+    }
+
+    T current_lookahead;
+    if (begin == end) {
+      current_lookahead = terminal_symbol;
+    } else {
+      current_lookahead = *begin;
+    }
+
+    size_t current_state = 0;
+    if (!stack.empty()) {
+      current_state = stack[stack.size() - 1].annotation;
+    }
+
+    if (action_table[current_state].find(current_lookahead) ==
+        action_table[current_state].end()) {
+      std::cerr << "Error: no action for state " << current_state <<
+                    " on lookahead " << current_lookahead << std::endl;
+    }
+
+    Action<T> current_action =
+        action_table[current_state].at(current_lookahead);
+    
+    if (std::holds_alternative<ShiftAction<T>>(current_action)) {
+      ShiftAction<T> shift_action = std::get<ShiftAction<T>>(current_action);
+
+      ConcreteSyntaxTree<T> node = ConcreteSyntaxTree<T>(current_lookahead);
+
+      stack.push_back(AnnotatedNode<T>(std::move(node),
+                                        shift_action.resulting_state));
+
+      ++begin;
+    } else if (std::holds_alternative<ReduceAction<T>>(current_action)) {
+      ReduceAction<T> reduce_action = std::get<ReduceAction<T>>(
+          current_action);
+      
+      ConcreteSyntaxTree<T> node = ConcreteSyntaxTree<T>(reduce_action.result);
+
+      if (stack.size() < reduce_action.pop_qty) {
+        std::cerr << "Error: trying to reduce " << reduce_action.pop_qty <<
+                      " from stack of size " << stack.size() << std::endl;
+      }
+
+      for (size_t i = 0; i < reduce_action.pop_qty; i++) {
+        (node.children).emplace_back(std::move(
+            stack[stack.size() - reduce_action.pop_qty + i].symbol));
+        stack[stack.size() - reduce_action.pop_qty + i].symbol;
+      }
+
+      for (size_t i = 0; i < reduce_action.pop_qty; i++) {
+        stack.pop_back();
+      }
+
+      // Try to shift
+      size_t pre_reduce_state = 0;
+      if (!stack.empty()) {
+        pre_reduce_state = stack.back().annotation;
+      }
+
+      if (action_table[pre_reduce_state].find(reduce_action.result) ==
+          action_table[pre_reduce_state].end()) {
+        std::cerr << "Error: no action on state " <<
+                      pre_reduce_state << " with symbol " <<
+                      reduce_action.result << std::endl;
+      }
+      Action<T> action = action_table[pre_reduce_state].at(
+          reduce_action.result);
+
+      if (!std::holds_alternative<ShiftAction<T>>(action)) {
+        std::cerr << "Error: non-shift action on state " <<
+                      pre_reduce_state << " with symbol " <<
+                      reduce_action.result << std::endl;
+      }
+      ShiftAction<T> shift_action = std::get<ShiftAction<T>>(action);
+
+      stack.push_back(AnnotatedNode<T>(std::move(node),
+                                        shift_action.resulting_state));
+    }
+  }
+}
+
+template<typename T>
+Parser<T>::Parser(const std::vector<std::unordered_map<T, Action<T>>>
+                  &action_table, T goal, T end) : goal_symbol(goal),
+                  terminal_symbol(end), action_table(action_table) {}
 
 } // namespace parser
 
