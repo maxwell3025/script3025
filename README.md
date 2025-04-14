@@ -1,4 +1,4 @@
-# 3025script
+# script3025
 
 # Dependencies
 To build this repository, [CMake](https://cmake.org/) is required.
