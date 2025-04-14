@@ -7,20 +7,23 @@ For coverage, [gcovr](https://github.com/gcovr/gcovr) is required.
 
 # Build
 Create a directory for the build output.
-```
+```bash
 mkdir build
 cd build
 ```
+
 Configure the project (see the [Configuration](#configuration) section for more options).
-```
+```bash
 cmake ..
 ```
+
 Build the project.
-```
+```bash
 cmake --build .
 ```
+
 Run tests.
-```
+```bash
 ctest -V
 ```
 
@@ -64,6 +67,7 @@ cmake -DSPDLOG_ACTIVE_LEVEL=0 <insert other options here> ..
 ```bash
 cmake -DSPDLOG_ACTIVE_LEVEL=0 -DCMAKE_BUILD_TYPE=Debug ..
 ```
+
 ### Release
 ```bash
 cmake -DSPDLOG_ACTIVE_LEVEL=6 -DCMAKE_BUILD_TYPE=Release ..
