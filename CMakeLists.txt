@@ -4,7 +4,13 @@ project(script3025)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Although testing is enabled in the individual subdirectories, 
 enable_testing()
 
+# Here, we forward the spdlog active level to compilation
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${SPDLOG_ACTIVE_LEVEL})
+
+# Here, we add subdirectories to 
+add_subdirectory(script3025_logger)
 add_subdirectory(parser)
 add_subdirectory(script3025_core)

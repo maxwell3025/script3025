@@ -1,16 +1,22 @@
-#ifndef PARSER_HPP
-#define PARSER_HPP
+#ifndef SCRIPT3025_PARSER_PARSER_HPP
+#define SCRIPT3025_PARSER_PARSER_HPP
 
 #include <algorithm>
 #include <deque>
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
 #include <vector>
+
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+
+#include "get_logger.hpp"
 
 namespace parser {
 
@@ -456,9 +462,11 @@ Parser<T> ParserBuilder<T>::build() {
 
     canonical_collection.insert(current_set);
 
-    std::cout << "Processing canonical set " << numbering.size() << ":" <<
-                 std::endl;
-    std::cout << stringify(current_set) << std::endl;
+    std::stringstream message;
+    message << "Processing canonical set " << numbering.size() << ":" <<
+               std::endl;
+    message << stringify(current_set);
+    SPDLOG_LOGGER_TRACE(get_logger(), "{}", message.str());
 
     numbering.push_back(current_set);
     
@@ -473,9 +481,12 @@ Parser<T> ParserBuilder<T>::build() {
         if (entry.index == entry.sentential_form.size() &&
             entry.following_symbol == symbol) {
           if (found_action) {
-            std::cout << "Error: Reduce-Reduce conflict with \'" << symbol <<
-                         "\' on" << std::endl;
-            std::cout << stringify(current_set) << std::endl;
+            std::stringstream message;
+            message << "Error: Reduce-Reduce conflict with \'" << symbol <<
+                       "\' on" << std::endl;
+            message << stringify(current_set);
+            SPDLOG_LOGGER_ERROR(get_logger(), "{}", message.str());
+            throw std::runtime_error(message.str());
           }
           found_action = true;
           action_table[current_set].insert({
@@ -486,9 +497,12 @@ Parser<T> ParserBuilder<T>::build() {
       CanonicalSet shifted = shift(current_set, symbol);
       if (!shifted.empty()) {
         if (found_action) {
-          std::cout << "Error: Shift-Reduce conflict with \'" << symbol <<
-                       "\' on" << std::endl;
-          std::cout << stringify(current_set) << std::endl;
+          std::stringstream message;
+          message << "Error: Shift-Reduce conflict with \'" << symbol <<
+                     "\' on" << std::endl;
+          message << stringify(current_set);
+          SPDLOG_LOGGER_ERROR(get_logger(), "{}", message.str());
+          throw std::runtime_error(message.str());
         }
         bfs_queue.push_back(shifted);
       }
@@ -616,15 +630,17 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
   std::vector<AnnotatedNode<T>> stack;
   while (true) {
     // Log current derivation
-    std::cout << " 0 ";
+    std::stringstream stack_trace;
+    stack_trace << " 0 ";
     for (AnnotatedNode<T> &node : stack) {
-      std::cout << node.symbol.symbol << " " << node.annotation << " ";
+      stack_trace << node.symbol.symbol << " " << node.annotation << " ";
     }
-    std::cout << "        ";
+    stack_trace << "        ";
     for (auto it = begin; it != end; ++it) {
-      std::cout << *it;
+      stack_trace << *it;
     }
-    std::cout << std::endl;
+    stack_trace;
+    SPDLOG_LOGGER_TRACE(get_logger(), "{}", stack_trace.str());
 
     if (begin == end && stack.size() == 1) {
       ConcreteSyntaxTree<T> return_value = std::move(stack[0].symbol);
@@ -646,8 +662,10 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
 
     if (action_table[current_state].find(current_lookahead) ==
         action_table[current_state].end()) {
-      std::cerr << "Error: no action for state " << current_state <<
-                    " on lookahead " << current_lookahead << std::endl;
+      std::stringstream message;
+      message << "Error: no action for state " << current_state <<
+                 " on lookahead " << current_lookahead;
+      SPDLOG_LOGGER_ERROR(get_logger(), "{}", message.str());
     }
 
     Action<T> current_action =
@@ -669,8 +687,10 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
       ConcreteSyntaxTree<T> node = ConcreteSyntaxTree<T>(reduce_action.result);
 
       if (stack.size() < reduce_action.pop_qty) {
-        std::cerr << "Error: trying to reduce " << reduce_action.pop_qty <<
-                      " from stack of size " << stack.size() << std::endl;
+        std::stringstream message;
+        message << "Error: trying to reduce " << reduce_action.pop_qty <<
+                   " from stack of size " << stack.size();
+        SPDLOG_LOGGER_ERROR(get_logger(), "{}", message.str());
       }
 
       for (size_t i = 0; i < reduce_action.pop_qty; i++) {
@@ -691,17 +711,19 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
 
       if (action_table[pre_reduce_state].find(reduce_action.result) ==
           action_table[pre_reduce_state].end()) {
-        std::cerr << "Error: no action on state " <<
-                      pre_reduce_state << " with symbol " <<
-                      reduce_action.result << std::endl;
+        std::stringstream message;
+        message << "Error: no action on state " << pre_reduce_state <<
+                   " with symbol " << reduce_action.result;
+        SPDLOG_LOGGER_ERROR(get_logger(), "{}", message.str());
       }
       Action<T> action = action_table[pre_reduce_state].at(
           reduce_action.result);
 
       if (!std::holds_alternative<ShiftAction<T>>(action)) {
-        std::cerr << "Error: non-shift action on state " <<
-                      pre_reduce_state << " with symbol " <<
-                      reduce_action.result << std::endl;
+        std::stringstream message;
+        message << "Error: non-shift action on state " << pre_reduce_state <<
+                   " with symbol " << reduce_action.result;
+        SPDLOG_LOGGER_ERROR(get_logger(), "{}", message.str());
       }
       ShiftAction<T> shift_action = std::get<ShiftAction<T>>(action);
 

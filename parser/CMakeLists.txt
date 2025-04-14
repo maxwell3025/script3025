@@ -30,8 +30,9 @@ target_include_directories(parser
   INTERFACE include
 )
 
-target_link_libraries(parser INTERFACE
-  spdlog
+target_link_libraries(parser
+  INTERFACE script3025_logger
+  INTERFACE spdlog
 )
 
 add_executable(parser_test
