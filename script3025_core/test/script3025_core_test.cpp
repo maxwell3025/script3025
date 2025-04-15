@@ -3,16 +3,24 @@
 #include "script3025_core.hpp"
 #include "parsing_utility.hpp"
 
-TEST(Parse, basic) {
+TEST(Parse, single_defn_simple) {
   script3025::parse(
-    "let type_identity := (a b c d lambda (x : Type). x y z w)"
+    "let identity := lambda (x : Type). x"
   );
 }
-TEST(Parse, un_basic) {
-  script3025::ParsedCode code = script3025::parse(
-    "let type_identity := (a b c d lambda (x : Type). x y z w)"
-    "let other_func := (a b c d lambda (x : Type). x y z w)"
+
+TEST(Parse, single_defn_complex) {
+  script3025::parse(
+    "let identity := lambda (x : Type). lambda (y : Type). lambda (z : Type). x"
   );
+}
+
+TEST(Parse, multi_defn) {
+  script3025::ParsedCode code = script3025::parse(
+    "let identity := lambda (x : Type). x\n"
+    "let identity_two := lambda (y : Type). y"
+  );
+
   script3025::collect_lists(*code.cst);
   script3025::collapse_oop(*code.cst);
 

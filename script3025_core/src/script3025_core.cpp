@@ -62,7 +62,4 @@ void collapse_oop(parser::ConcreteSyntaxTree<Token> &tree) {
   }
 }
 
-Environment::Environment(parser::ConcreteSyntaxTree<Token> &source) {
-}
-
 } // namespace script3025
