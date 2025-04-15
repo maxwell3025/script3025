@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(spdlog)
 
 add_library(logger3025
   src/logger3025.cpp
+  include/logger3025.hpp
 )
 
 target_include_directories(logger3025
@@ -22,5 +23,5 @@ target_include_directories(logger3025
 )
 
 target_link_libraries(logger3025
-  spdlog
+  PUBLIC spdlog
 )

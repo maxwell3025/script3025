@@ -15,8 +15,17 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_library(script3025_core
-  src/script3025_core.cpp
+  src/application_expression.cpp
+  src/id_expression.cpp
+  src/lambda_expression.cpp
   src/parsing_utility.cpp
+  src/pi_expression.cpp
+  src/script3025_core.cpp
+  src/token.cpp
+  include/expression.hpp
+  include/parsing_utility.hpp
+  include/script3025_core.hpp
+  include/token.hpp
 )
 
 target_include_directories(script3025_core
@@ -25,8 +34,8 @@ target_include_directories(script3025_core
 )
 
 target_link_libraries(script3025_core
-  parser
-  logger3025
+  PUBLIC parser
+  PUBLIC logger3025
 )
 
 add_executable(script3025_core_test

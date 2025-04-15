@@ -24,7 +24,9 @@ FetchContent_MakeAvailable(spdlog)
 
 enable_testing()
 
-add_library(parser INTERFACE)
+add_library(parser INTERFACE
+  include/parser.hpp
+)
 
 target_include_directories(parser
   INTERFACE include
@@ -32,7 +34,6 @@ target_include_directories(parser
 
 target_link_libraries(parser
   INTERFACE logger3025
-  INTERFACE spdlog
 )
 
 add_executable(parser_test
