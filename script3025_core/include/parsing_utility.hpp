@@ -1,8 +1,9 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_PARSING_UTILITY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_PARSING_UTILITY_HPP
 
-#include "parser.hpp"
 #include <unordered_set>
+
+#include "parser.hpp"
 
 namespace script3025 {
 

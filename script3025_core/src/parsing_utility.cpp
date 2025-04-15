@@ -141,7 +141,6 @@ ParsedCode parse(std::string text) {
     // Recognize identifiers
     while (
         i < text.size() && is_alphanumeric(text[i])) {
-
       ++i;
     }
     if (i > start) {
