@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(script3025_logger)
+project(logger3025)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,12 +13,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(spdlog)
 
-add_library(script3025_logger INTERFACE)
-
-target_include_directories(script3025_logger
-  INTERFACE include
+add_library(logger3025
+  src/logger3025.cpp
 )
 
-target_link_libraries(script3025_logger
-  INTERFACE spdlog
+target_include_directories(logger3025
+  PUBLIC include
+)
+
+target_link_libraries(logger3025
+  spdlog
 )

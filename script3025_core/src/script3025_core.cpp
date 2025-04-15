@@ -1,5 +1,7 @@
 #include "script3025_core.hpp"
 
+#include "logger3025.hpp"
+
 namespace script3025 {
 
 // @brief Collect all of the elements of list-like symbols.

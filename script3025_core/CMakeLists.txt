@@ -26,6 +26,7 @@ target_include_directories(script3025_core
 
 target_link_libraries(script3025_core
   parser
+  logger3025
 )
 
 add_executable(script3025_core_test

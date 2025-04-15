@@ -183,10 +183,11 @@ ParsedCode parse(std::string text) {
     }
   }
 
+  std::stringstream message;
   for (Token token : token_sequence) {
-    std::cout << token;
+    message << token;
   }
-  std::cout << std::endl;
+  LOGGER3025_TRACE("{}", message.str());
 
   if (!basic_parser) {
     basic_parser = std::make_unique<parser::Parser<Token>>(
@@ -224,7 +225,7 @@ ParsedCode parse(std::string text) {
   output.cst = std::make_unique<parser::ConcreteSyntaxTree<Token>>(
       (*basic_parser).parse(token_sequence.begin(), token_sequence.end()));
 
-  std::cerr << *output.cst;
+  LOGGER3025_TRACE("Generated tree:\n{}", to_string(*output.cst));
   return output;
 }
 

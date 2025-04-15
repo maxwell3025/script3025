@@ -15,5 +15,7 @@ TEST(Parse, un_basic) {
   );
   script3025::collect_lists(*code.cst);
   script3025::collapse_oop(*code.cst);
-  std::cout << *code.cst;
+
+  LOGGER3025_INFO("Recieved the following CST:\n"
+                  "{}", to_string(*code.cst));
 }

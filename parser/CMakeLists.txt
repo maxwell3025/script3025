@@ -31,7 +31,7 @@ target_include_directories(parser
 )
 
 target_link_libraries(parser
-  INTERFACE script3025_logger
+  INTERFACE logger3025
   INTERFACE spdlog
 )
 
