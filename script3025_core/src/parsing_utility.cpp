@@ -23,10 +23,10 @@ std::ostream &operator<<(std::ostream &os, script3025::Token token) {
     os << "inductive";
     break;
   case Token::ID:
-    os << "<id>";
+    os << "i";
     break;
   case Token::NUMBER:
-    os << "<id>";
+    os << "n";
     break;
   case Token::LAMBDA:
     os << "λ";
@@ -41,25 +41,25 @@ std::ostream &operator<<(std::ostream &os, script3025::Token token) {
     os << ")";
     break;
   case Token::ABS:
-    os << "abs";
+    os << "A";
     break;
   case Token::EXPR_PAREN:
-    os << "e:par";
+    os << "E₂";
     break;
   case Token::EXPR_APP:
-    os << "e:app";
+    os << "E₁";
     break;
   case Token::EXPR_ABS:
-    os << "expr";
+    os << "E₀";
     break;
   case Token::DEFN:
-    os << "defn";
+    os << "D";
     break;
   case Token::IDEFN:
-    os << "idefn";
+    os << "I";
     break;
   case Token::PROG:
-    os << "prog";
+    os << "P";
     break;
   case Token::END:
     os << "$";
