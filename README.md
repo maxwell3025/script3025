@@ -72,3 +72,8 @@ cmake -DSPDLOG_ACTIVE_LEVEL=0 -DCMAKE_BUILD_TYPE=Debug ..
 ```bash
 cmake -DSPDLOG_ACTIVE_LEVEL=6 -DCMAKE_BUILD_TYPE=Release ..
 ```
+
+### Compile
+```bash
+env MAKE_TERMERR=kitty MAKE_TERMOUT=kitty make -j 16 2>&1 | less -R
+```

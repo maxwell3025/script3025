@@ -9,6 +9,7 @@ enable_testing()
 
 # Here, we forward the spdlog active level to compilation
 add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${SPDLOG_ACTIVE_LEVEL})
+add_compile_options(-fdiagnostics-color)
 
 # Here, we add subdirectories to 
 add_subdirectory(script3025_logger)
