@@ -22,8 +22,10 @@ TEST(Parse, multi_defn) {
   );
 
   script3025::collect_lists(*code.cst);
-  script3025::collapse_oop(*code.cst);
+  LOGGER3025_INFO("collect_lists produced the following CST:\n"
+                  "{}", to_string(*code.cst));
 
-  LOGGER3025_INFO("Recieved the following CST:\n"
+  script3025::collapse_oop(*code.cst);
+  LOGGER3025_INFO("collapse_oop produced the following CST:\n"
                   "{}", to_string(*code.cst));
 }

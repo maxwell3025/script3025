@@ -15,13 +15,11 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_library(script3025_core
-  src/application_expression.cpp
-  src/id_expression.cpp
-  src/lambda_expression.cpp
+  src/cst_transformers.cpp
+  src/expression.cpp
   src/parsing_utility.cpp
-  src/pi_expression.cpp
-  src/script3025_core.cpp
   src/token.cpp
+  include/cst_transformers.hpp
   include/expression.hpp
   include/parsing_utility.hpp
   include/script3025_core.hpp

@@ -77,3 +77,8 @@ cmake -DSPDLOG_ACTIVE_LEVEL=6 -DCMAKE_BUILD_TYPE=Release ..
 ```bash
 env MAKE_TERMERR=kitty MAKE_TERMOUT=kitty make -j 16 2>&1 | less -R
 ```
+
+### Test
+```bash
+GTEST_COLOR=1 ctest -V | less -R
+```

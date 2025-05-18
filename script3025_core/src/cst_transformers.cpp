@@ -1,31 +1,9 @@
-#include "script3025_core.hpp"
+#include "cst_transformers.hpp"
 
 #include "logger3025.hpp"
 
 namespace script3025 {
 
-// @brief Collect all of the elements of list-like symbols.
-//
-// For instance, we want
-// ```
-// ┬prog
-// ├┬prog
-// │├┬prog
-// ││├┬prog
-// │││├─prog
-// │││└─defn
-// ││└─defn
-// │└─defn
-// └─defn
-// ```
-// To collapse into
-// ```
-// ┬prog
-// ├─defn
-// ├─defn
-// ├─defn
-// └─defn
-// ```
 void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {
   for (parser::ConcreteSyntaxTree<Token> &child : tree.children) {
     collect_lists(child);
@@ -41,7 +19,6 @@ void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {
   }
 }
 
-// @brief Collapse the order-of-operations rules in the CST
 void collapse_oop(parser::ConcreteSyntaxTree<Token> &tree) {
   for (parser::ConcreteSyntaxTree<Token> &child : tree.children) {
     collapse_oop(child);
