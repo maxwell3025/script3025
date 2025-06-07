@@ -21,7 +21,7 @@ class Expression {
 
   // @brief
   // Creates a copy of the this expression.
-  virtual std::unique_ptr<Expression> clone();
+  virtual std::unique_ptr<Expression> clone() const = 0;
 
   // @brief
   // Returns true if this expression is in normal form within its context
@@ -31,19 +31,17 @@ class Expression {
   // Gets the type of this expression in normal form.
   // This also determines if the expression is well-typed.
   // For non-well-typed expressions, this expression is false.
-  virtual Expression* get_type() const = 0;
+  virtual Expression* get_type() = 0;
 
   // @brief
   // Replaces all identifiers matching `id` which came from the abstraction
   // `source` with `expression`.
-  virtual std::unique_ptr<Expression> replace(const std::string &id,
-                                              const Expression *source,
-                                              const Expression &expression) 
-                                              const = 0;
+  virtual void replace(const std::string &id, const Expression *source,
+                       const Expression &expression) = 0;
 
   // @brief
   // Reduces this expression to normal form within its context.
-  virtual std::unique_ptr<Expression> reduce() const = 0;
+  virtual std::unique_ptr<Expression> reduce() = 0;
 
   virtual ~Expression() = default;
 
@@ -51,20 +49,21 @@ class Expression {
   // Returns true iff the 2 expressions are syntactically equal.
   // 2 expressions might reduce to the same normal form but not be equal in this
   // sense.
-  virtual bool operator==(const Expression& other) const;
+  virtual bool operator==(const Expression& other) const = 0;
 
   // @brief
   // Returns the negation of `operator==`.
   bool operator!=(const Expression& other) const;
 
- protected:
+  virtual std::ostream &print(std::ostream &os) const = 0;
+
   // @brief
   // The deepest abstraction (Pi or lambda) that this expression is inside of.
   // For global expressions, `parent_abstraction` should be `nullptr`.
   Expression *parent_abstraction;
 
   // @brief
-  // A pointer to a type of this expression.
+  // A pointer to the type of this expression.
   // If the type was never evaluated, then this might be null.
   std::unique_ptr<Expression> type;
 
@@ -73,6 +72,14 @@ class Expression {
   // This is intially true, but if a type error is detected, then this becomes
   // false.
   bool possibly_well_typed;
+
+ protected:
+  Expression(Expression *parent_abstraction, std::unique_ptr<Expression> &&type,
+             bool possibly_well_typed);
+
+  Expression(const Expression& other);
+
+  Expression();
 };
 
 class LambdaExpression : public Expression {
@@ -81,19 +88,18 @@ class LambdaExpression : public Expression {
                    std::unique_ptr<Expression> &&argument_type,
                    std::unique_ptr<Expression> &&definition);
   LambdaExpression(const LambdaExpression &other);
-  std::unique_ptr<Expression> clone();
+  std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
-  Expression *get_type() const override;
-  std::unique_ptr<Expression> replace(const std::string &id,
-                                      const Expression *source,
-                                      const Expression &expression) const
-                                      override;
-  std::unique_ptr<Expression> reduce() const override;
+  Expression *get_type() override;
+  void replace(const std::string &id, const Expression *source,
+               const Expression &expression) override;
+  std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
+  std::ostream &print(std::ostream &os) const override;
+
   std::string argument_id;
   std::unique_ptr<Expression> argument_type;
   std::unique_ptr<Expression> definition;
- private:
 };
 
 class PiExpression : public Expression {
@@ -102,15 +108,15 @@ class PiExpression : public Expression {
                std::unique_ptr<Expression> &&argument_type,
                std::unique_ptr<Expression> &&definition);
   PiExpression(const PiExpression &other);
-  std::unique_ptr<Expression> clone();
+  std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
-  Expression *get_type() const override;
-  std::unique_ptr<Expression> replace(const std::string &id,
-                                      const Expression *source,
-                                      const Expression &expression) const
-                                      override;
-  std::unique_ptr<Expression> reduce() const override;
+  Expression *get_type() override;
+  void replace(const std::string &id, const Expression *source,
+               const Expression &expression) override;
+  std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
+  std::ostream &print(std::ostream &os) const override;
+
   std::string argument_id;
   std::unique_ptr<Expression> argument_type;
   std::unique_ptr<Expression> definition;
@@ -122,33 +128,45 @@ class ApplicationExpression : public Expression {
   ApplicationExpression(std::unique_ptr<Expression> &&function,
                         std::unique_ptr<Expression> &&argument);
   ApplicationExpression(const ApplicationExpression &other);
-  std::unique_ptr<Expression> clone();
+  std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
-  Expression* get_type() const override;
-  std::unique_ptr<Expression> replace(const std::string &id,
-                                      const Expression *source,
-                                      const Expression &expression) const
-                                      override;
-  std::unique_ptr<Expression> reduce() const override;
+  Expression* get_type() override;
+  void replace(const std::string &id, const Expression *source,
+               const Expression &expression) override;
+  std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
+  std::ostream &print(std::ostream &os) const override;
+
  private:
+  /**
+   * @brief converts an application expression into weak-head normal form by
+   * recursively applying.
+   * 
+   * For example, if you have the expression F a b c d, this will first
+   * apply a, then b, then c, then d.
+   * 
+   * this uses lazy evaluation, since a b c d are not reduced to normal form
+   * first.
+  */
+  std::unique_ptr<Expression> get_whnf();
+
   std::unique_ptr<Expression> function;
   std::unique_ptr<Expression> argument;
 };
 
 class IdExpression : public Expression {
  public:
-  IdExpression(std::string &&id);
+  IdExpression(std::string &&id, Expression *source);
   IdExpression(const IdExpression &other);
-  std::unique_ptr<Expression> clone() override;
+  std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
-  Expression *get_type() const override;
-  std::unique_ptr<Expression> replace(const std::string &id,
-                                      const Expression *source,
-                                      const Expression &expression) const
-                                      override;
-  std::unique_ptr<Expression> reduce() const override;
+  Expression *get_type() override;
+  void replace(const std::string &id, const Expression *source,
+               const Expression &expression) override;
+  std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
+  std::ostream &print(std::ostream &os) const override;
+
  private:
   std::string id;
   Expression *source;
@@ -156,7 +174,8 @@ class IdExpression : public Expression {
 
 template <typename Iterator>
 std::unique_ptr<Expression> Expression::create(
-    const parser::ConcreteSyntaxTree<Token> &source, Iterator &string_iterator) {
+    const parser::ConcreteSyntaxTree<Token> &source,
+    Iterator &string_iterator) {
   std::vector<Token> sentential_form;
   std::transform(source.children.begin(), source.children.end(),
       std::back_inserter(sentential_form),
@@ -315,11 +334,9 @@ std::unique_ptr<Expression> Expression::create(
 }
 
 std::ostream &operator<<(std::ostream &os, const Expression &expr) {
-  // TODO
-  os << "";
-  return os;
+  return expr.print(os);
 }
 
-}
+} // namespace script3025
 
 #endif

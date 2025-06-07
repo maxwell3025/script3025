@@ -29,3 +29,10 @@ TEST(Parse, multi_defn) {
   LOGGER3025_INFO("collapse_oop produced the following CST:\n"
                   "{}", to_string(*code.cst));
 }
+
+TEST(Evaluate, simple) {
+  script3025::ParsedCode code = script3025::parse(
+    "let identity := lambda (x : Type). x\n"
+    "let identity_two := lambda (y : Type). y"
+  );
+}

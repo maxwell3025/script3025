@@ -5,23 +5,11 @@
 #include <unordered_map>
 
 #include "parser.hpp"
+
+#include "expression.hpp"
 #include "parsing_utility.hpp"
 
 namespace script3025 {
-
-class Expression {
- public:
-  template <typename Iterator>
-  static std::unique_ptr<Expression> create(
-      parser::ConcreteSyntaxTree<Token> &source, Iterator &string_iterator);
-  virtual bool is_normal() const = 0;
-  virtual std::unique_ptr<Expression> get_type() const = 0;
-  virtual void replace(std::string id, const Expression &expression) = 0;
-  virtual std::unique_ptr<Expression> get_reduced() const = 0;
-  virtual ~Expression() = default;
- protected:
- private:
-};
 
 class InductiveDefinition {
  public:
@@ -53,20 +41,6 @@ class Program {
 void collect_lists(parser::ConcreteSyntaxTree<Token> &tree);
 
 void collapse_oop(parser::ConcreteSyntaxTree<Token> &tree);
-
-template <typename Iterator>
-std::unique_ptr<Expression> generate_expression (
-    parser::ConcreteSyntaxTree<Token> &source,
-    Iterator &string_iterator
-) {
-  if (source.children[0].symbol == Token::LAMBDA) {
-
-  }
-  if (source.children[0].symbol == Token::EXPR) {
-
-  }
-
-}
 
 template <typename Iterator>
 NormalDefinition::NormalDefinition(parser::ConcreteSyntaxTree<Token> &source,
