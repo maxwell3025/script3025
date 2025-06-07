@@ -36,8 +36,9 @@ class Expression {
   // @brief
   // Replaces all identifiers matching `id` which came from the abstraction
   // `source` with `expression`.
-  virtual void replace(const std::string &id, const Expression *source,
-                       const Expression &expression) = 0;
+  virtual std::unique_ptr<Expression> replace(const std::string &id,
+                                              const Expression *source,
+                                              const Expression &expression) = 0;
 
   // @brief
   // Reduces this expression to normal form within its context.
@@ -91,8 +92,9 @@ class LambdaExpression : public Expression {
   std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
   Expression *get_type() override;
-  void replace(const std::string &id, const Expression *source,
-               const Expression &expression) override;
+  std::unique_ptr<Expression> replace(const std::string &id,
+                                      const Expression *source,
+                                      const Expression &expression) override;
   std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
   std::ostream &print(std::ostream &os) const override;
@@ -111,8 +113,9 @@ class PiExpression : public Expression {
   std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
   Expression *get_type() override;
-  void replace(const std::string &id, const Expression *source,
-               const Expression &expression) override;
+  std::unique_ptr<Expression> replace(const std::string &id,
+                                      const Expression *source,
+                                      const Expression &expression) override;
   std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
   std::ostream &print(std::ostream &os) const override;
@@ -131,8 +134,9 @@ class ApplicationExpression : public Expression {
   std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
   Expression* get_type() override;
-  void replace(const std::string &id, const Expression *source,
-               const Expression &expression) override;
+  std::unique_ptr<Expression> replace(const std::string &id,
+                                      const Expression *source,
+                                      const Expression &expression) override;
   std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
   std::ostream &print(std::ostream &os) const override;
@@ -161,8 +165,9 @@ class IdExpression : public Expression {
   std::unique_ptr<Expression> clone() const override;
   bool is_normal() const override;
   Expression *get_type() override;
-  void replace(const std::string &id, const Expression *source,
-               const Expression &expression) override;
+  std::unique_ptr<Expression> replace(const std::string &id,
+                                      const Expression *source,
+                                      const Expression &expression) override;
   std::unique_ptr<Expression> reduce() override;
   bool operator==(const Expression &other) const override;
   std::ostream &print(std::ostream &os) const override;

@@ -43,10 +43,12 @@ Expression* IdExpression::get_type() {
   }
 }
 
-void IdExpression::replace(const std::string &id, const Expression *source,
-                           const Expression &expression) {
+std::unique_ptr<Expression> IdExpression::replace(
+    const std::string &id,
+    const Expression *source,
+    const Expression &expression) {
   if (this -> id == id && this -> source == source) {
-
+    return expression.clone();
   }
 }
 

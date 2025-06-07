@@ -37,14 +37,18 @@ Expression *PiExpression::get_type() {
   }
 }
 
-void PiExpression::replace(
+std::unique_ptr<Expression> PiExpression::replace(
     const std::string &id, const Expression *source,
     const Expression &expression) {
-  if (id == argument_id) return;
-  argument_type -> replace(id, source, expression);
-  definition -> replace(id, source, expression);
-  possibly_well_typed = true;
-  type = std::unique_ptr<Expression>();
+  std::unique_ptr<PiExpression> output =
+      std::make_unique<PiExpression>(*this);
+
+  output -> argument_type =
+      output -> argument_type -> replace(id, source, expression);
+  output -> definition =
+      output -> definition -> replace(id, source, expression);
+
+  return output;
 }
 
 std::unique_ptr<Expression> PiExpression::reduce() {

@@ -31,9 +31,9 @@ Expression* ApplicationExpression::get_type() {
       PiExpression &function_type_ref =
           static_cast<PiExpression&>(*function_type);
       type = function_type_ref.definition -> clone();
-      type -> replace(function_type_ref.argument_id,
-                      &function_type_ref,
-                      *argument_type);
+      type = type -> replace(function_type_ref.argument_id,
+                             &function_type_ref,
+                             *argument_type);
       type -> parent_abstraction = parent_abstraction;
       possibly_well_typed = true;
     } else {
@@ -49,11 +49,16 @@ Expression* ApplicationExpression::get_type() {
   }
 }
 
-void ApplicationExpression::replace(const std::string &id,
-                                    const Expression *source,
-                                    const Expression &expression) {
-  function -> replace(id, source, expression);
-  argument -> replace(id, source, expression);
+std::unique_ptr<Expression> ApplicationExpression::replace(
+    const std::string &id, const Expression *source,
+    const Expression &expression) {
+  std::unique_ptr<ApplicationExpression> output =
+      std::make_unique<ApplicationExpression>(*this);
+
+  output -> function = output -> function -> replace(id, source, expression);
+  output -> argument = output -> argument -> replace(id, source, expression);
+
+  return output;
 }
 
 std::unique_ptr<Expression> ApplicationExpression::get_whnf() {
@@ -80,8 +85,10 @@ std::unique_ptr<Expression> ApplicationExpression::get_whnf() {
 
     // Actually do the beta reduction.
     // To implement cbv, use argument -> reduce() instead of argument.
-    function_ref.definition -> replace(function_ref.argument_id, &function_ref,
-                                       *argument);
+    function_ref.definition =
+        function_ref.definition -> replace(function_ref.argument_id,
+                                           &function_ref,
+                                           *argument);
     // This could potentially cause some weird move semantics bs depending on
     // how destructors are called.
     // i.e. since output owns function(_ref) owns definition, the assignment
