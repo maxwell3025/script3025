@@ -22,8 +22,4 @@ bool Expression::operator!=(const Expression& rhs) const {
   return !(*this == rhs);
 }
 
-std::ostream &IdExpression::print(std::ostream &os) const {
-  return os << id;
-}
-
 } //namespace script3025

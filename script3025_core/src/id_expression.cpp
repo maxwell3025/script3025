@@ -50,6 +50,24 @@ std::unique_ptr<Expression> IdExpression::replace(
   if (this -> id == id && this -> source == source) {
     return expression.clone();
   }
+  return clone();
+}
+
+std::unique_ptr<Expression> IdExpression::reduce() {
+  // TODO implement delta reductions
+  return clone();
+}
+
+bool IdExpression::operator==(const Expression &other) const {
+  if(typeid(other) != typeid(IdExpression)) return false;
+  const IdExpression &other_id =
+      static_cast<const IdExpression &>(other);
+  return id == other_id.id &&
+         source == other_id.source;
+}
+
+std::ostream &IdExpression::print(std::ostream &os) const {
+  return os << id;
 }
 
 } //namespace scritp3025

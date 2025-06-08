@@ -14,6 +14,8 @@ class Expression {
   // Creates an `Expression` based on a CST and a token iterator.
   // `source` is the CST that this expression is based on, and `string_iterator`
   // is the list of strings associated with each leaf node in `source`.
+  // This uses move semantics, so this might damage the underlying container for
+  // the iterator.
   template <typename Iterator>
   static std::unique_ptr<Expression> create(
       const parser::ConcreteSyntaxTree<Token> &source,
@@ -218,8 +220,8 @@ std::unique_ptr<Expression> Expression::create(
     std::unique_ptr<Expression> definition = Expression::create(
         source.children[7], string_iterator);
 
-    return std::make_unique<LambdaExpression>(identifier, argument_type,
-        definition);
+    return std::make_unique<LambdaExpression>(std::move(identifier),
+        std::move(argument_type), std::move(definition));
   } else if (sentential_form == std::vector({Token::LAMBDA, Token::ID,
                                              Token::COLON, Token::EXPR,
                                              Token::PERIOD, Token::EXPR})) {
@@ -244,8 +246,8 @@ std::unique_ptr<Expression> Expression::create(
     std::unique_ptr<Expression> definition = Expression::create(
         source.children[5], string_iterator);
 
-    return std::make_unique<LambdaExpression>(identifier, argument_type,
-        definition);
+    return std::make_unique<LambdaExpression>(std::move(identifier),
+        std::move(argument_type), std::move(definition));
   } else if (sentential_form == std::vector({Token::PI, Token::L_PAREN,
                                               Token::ID, Token::COLON,
                                               Token::EXPR, Token::R_PAREN,
@@ -277,8 +279,8 @@ std::unique_ptr<Expression> Expression::create(
     std::unique_ptr<Expression> definition = Expression::create(
         source.children[7], string_iterator);
 
-    return std::make_unique<PiExpression>(identifier, argument_type,
-        definition);
+    return std::make_unique<PiExpression>(std::move(identifier),
+        std::move(argument_type), std::move(definition));
   } else if (sentential_form == std::vector({Token::LAMBDA, Token::ID,
                                              Token::COLON, Token::EXPR,
                                              Token::PERIOD, Token::EXPR})) {
@@ -303,8 +305,8 @@ std::unique_ptr<Expression> Expression::create(
     std::unique_ptr<Expression> definition = Expression::create(
         source.children[5], string_iterator);
 
-    return std::make_unique<PiExpression>(identifier, argument_type,
-        definition);
+    return std::make_unique<PiExpression>(std::move(identifier),
+        std::move(argument_type), std::move(definition));
   } else if (sentential_form == std::vector({Token::L_PAREN, Token::EXPR,
                                             Token::R_PAREN})) {
     // (
@@ -325,7 +327,8 @@ std::unique_ptr<Expression> Expression::create(
     std::unique_ptr<Expression> argument = Expression::create(
         source.children[1], string_iterator);
 
-    return std::make_unique<ApplicationExpression>(function, argument);
+    return std::make_unique<ApplicationExpression>(std::move(function),
+        std::move(argument));
   } else {
     std::stringstream sentential_form_string;
     for (const Token &token : sentential_form) {
@@ -338,7 +341,7 @@ std::unique_ptr<Expression> Expression::create(
   }
 }
 
-std::ostream &operator<<(std::ostream &os, const Expression &expr) {
+inline std::ostream &operator<<(std::ostream &os, const Expression &expr) {
   return expr.print(os);
 }
 

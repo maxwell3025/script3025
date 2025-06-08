@@ -157,6 +157,7 @@ ParsedCode parse(std::string text) {
       (*basic_parser).parse(token_sequence.begin(), token_sequence.end()));
 
   LOGGER3025_TRACE("Generated tree:\n{}", to_string(*output.cst));
+  output.text = std::move(text);
   return output;
 }
 
