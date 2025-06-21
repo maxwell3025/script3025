@@ -51,8 +51,7 @@ struct fmt::formatter<script3025::Token>
   template<typename FormatContext>
   auto format(script3025::Token const& token, FormatContext& ctx) const {
     std::stringstream output;
-    script3025::operator<<(output, token);
-    // output << token;
+    output << token;
     return fmt::format_to(ctx.out(), "{0}", output.str());
   }
 };
