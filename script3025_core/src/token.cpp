@@ -2,65 +2,63 @@
 
 #include <iomanip>
 
-namespace script3025 {
-
-std::ostream &operator<<(std::ostream &os, script3025::Token token) {
+std::ostream &script3025::operator<<(std::ostream &os, const script3025::Token &token) {
   switch (token) {
-  case Token::COLON:
+  case script3025::Token::COLON:
     os << ":";
     break;
-  case Token::PERIOD:
+  case script3025::Token::PERIOD:
     os << ".";
     break;
-  case Token::LET:
+  case script3025::Token::LET:
     os << "let";
     break;
-  case Token::DEF:
+  case script3025::Token::DEF:
     os << ":=";
     break;
-  case Token::INDUCTIVE:
+  case script3025::Token::INDUCTIVE:
     os << "inductive";
     break;
-  case Token::ID:
+  case script3025::Token::ID:
     os << "i";
     break;
-  case Token::NUMBER:
+  case script3025::Token::NUMBER:
     os << "n";
     break;
-  case Token::LAMBDA:
+  case script3025::Token::LAMBDA:
     os << "λ";
     break;
-  case Token::PI:
+  case script3025::Token::PI:
     os << "Π";
     break;
-  case Token::L_PAREN:
+  case script3025::Token::L_PAREN:
     os << "(";
     break;
-  case Token::R_PAREN:
+  case script3025::Token::R_PAREN:
     os << ")";
     break;
-  case Token::ABS:
+  case script3025::Token::ABS:
     os << "A";
     break;
-  case Token::EXPR_PAREN:
+  case script3025::Token::EXPR_PAREN:
     os << "E₂";
     break;
-  case Token::EXPR_APP:
+  case script3025::Token::EXPR_APP:
     os << "E₁";
     break;
-  case Token::EXPR_ABS:
+  case script3025::Token::EXPR_ABS:
     os << "E₀";
     break;
-  case Token::DEFN:
+  case script3025::Token::DEFN:
     os << "D";
     break;
-  case Token::IDEFN:
+  case script3025::Token::IDEFN:
     os << "I";
     break;
-  case Token::PROG:
+  case script3025::Token::PROG:
     os << "P";
     break;
-  case Token::END:
+  case script3025::Token::END:
     os << "$";
     break;
   default:
@@ -69,6 +67,4 @@ std::ostream &operator<<(std::ostream &os, script3025::Token token) {
     break;
   }
   return os;
-}
-
 }

@@ -2,6 +2,9 @@
 #define SCRIPT3025_SCRIPT3025_CORE_TOKEN_HPP
 
 #include <iostream>
+#include <sstream>
+
+#include "spdlog/fmt/fmt.h"
 
 namespace script3025 {
 
@@ -33,8 +36,25 @@ enum class Token {
   END
 };
 
-std::ostream &operator<<(std::ostream &os, script3025::Token token);
+std::ostream &operator<<(std::ostream &os, const script3025::Token &token);
 
 } // namespace script30225
+
+template <>
+struct fmt::formatter<script3025::Token>
+{
+  template<typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
+    return ctx.begin();
+  }
+
+  template<typename FormatContext>
+  auto format(script3025::Token const& token, FormatContext& ctx) const {
+    std::stringstream output;
+    script3025::operator<<(output, token);
+    // output << token;
+    return fmt::format_to(ctx.out(), "{0}", output.str());
+  }
+};
 
 #endif

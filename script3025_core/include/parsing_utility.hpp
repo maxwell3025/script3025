@@ -3,9 +3,9 @@
 
 #include <unordered_set>
 
+#include "token.hpp"
 #include "parser.hpp"
 
-#include "token.hpp"
 
 namespace script3025 {
 

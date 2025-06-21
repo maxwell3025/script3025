@@ -31,14 +31,14 @@ Expression* IdExpression::get_type() {
     } else if (typeid(*source) == typeid(PiExpression)) {
       type = static_cast<PiExpression*>(source) -> argument_type -> reduce();
     } else {
-      LOGGER3025_ERROR("Invalid source!");
+      SPDLOG_LOGGER_ERROR(get_logger(), "Invalid source!");
     }
   }
 
   if (type) {
     return type.get();
   } else {
-    LOGGER3025_ERROR("Could not find type for expression {}", to_string(*this));
+    SPDLOG_LOGGER_ERROR(get_logger(), "Could not find type for expression {}", to_string());
     return nullptr;
   }
 }
@@ -68,6 +68,17 @@ bool IdExpression::operator==(const Expression &other) const {
 
 std::ostream &IdExpression::print(std::ostream &os) const {
   return os << id;
+}
+
+std::shared_ptr<spdlog::logger> IdExpression::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::IdExpression", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
 }
 
 } //namespace scritp3025

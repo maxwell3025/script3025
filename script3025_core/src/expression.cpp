@@ -22,4 +22,21 @@ bool Expression::operator!=(const Expression& rhs) const {
   return !(*this == rhs);
 }
 
+std::shared_ptr<spdlog::logger> Expression::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::Expression", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
+}
+
+std::string Expression::to_string() {
+  std::stringstream output;
+  output << *this;
+  return output.str();
+}
+
 } //namespace script3025

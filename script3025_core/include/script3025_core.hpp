@@ -18,6 +18,7 @@ class InductiveDefinition {
  private:
   std::string name;
   std::unique_ptr<Expression> definition;
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 class NormalDefinition {
@@ -27,6 +28,7 @@ class NormalDefinition {
  private:
   std::string name;
   std::unique_ptr<Expression> definition;
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 class Program {
@@ -36,6 +38,7 @@ class Program {
  private:
   std::vector<NormalDefinition> definitions;
   std::vector<InductiveDefinition> inductive_definitions;
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 void collect_lists(parser::ConcreteSyntaxTree<Token> &tree);
@@ -46,8 +49,8 @@ template <typename Iterator>
 NormalDefinition::NormalDefinition(parser::ConcreteSyntaxTree<Token> &source,
                                    Iterator &string_iterator) {
   if (source.symbol != Token::DEFN) {
-    LOGGER3025_ERROR("Expected a concrete syntax tree with type {}. Received {}",
-                     to_string(Token::PROG), to_string(source.symbol));
+    SPDLOG_LOGGER_ERROR(get_logger(), "Expected a concrete syntax tree with type {}. Received {}",
+                     Token::PROG, source.symbol);
     throw std::runtime_error(
         "Attempted to construct program from non-program node.");
   }
@@ -61,8 +64,8 @@ NormalDefinition::NormalDefinition(parser::ConcreteSyntaxTree<Token> &source,
       definition = (child, string_iterator);
       break;
     default:
-      LOGGER3025_ERROR("Received malformed syntax tree:\n"
-                       "{}", to_string(source));
+      SPDLOG_LOGGER_ERROR(get_logger(), "Received malformed syntax tree:\n"
+                       "{}", source.to_string());
       throw std::runtime_error("Malformed syntax tree");
     }
   }
@@ -72,8 +75,8 @@ template <typename Iterator>
 Program::Program(parser::ConcreteSyntaxTree<Token> &source,
                  Iterator &string_iterator) {
   if (source.symbol != Token::PROG) {
-    LOGGER3025_ERROR("Expected a concrete syntax tree with type {}. Received {}",
-                     to_string(Token::PROG), to_string(source.symbol));
+    SPDLOG_LOGGER_ERROR(get_logger(), "Expected a concrete syntax tree with type {}. Received {}",
+                     Token::PROG, source.symbol);
     throw std::runtime_error(
         "Attempted to construct program from non-program node.");
   }
@@ -86,8 +89,8 @@ Program::Program(parser::ConcreteSyntaxTree<Token> &source,
       inductive_definitions.emplace_back(child, string_iterator);
       break;
     default:
-      LOGGER3025_ERROR("Received malformed syntax tree:\n"
-                       "{}", to_string(source));
+      SPDLOG_LOGGER_ERROR(get_logger(), "Received malformed syntax tree:\n"
+                       "{}", source);
       throw std::runtime_error("Malformed syntax tree");
     }
   }

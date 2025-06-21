@@ -44,7 +44,7 @@ Expression* ApplicationExpression::get_type() {
   if (type) {
     return type.get();
   } else {
-    LOGGER3025_ERROR("Could not find type for expression {}", to_string(*this));
+    SPDLOG_LOGGER_ERROR(get_logger(), "Could not find type for expression {}", to_string());
     return nullptr;
   }
 }
@@ -81,7 +81,7 @@ std::unique_ptr<Expression> ApplicationExpression::get_whnf() {
 
     // Sound alarms if a type error occurs
     if(*function_ref.type -> reduce() != *argument -> get_type())
-      LOGGER3025_ERROR("Bad Application in {}", to_string(*this));
+      SPDLOG_LOGGER_ERROR(get_logger(), "Bad Application in {}", to_string());
 
     // Actually do the beta reduction.
     // To implement cbv, use argument -> reduce() instead of argument.
@@ -143,6 +143,17 @@ bool ApplicationExpression::operator==(const Expression &other) const {
 
 std::ostream &ApplicationExpression::print(std::ostream &os) const {
   return os << "(" << *function << ")(" << *argument << ")";
+}
+
+std::shared_ptr<spdlog::logger> ApplicationExpression::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::ApplicationExpression", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
 }
 
 }

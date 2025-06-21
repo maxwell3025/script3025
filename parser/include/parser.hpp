@@ -13,7 +13,8 @@
 #include <variant>
 #include <vector>
 
-#include "logger3025.hpp"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace parser {
 
@@ -187,6 +188,13 @@ struct ConcreteSyntaxTree {
   ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other) : symbol(other.symbol),
       children(std::move(other.children)){}
 
+  std::string to_string() {
+    std::stringstream output;
+    std::vector<std::string> stack;
+    stringify_internal(output, stack, true);
+    return output.str();
+  }
+
  private:
   void stringify_internal(std::ostream &os, std::vector<std::string> &current_stack, bool is_last) const {
     for (const std::string &c : current_stack) {
@@ -238,6 +246,7 @@ class Parser {
  private:
   Parser(const std::vector<std::unordered_map<T, Action<T>>> &action_table,
           T goal, T end);
+  static std::shared_ptr<spdlog::logger> get_logger();
 
   T goal_symbol;
   T terminal_symbol;
@@ -303,6 +312,8 @@ class ParserBuilder {
 
   // Converts a `CanonicalSet` into a string
   std::string stringify(const CanonicalSet &canonical_set) const;
+
+  static std::shared_ptr<spdlog::logger> get_logger();
 
   T goal_symbol;
   T terminal_symbol;
@@ -459,10 +470,11 @@ Parser<T> ParserBuilder<T>::build() {
 
     canonical_collection.insert(current_set);
 
-    LOGGER3025_TRACE("Processing canonical set {}:\n"
-                     "{}",
-                     numbering.size(),
-                     stringify(current_set));
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Processing canonical set {}:\n"
+                        "{}",
+                        numbering.size(),
+                        stringify(current_set));
 
     numbering.push_back(current_set);
     
@@ -477,10 +489,11 @@ Parser<T> ParserBuilder<T>::build() {
         if (entry.index == entry.sentential_form.size() &&
             entry.following_symbol == symbol) {
           if (found_action) {
-            LOGGER3025_ERROR("Error: Reduce-Reduce conflict with \'{}\' on\n"
-                             "{}",
-                             to_string(symbol),
-                             stringify(current_set));
+            SPDLOG_LOGGER_ERROR(get_logger(),
+                                "Error: Reduce-Reduce conflict with \'{}\' on\n"
+                                "{}",
+                                symbol,
+                                stringify(current_set));
             throw std::runtime_error("Reduce-Reduce conflict");
           }
           found_action = true;
@@ -492,10 +505,11 @@ Parser<T> ParserBuilder<T>::build() {
       CanonicalSet shifted = shift(current_set, symbol);
       if (!shifted.empty()) {
         if (found_action) {
-          LOGGER3025_ERROR("Error: Shift-Reduce conflict with \'{}\' on\n"
-                           "{}",
-                           to_string(symbol),
-                           stringify(current_set));
+          SPDLOG_LOGGER_ERROR(get_logger(),
+                              "Error: Shift-Reduce conflict with \'{}\' on\n"
+                              "{}",
+                              symbol,
+                              stringify(current_set));
           throw std::runtime_error("Shift-Reduce conflict");
         }
         bfs_queue.push_back(shifted);
@@ -619,8 +633,20 @@ std::string ParserBuilder<T>::stringify(
 }
 
 template<typename T>
+std::shared_ptr<spdlog::logger> ParserBuilder<T>::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("parser::ParserBuilder", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
+}
+
+template<typename T>
 template<typename Iterator>
-ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
+ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
   std::vector<AnnotatedNode<T>> stack;
   while (true) {
     // Log current derivation
@@ -634,7 +660,7 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
       stack_trace << *it;
     }
     stack_trace;
-    LOGGER3025_TRACE("{}", stack_trace.str());
+    SPDLOG_LOGGER_TRACE(get_logger(), "{}", stack_trace.str());
 
     if (begin == end && stack.size() == 1) {
       ConcreteSyntaxTree<T> return_value = std::move(stack[0].symbol);
@@ -656,8 +682,9 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
 
     if (action_table[current_state].find(current_lookahead) ==
         action_table[current_state].end()) {
-      LOGGER3025_ERROR("Error: no action for state {} on lookahead {}",
-                       current_state, to_string(current_lookahead));
+      SPDLOG_LOGGER_ERROR(get_logger(),
+                          "Error: no action for state {} on lookahead {}",
+                          current_state, current_lookahead);
     }
 
     Action<T> current_action =
@@ -679,8 +706,9 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
       ConcreteSyntaxTree<T> node = ConcreteSyntaxTree<T>(reduce_action.result);
 
       if (stack.size() < reduce_action.pop_qty) {
-        LOGGER3025_ERROR("Error: trying to reduce {} from stack of size {}",
-                         reduce_action.pop_qty, stack.size());
+        SPDLOG_LOGGER_ERROR(get_logger(),
+                            "Error: trying to reduce {} from stack of size {}",
+                            reduce_action.pop_qty, stack.size());
       }
 
       for (size_t i = 0; i < reduce_action.pop_qty; i++) {
@@ -701,15 +729,17 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end){
 
       if (action_table[pre_reduce_state].find(reduce_action.result) ==
           action_table[pre_reduce_state].end()) {
-        LOGGER3025_ERROR("Error: no action on state {} with symbol {}",
-                         pre_reduce_state, to_string(reduce_action.result));
+        SPDLOG_LOGGER_ERROR(get_logger(),
+                            "Error: no action on state {} with symbol {}",
+                            pre_reduce_state, reduce_action.result);
       }
       Action<T> action = action_table[pre_reduce_state].at(
           reduce_action.result);
 
       if (!std::holds_alternative<ShiftAction<T>>(action)) {
-        LOGGER3025_ERROR("Error: non-shift action on state {} with symbol {}",
-                         pre_reduce_state, to_string(reduce_action.result));
+        SPDLOG_LOGGER_ERROR(get_logger(),
+                            "Error: non-shift action on state {} with symbol {}",
+                            pre_reduce_state, reduce_action.result);
       }
       ShiftAction<T> shift_action = std::get<ShiftAction<T>>(action);
 
@@ -723,6 +753,18 @@ template<typename T>
 Parser<T>::Parser(const std::vector<std::unordered_map<T, Action<T>>>
                   &action_table, T goal, T end) : goal_symbol(goal),
                   terminal_symbol(end), action_table(action_table) {}
+
+template<typename T>
+std::shared_ptr<spdlog::logger> Parser<T>::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("parser::Parser", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
+}
 
 } // namespace parser
 

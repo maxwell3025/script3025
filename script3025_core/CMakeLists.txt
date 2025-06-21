@@ -22,6 +22,7 @@ add_library(script3025_core
   src/lambda_expression.cpp
   src/pi_expression.cpp
   src/parsing_utility.cpp
+  src/script3025_core.cpp
   src/token.cpp
   include/cst_transformers.hpp
   include/expression.hpp
@@ -37,7 +38,6 @@ target_include_directories(script3025_core
 
 target_link_libraries(script3025_core
   PUBLIC parser
-  PUBLIC logger3025
 )
 
 add_executable(script3025_core_test

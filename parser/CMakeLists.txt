@@ -19,21 +19,20 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/gabime/spdlog.git
   GIT_TAG        48bcf39a661a13be22666ac64db8a7f886f2637e
 )
-
 FetchContent_MakeAvailable(spdlog)
 
 enable_testing()
 
-add_library(parser INTERFACE
+add_library(parser
   include/parser.hpp
 )
 
 target_include_directories(parser
-  INTERFACE include
+  PUBLIC include
 )
 
 target_link_libraries(parser
-  INTERFACE logger3025
+  PUBLIC spdlog
 )
 
 add_executable(parser_test

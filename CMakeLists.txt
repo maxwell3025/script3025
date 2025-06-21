@@ -11,7 +11,6 @@ enable_testing()
 add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${SPDLOG_ACTIVE_LEVEL})
 add_compile_options(-fdiagnostics-color)
 
-# Here, we add subdirectories to 
-add_subdirectory(script3025_logger)
+# Here, we add subdirectories
 add_subdirectory(parser)
 add_subdirectory(script3025_core)

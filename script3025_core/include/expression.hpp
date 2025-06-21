@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "parser.hpp"
 #include "token.hpp"
+#include "parser.hpp"
 
 namespace script3025 {
 
@@ -76,6 +76,10 @@ class Expression {
   // false.
   bool possibly_well_typed;
 
+  // @brief
+  // Converts the current expression into a string
+  std::string to_string();
+
  protected:
   Expression(Expression *parent_abstraction, std::unique_ptr<Expression> &&type,
              bool possibly_well_typed);
@@ -83,6 +87,8 @@ class Expression {
   Expression(const Expression& other);
 
   Expression();
+
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 class LambdaExpression : public Expression {
@@ -104,6 +110,9 @@ class LambdaExpression : public Expression {
   std::string argument_id;
   std::unique_ptr<Expression> argument_type;
   std::unique_ptr<Expression> definition;
+
+ private:
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 class PiExpression : public Expression {
@@ -125,7 +134,9 @@ class PiExpression : public Expression {
   std::string argument_id;
   std::unique_ptr<Expression> argument_type;
   std::unique_ptr<Expression> definition;
+
  private:
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 class ApplicationExpression : public Expression {
@@ -158,6 +169,7 @@ class ApplicationExpression : public Expression {
 
   std::unique_ptr<Expression> function;
   std::unique_ptr<Expression> argument;
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 class IdExpression : public Expression {
@@ -177,6 +189,7 @@ class IdExpression : public Expression {
  private:
   std::string id;
   Expression *source;
+  static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 template <typename Iterator>
@@ -334,7 +347,8 @@ std::unique_ptr<Expression> Expression::create(
     for (const Token &token : sentential_form) {
       sentential_form_string << token;
     }
-    LOGGER3025_ERROR(
+    SPDLOG_LOGGER_ERROR(
+        get_logger(),
         "This sentential form failed to match any known expressions: {}",
         sentential_form_string.str());
     throw std::runtime_error("Failed to match token sequence.");

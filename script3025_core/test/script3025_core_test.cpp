@@ -3,6 +3,17 @@
 #include "script3025_core.hpp"
 #include "parsing_utility.hpp"
 
+std::shared_ptr<spdlog::logger> get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025_core_test.cpp", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
+}
+
 TEST(Parse, single_defn_simple) {
   script3025::parse(
     "let identity := lambda (x : Type). x"
@@ -22,12 +33,12 @@ TEST(Parse, multi_defn) {
   );
 
   script3025::collect_lists(*code.cst);
-  LOGGER3025_INFO("collect_lists produced the following CST:\n"
-                  "{}", to_string(*code.cst));
+  SPDLOG_LOGGER_INFO(get_logger(), "collect_lists produced the following CST:\n"
+                  "{}", code.cst -> to_string());
 
   script3025::collapse_oop(*code.cst);
-  LOGGER3025_INFO("collapse_oop produced the following CST:\n"
-                  "{}", to_string(*code.cst));
+  SPDLOG_LOGGER_INFO(get_logger(), "collapse_oop produced the following CST:\n"
+                  "{}", code.cst -> to_string());
 }
 
 TEST(Evaluate, simple) {
@@ -37,8 +48,8 @@ TEST(Evaluate, simple) {
   script3025::collect_lists(*code.cst);
   script3025::collapse_oop(*code.cst);
 
-  LOGGER3025_INFO("CST:\n"
-                  "{}", to_string(*code.cst));
+  SPDLOG_LOGGER_INFO(get_logger(), "CST:\n"
+                  "{}", code.cst -> to_string());
 
   std::vector<std::string> token_text;
   for (size_t i = 0; i < code.segment_begin.size(); ++i) {
@@ -50,5 +61,5 @@ TEST(Evaluate, simple) {
   auto iter = token_text.begin();
   std::unique_ptr<script3025::Expression> expression =
       script3025::Expression::create(code.cst -> children[0], iter);
-  LOGGER3025_INFO("{}", to_string(*expression));
+  SPDLOG_LOGGER_INFO(get_logger(), "{}", expression -> to_string());
 }

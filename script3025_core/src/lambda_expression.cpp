@@ -44,7 +44,7 @@ Expression *LambdaExpression::get_type() {
   if (type) {
     return type.get();
   } else {
-    LOGGER3025_ERROR("Could not find type for expression {}", to_string(*this));
+    SPDLOG_LOGGER_ERROR(get_logger(), "Could not find type for expression {}", to_string());
     return nullptr;
   }
 }
@@ -83,6 +83,17 @@ bool LambdaExpression::operator==(const Expression &other) const {
 std::ostream &LambdaExpression::print(std::ostream &os) const {
   return os << "λ (" << argument_id << " : " << *argument_type << "). " <<
         *definition;
+}
+
+std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::LambdaExpression", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
 }
 
 }

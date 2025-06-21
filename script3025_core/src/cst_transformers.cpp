@@ -1,7 +1,5 @@
 #include "cst_transformers.hpp"
 
-#include "logger3025.hpp"
-
 namespace script3025 {
 
 void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {

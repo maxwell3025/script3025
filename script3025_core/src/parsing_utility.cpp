@@ -11,6 +11,13 @@ bool is_alphanumeric(char c) {
 std::unique_ptr<parser::Parser<Token>> basic_parser;
 
 ParsedCode parse(std::string text) {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&] () -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::parse", spdlog::color_mode::always);
+        logger-> set_level(spdlog::level::warn);
+        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
   // Tokenize the text
   ParsedCode output;
   std::vector<Token> token_sequence;
@@ -118,7 +125,7 @@ ParsedCode parse(std::string text) {
   for (Token token : token_sequence) {
     message << token;
   }
-  LOGGER3025_TRACE("{}", message.str());
+  SPDLOG_LOGGER_TRACE(logger, "{}", message.str());
 
   if (!basic_parser) {
     basic_parser = std::make_unique<parser::Parser<Token>>(
@@ -156,7 +163,7 @@ ParsedCode parse(std::string text) {
   output.cst = std::make_unique<parser::ConcreteSyntaxTree<Token>>(
       (*basic_parser).parse(token_sequence.begin(), token_sequence.end()));
 
-  LOGGER3025_TRACE("Generated tree:\n{}", to_string(*output.cst));
+  SPDLOG_LOGGER_TRACE(logger, "Generated tree:\n{}", output.cst -> to_string());
   output.text = std::move(text);
   return output;
 }
