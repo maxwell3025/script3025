@@ -30,10 +30,7 @@ TEST(Parse, single_defn_simple) {
                   return t.text;
                  });
 
-  auto iterator = token_text.begin();
-  script3025::Program program(*(parsed_code.cst), iterator);
-
-  // SPDLOG_LOGGER_INFO(get_logger(), "{}", program);
+  script3025::Program program(*(parsed_code.cst), token_text.begin());
 }
 
 TEST(Parse, single_defn_complex) {
