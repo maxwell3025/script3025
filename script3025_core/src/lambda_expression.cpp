@@ -11,7 +11,7 @@ LambdaExpression::LambdaExpression(std::string &&argument_id,
                                    Expression(
                                       argument_type -> parent_abstraction,
                                       std::unique_ptr<Expression>(), true) {
-  definition -> parent_abstraction = this;
+  this -> definition -> parent_abstraction = this;
 }
 
 LambdaExpression::LambdaExpression(const LambdaExpression &other)

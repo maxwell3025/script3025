@@ -2,63 +2,68 @@
 
 #include <iomanip>
 
-std::ostream &script3025::operator<<(std::ostream &os, const script3025::Token &token) {
+namespace script3025 {
+
+std::ostream &operator<<(std::ostream &os, const Token &token) {
   switch (token) {
-  case script3025::Token::COLON:
+  case Token::COLON:
     os << ":";
     break;
-  case script3025::Token::PERIOD:
+  case Token::PERIOD:
     os << ".";
     break;
-  case script3025::Token::LET:
+  case Token::LET:
     os << "let";
     break;
-  case script3025::Token::DEF:
+  case Token::DEF:
+    os << "def";
+    break;
+  case Token::ASSIGN:
     os << ":=";
     break;
-  case script3025::Token::INDUCTIVE:
+  case Token::INDUCTIVE:
     os << "inductive";
     break;
-  case script3025::Token::ID:
+  case Token::ID:
     os << "i";
     break;
-  case script3025::Token::NUMBER:
+  case Token::NUMBER:
     os << "n";
     break;
-  case script3025::Token::LAMBDA:
+  case Token::LAMBDA:
     os << "λ";
     break;
-  case script3025::Token::PI:
+  case Token::PI:
     os << "Π";
     break;
-  case script3025::Token::L_PAREN:
+  case Token::L_PAREN:
     os << "(";
     break;
-  case script3025::Token::R_PAREN:
+  case Token::R_PAREN:
     os << ")";
     break;
-  case script3025::Token::ABS:
+  case Token::ABS:
     os << "A";
     break;
-  case script3025::Token::EXPR_PAREN:
+  case Token::EXPR_PAREN:
     os << "E₂";
     break;
-  case script3025::Token::EXPR_APP:
+  case Token::EXPR_APP:
     os << "E₁";
     break;
-  case script3025::Token::EXPR_ABS:
+  case Token::EXPR_ABS:
     os << "E₀";
     break;
-  case script3025::Token::DEFN:
+  case Token::DEFN:
     os << "D";
     break;
-  case script3025::Token::IDEFN:
+  case Token::IDEFN:
     os << "I";
     break;
-  case script3025::Token::PROG:
+  case Token::PROG:
     os << "P";
     break;
-  case script3025::Token::END:
+  case Token::END:
     os << "$";
     break;
   default:
@@ -68,3 +73,5 @@ std::ostream &script3025::operator<<(std::ostream &os, const script3025::Token &
   }
   return os;
 }
+
+} // namespace script3025

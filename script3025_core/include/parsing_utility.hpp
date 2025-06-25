@@ -9,14 +9,17 @@
 
 namespace script3025 {
 
-class ParsedCode {
- public:
+struct AnnotatedToken {
+  Token token;
   std::string text;
-  std::unique_ptr<parser::ConcreteSyntaxTree<Token>> cst;
-  std::vector<size_t> segment_begin;
-  std::vector<size_t> segment_end;
 };
 
+struct ParsedCode {
+  std::unique_ptr<parser::ConcreteSyntaxTree<Token>> cst;
+  std::vector<AnnotatedToken> annotated_tokens;
+};
+
+std::vector<AnnotatedToken> tokenize(std::string text);
 ParsedCode parse(std::string text);
 
 } // namespace script3025

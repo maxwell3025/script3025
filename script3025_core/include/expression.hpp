@@ -139,6 +139,30 @@ class PiExpression : public Expression {
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
+class LetExpression : public Expression {
+ public:
+  LetExpression(std::string &&argument_id,
+                std::unique_ptr<Expression> &&argument_type,
+                std::unique_ptr<Expression> &&definition);
+  LetExpression(const LetExpression &other);
+  std::unique_ptr<Expression> clone() const override;
+  bool is_normal() const override;
+  Expression *get_type() override;
+  std::unique_ptr<Expression> replace(const std::string &id,
+                                      const Expression *source,
+                                      const Expression &expression) override;
+  std::unique_ptr<Expression> reduce() override;
+  bool operator==(const Expression &other) const override;
+  std::ostream &print(std::ostream &os) const override;
+
+  std::string argument_id;
+  std::unique_ptr<Expression> argument_type;
+  std::unique_ptr<Expression> definition;
+
+ private:
+  static std::shared_ptr<spdlog::logger> get_logger();
+};
+
 class ApplicationExpression : public Expression {
  public:
   ApplicationExpression(std::unique_ptr<Expression> &&function,
@@ -342,6 +366,10 @@ std::unique_ptr<Expression> Expression::create(
 
     return std::make_unique<ApplicationExpression>(std::move(function),
         std::move(argument));
+  } else if (sentential_form == std::vector({Token::ID})) {
+    std::string id(*string_iterator);
+    ++string_iterator;
+    return std::make_unique<IdExpression>(std::move(id), nullptr);
   } else {
     std::stringstream sentential_form_string;
     for (const Token &token : sentential_form) {

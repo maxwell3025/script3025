@@ -10,7 +10,7 @@ PiExpression::PiExpression(std::string &&argument_id,
                            definition(std::move(definition)),
                            Expression(argument_type -> parent_abstraction,
                                       std::unique_ptr<Expression>(), true) {
-  definition -> parent_abstraction = this;
+  this -> definition -> parent_abstraction = this;
 }
 
 PiExpression::PiExpression(const PiExpression &other)

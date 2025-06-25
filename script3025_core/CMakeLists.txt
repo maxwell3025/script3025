@@ -14,19 +14,32 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        48bcf39a661a13be22666ac64db8a7f886f2637e
+)
+FetchContent_MakeAvailable(spdlog)
+
+
 add_library(script3025_core
   src/application_expression.cpp
   src/cst_transformers.cpp
+  src/definition.cpp
   src/expression.cpp
   src/id_expression.cpp
+  src/inductive_definition.cpp
   src/lambda_expression.cpp
   src/pi_expression.cpp
   src/parsing_utility.cpp
-  src/script3025_core.cpp
+  src/program.cpp
   src/token.cpp
   include/cst_transformers.hpp
+  include/definition.hpp
   include/expression.hpp
+  include/inductive_definition.hpp
   include/parsing_utility.hpp
+  include/program.hpp
   include/script3025_core.hpp
   include/token.hpp
 )

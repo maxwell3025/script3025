@@ -188,7 +188,7 @@ struct ConcreteSyntaxTree {
   ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other) : symbol(other.symbol),
       children(std::move(other.children)){}
 
-  std::string to_string() {
+  std::string to_string() const {
     std::stringstream output;
     std::vector<std::string> stack;
     stringify_internal(output, stack, true);
@@ -767,5 +767,20 @@ std::shared_ptr<spdlog::logger> Parser<T>::get_logger() {
 }
 
 } // namespace parser
+
+template <typename T>
+struct fmt::formatter<parser::ConcreteSyntaxTree<T>>
+{
+  template<typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
+    return ctx.begin();
+  }
+
+  template<typename FormatContext>
+  auto format(parser::ConcreteSyntaxTree<T> const& tree, FormatContext& ctx)
+      const {
+    return fmt::format_to(ctx.out(), "{0}", tree.to_string());
+  }
+};
 
 #endif

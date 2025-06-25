@@ -17,8 +17,10 @@ enum class Token {
   PERIOD,
   COLON,
   LET,
-  INDUCTIVE,
+  IN,
   DEF,
+  INDUCTIVE,
+  ASSIGN,
   L_PAREN,
   R_PAREN,
   // non-terminals
