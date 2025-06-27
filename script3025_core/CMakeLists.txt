@@ -30,15 +30,23 @@ add_library(script3025_core
   src/id_expression.cpp
   src/inductive_definition.cpp
   src/lambda_expression.cpp
+  src/let_expression.cpp
   src/pi_expression.cpp
   src/parsing_utility.cpp
   src/program.cpp
   src/token.cpp
+  include/application_expression.hpp
   include/cst_transformers.hpp
   include/definition.hpp
   include/expression.hpp
+  include/expression_factory.hpp
+  include/expression_visitor.hpp
+  include/id_expression.hpp
   include/inductive_definition.hpp
+  include/lambda_expression.hpp
+  include/let_expression.hpp
   include/parsing_utility.hpp
+  include/pi_expression.hpp
   include/program.hpp
   include/script3025_core.hpp
   include/token.hpp

@@ -1,4 +1,5 @@
-#include "expression.hpp"
+#include "lambda_expression.hpp"
+#include "pi_expression.hpp"
 
 namespace script3025 {
 
@@ -34,7 +35,7 @@ Expression *LambdaExpression::get_type() {
       possibly_well_typed = false;
     } else {
       type = std::make_unique<PiExpression>(std::string(argument_id),
-                                            argument_type-> clone(),
+                                            argument_type -> clone(),
                                             output_type -> clone());
       type -> parent_abstraction = parent_abstraction;
       possibly_well_typed = true;
@@ -94,6 +95,14 @@ std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
         return logger;
       })();
   return logger;
+}
+
+void LambdaExpression::accept(ExpressionVisitor &visitor) const {
+  visitor.visit_lambda(*this);
+}
+
+void LambdaExpression::accept(MutatingExpressionVisitor &visitor) {
+  visitor.visit_lambda(*this);
 }
 
 }

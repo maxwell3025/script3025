@@ -5,6 +5,7 @@
 #include <string>
 
 #include "expression.hpp"
+#include "expression_factory.hpp"
 #include "parser.hpp"
 
 namespace script3025 {
@@ -21,7 +22,7 @@ class Definition {
 
 template <typename Iterator>
 Definition::Definition(parser::ConcreteSyntaxTree<Token> &source,
-                                   Iterator &&string_iterator) {
+                       Iterator &&string_iterator) {
   if (source.symbol != Token::DEFN) {
     SPDLOG_LOGGER_ERROR(get_logger(), "Expected a concrete syntax tree with type {}. Received {}",
                         Token::PROG, source.symbol);
@@ -50,7 +51,7 @@ Definition::Definition(parser::ConcreteSyntaxTree<Token> &source,
   // :=
   ++string_iterator;
   // <expr>
-  definition = Expression::create(source.children[3], string_iterator);
+  definition = create_expression(source.children[3], string_iterator);
 }
 
 }

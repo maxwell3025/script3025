@@ -1,4 +1,4 @@
-#include "expression.hpp"
+#include "pi_expression.hpp"
 
 namespace script3025 {
 
@@ -82,6 +82,14 @@ std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
         return logger;
       })();
   return logger;
+}
+
+void PiExpression::accept(ExpressionVisitor &visitor) const {
+  visitor.visit_pi(*this);
+}
+
+void PiExpression::accept(MutatingExpressionVisitor &visitor) {
+  visitor.visit_pi(*this);
 }
 
 }

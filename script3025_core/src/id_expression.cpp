@@ -1,4 +1,6 @@
-#include "expression.hpp"
+#include "id_expression.hpp"
+#include "pi_expression.hpp"
+#include "lambda_expression.hpp"
 
 namespace script3025 {
 
@@ -79,6 +81,14 @@ std::shared_ptr<spdlog::logger> IdExpression::get_logger() {
         return logger;
       })();
   return logger;
+}
+
+void IdExpression::accept(ExpressionVisitor &visitor) const {
+  visitor.visit_id(*this);
+}
+
+void IdExpression::accept(MutatingExpressionVisitor &visitor) {
+  visitor.visit_id(*this);
 }
 
 } //namespace scritp3025
