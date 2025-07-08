@@ -1,25 +1,27 @@
 #include "expression.hpp"
+#include "equality_visitor.hpp"
+#include "cloning_visitor.hpp"
 
 namespace script3025 {
 
-Expression::Expression(Expression *parent_abstraction,
-                       std::unique_ptr<Expression> &&type,
-                       bool possibly_well_typed)
-                       : parent_abstraction(parent_abstraction),
-                       type(std::move(type)),
-                       possibly_well_typed(possibly_well_typed) {}
+std::unique_ptr<Expression> Expression::clone(
+    std::unordered_map<const Expression *, Expression *> initial_map) {
+  CloningVisitor visitor;
+  visitor.pointer_map = initial_map;
+  accept(visitor);
+  return std::move(visitor.value);
+}
 
-Expression::Expression(const Expression& other)
-                       : parent_abstraction(other.parent_abstraction),
-                       type(other.type -> clone()),
-                       possibly_well_typed(other.possibly_well_typed) {}
-
-Expression::Expression() : parent_abstraction(nullptr),
-                         type(),
-                         possibly_well_typed(true) {}
+bool Expression::operator==(const Expression& rhs) const {
+  return !(*this != rhs);
+}
 
 bool Expression::operator!=(const Expression& rhs) const {
-  return !(*this == rhs);
+  EqualityVisitor visitor;
+  visitor.lhs = this;
+  visitor.unequal = false;
+  rhs.accept(visitor);
+  return visitor.unequal;
 }
 
 std::shared_ptr<spdlog::logger> Expression::get_logger() {

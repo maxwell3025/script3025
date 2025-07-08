@@ -25,29 +25,37 @@ FetchContent_MakeAvailable(spdlog)
 add_library(script3025_core
   src/application_expression.cpp
   src/cst_transformers.cpp
+  src/cloning_visitor.cpp
   src/definition.cpp
+  src/equality_visitor.cpp
   src/expression.cpp
   src/id_expression.cpp
   src/inductive_definition.cpp
   src/lambda_expression.cpp
+  src/lazy_reduction_visitor.cpp
   src/let_expression.cpp
   src/pi_expression.cpp
   src/parsing_utility.cpp
   src/program.cpp
+  src/replacing_visitor.cpp
   src/token.cpp
   include/application_expression.hpp
   include/cst_transformers.hpp
+  include/cloning_visitor.hpp
   include/definition.hpp
+  include/equality_visitor.hpp
   include/expression.hpp
   include/expression_factory.hpp
   include/expression_visitor.hpp
   include/id_expression.hpp
   include/inductive_definition.hpp
   include/lambda_expression.hpp
+  include/lazy_reduction_visitor.hpp
   include/let_expression.hpp
   include/parsing_utility.hpp
   include/pi_expression.hpp
   include/program.hpp
+  include/replacing_visitor.hpp
   include/script3025_core.hpp
   include/token.hpp
 )

@@ -11,18 +11,14 @@ class ApplicationExpression : public Expression {
   ApplicationExpression(std::unique_ptr<Expression> &&function,
                         std::unique_ptr<Expression> &&argument);
   ApplicationExpression(const ApplicationExpression &other);
-  std::unique_ptr<Expression> clone() const override;
+  ApplicationExpression();
   bool is_normal() const override;
-  Expression* get_type() override;
-  std::unique_ptr<Expression> replace(const std::string &id,
-                                      const Expression *source,
-                                      const Expression &expression) override;
-  std::unique_ptr<Expression> reduce() override;
-  bool operator==(const Expression &other) const override;
   std::ostream &print(std::ostream &os) const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 
+  std::unique_ptr<Expression> function;
+  std::unique_ptr<Expression> argument;
  private:
   /**
    * @brief converts an application expression into weak-head normal form by
@@ -36,8 +32,6 @@ class ApplicationExpression : public Expression {
   */
   std::unique_ptr<Expression> get_whnf();
 
-  std::unique_ptr<Expression> function;
-  std::unique_ptr<Expression> argument;
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 

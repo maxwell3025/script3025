@@ -5,7 +5,7 @@
 std::shared_ptr<spdlog::logger> get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("script3025_core_test.cpp", spdlog::color_mode::always);
+        logger = spdlog::stderr_color_mt("script3025_core_test.cpp", spdlog::color_mode::automatic);
         logger-> set_level(spdlog::level::info);
         logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
@@ -27,7 +27,7 @@ TEST(Parse, single_defn_simple) {
   std::transform(parsed_code.annotated_tokens.begin(),
                  parsed_code.annotated_tokens.end(), token_text.begin(),
                  [&] (script3025::AnnotatedToken t) {
-                  return t.text;
+                   return t.text;
                  });
 
   script3025::Program program(*(parsed_code.cst), token_text.begin());
