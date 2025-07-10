@@ -21,11 +21,6 @@ bool LambdaExpression::is_normal() const {
   return argument_type -> is_normal() && definition -> is_normal();
 }
 
-std::ostream &LambdaExpression::print(std::ostream &os) const {
-  return os << "λ (" << argument_id << " : " << *argument_type << "). " <<
-        *definition;
-}
-
 std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

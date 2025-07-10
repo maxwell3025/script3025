@@ -20,11 +20,6 @@ bool PiExpression::is_normal() const {
   return argument_type -> is_normal() && definition -> is_normal();
 }
 
-std::ostream &PiExpression::print(std::ostream &os) const {
-  return os << "Π (" << argument_id << " : " << *argument_type << "). " <<
-        *definition;
-}
-
 std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

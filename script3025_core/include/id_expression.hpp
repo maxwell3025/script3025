@@ -12,7 +12,6 @@ class IdExpression : public Expression {
   IdExpression(const IdExpression &other);
   IdExpression();
   bool is_normal() const override;
-  std::ostream &print(std::ostream &os) const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 

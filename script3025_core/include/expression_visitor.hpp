@@ -3,6 +3,7 @@
 
 namespace script3025 {
 
+class Expression;
 class ApplicationExpression;
 class IdExpression;
 class LambdaExpression;
@@ -16,6 +17,7 @@ class ExpressionVisitor {
   virtual void visit_lambda(const LambdaExpression &e) = 0;
   virtual void visit_let(const LetExpression &e) = 0;
   virtual void visit_pi(const PiExpression &e) = 0;
+  void visit(const Expression &e);
 };
 
 class MutatingExpressionVisitor {
@@ -25,6 +27,7 @@ class MutatingExpressionVisitor {
   virtual void visit_lambda(LambdaExpression &e) = 0;
   virtual void visit_let(LetExpression &e) = 0;
   virtual void visit_pi(PiExpression &e) = 0;
+  void visit(Expression &e);
 };
 
 } // namespace script3025

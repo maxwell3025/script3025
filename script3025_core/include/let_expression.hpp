@@ -15,7 +15,6 @@ class LetExpression : public Expression {
   LetExpression(const LetExpression &other);
   LetExpression();
   bool is_normal() const override;
-  std::ostream &print(std::ostream &os) const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 

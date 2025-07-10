@@ -29,6 +29,7 @@ add_library(script3025_core
   src/definition.cpp
   src/equality_visitor.cpp
   src/expression.cpp
+  src/expression_visitor.cpp
   src/id_expression.cpp
   src/inductive_definition.cpp
   src/lambda_expression.cpp
@@ -37,6 +38,7 @@ add_library(script3025_core
   src/pi_expression.cpp
   src/parsing_utility.cpp
   src/program.cpp
+  src/stringify_visitor.cpp
   src/replacing_visitor.cpp
   src/token.cpp
   include/application_expression.hpp
@@ -57,6 +59,7 @@ add_library(script3025_core
   include/program.hpp
   include/replacing_visitor.hpp
   include/script3025_core.hpp
+  include/stringify_visitor.hpp
   include/token.hpp
 )
 

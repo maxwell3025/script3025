@@ -22,10 +22,6 @@ bool ApplicationExpression::is_normal() const {
   return typeid(*function) == typeid(IdExpression);
 }
 
-std::ostream &ApplicationExpression::print(std::ostream &os) const {
-  return os << "(" << *function << ")(" << *argument << ")";
-}
-
 std::shared_ptr<spdlog::logger> ApplicationExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

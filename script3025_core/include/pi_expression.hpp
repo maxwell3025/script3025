@@ -14,7 +14,6 @@ class PiExpression : public Expression {
   PiExpression(const PiExpression &other);
   PiExpression();
   bool is_normal() const override;
-  std::ostream &print(std::ostream &os) const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 

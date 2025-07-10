@@ -14,9 +14,9 @@ class Program {
  public:
   template <typename Iterator>
   Program(parser::ConcreteSyntaxTree<Token> &source, Iterator &&string_iterator);
- private:
   std::vector<Definition> definitions;
   std::vector<InductiveDefinition> inductive_definitions;
+ private:
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 

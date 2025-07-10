@@ -18,10 +18,6 @@ bool IdExpression::is_normal() const {
   return true;
 }
 
-std::ostream &IdExpression::print(std::ostream &os) const {
-  return os << id;
-}
-
 std::shared_ptr<spdlog::logger> IdExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

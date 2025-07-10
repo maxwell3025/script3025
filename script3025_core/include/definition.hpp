@@ -14,9 +14,9 @@ class Definition {
  public:
   template <typename Iterator>
   Definition(parser::ConcreteSyntaxTree<Token> &source, Iterator &&string_iterator);
- private:
   std::string name;
   std::unique_ptr<Expression> definition;
+ private:
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 

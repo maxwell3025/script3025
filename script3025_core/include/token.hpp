@@ -45,13 +45,11 @@ std::ostream &operator<<(std::ostream &os, const script3025::Token &token);
 template <>
 struct fmt::formatter<script3025::Token>
 {
-  template<typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
+  constexpr auto parse(format_parse_context &ctx) {
     return ctx.begin();
   }
 
-  template<typename FormatContext>
-  auto format(script3025::Token const& token, FormatContext& ctx) const {
+  auto format(script3025::Token const& token, format_context& ctx) const {
     std::stringstream output;
     output << token;
     return fmt::format_to(ctx.out(), "{0}", output.str());

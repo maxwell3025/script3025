@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "spdlog/fmt/fmt.h"
+
 #include "token.hpp"
 #include "parser.hpp"
 
@@ -13,16 +15,9 @@ class MutatingExpressionVisitor;
 
 class Expression {
  public:
-  // @brief
-  // Creates an `Expression` based on a CST and a token iterator.
-  // `source` is the CST that this expression is based on, and `string_iterator`
-  // is the list of strings associated with each leaf node in `source`.
-  // This uses move semantics, so this might damage the underlying container for
-  // the iterator.
-  template <typename Iterator>
-  static std::unique_ptr<Expression> create(
-      const parser::ConcreteSyntaxTree<Token> &source,
-      Iterator &string_iterator);
+  virtual void accept(ExpressionVisitor &visitor) const = 0;
+
+  virtual void accept(MutatingExpressionVisitor &visitor) = 0;
 
   // @brief
   // Returns true if this expression is in normal form within its context
@@ -43,23 +38,28 @@ class Expression {
   // Returns the negation of `operator==`.
   bool operator!=(const Expression& other) const;
 
-  virtual std::ostream &print(std::ostream &os) const = 0;
-
   // @brief
   // Converts the current expression into a string
-  std::string to_string();
-
-  virtual void accept(ExpressionVisitor &visitor) const = 0;
-
-  virtual void accept(MutatingExpressionVisitor &visitor) = 0;
+  std::string to_string() const;
 
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Expression &expr) {
-  return expr.print(os);
+  return os << expr.to_string();
 }
 
 } // namespace script3025
+
+template <>
+struct fmt::formatter<script3025::Expression>
+{
+  constexpr auto parse(format_parse_context &ctx) {
+    return ctx.begin();
+  }
+
+  format_context::iterator format(const script3025::Expression & expr,
+                                  format_context& ctx) const;
+};
 
 #endif

@@ -22,11 +22,6 @@ bool LetExpression::is_normal() const {
   return false;
 }
 
-std::ostream &LetExpression::print(std::ostream &os) const {
-  return os << "let (" << argument_id << " : " << *argument_type << ") = " <<
-      *argument_value << " in " << *definition;
-}
-
 void LetExpression::accept(ExpressionVisitor &visitor) const {
   visitor.visit_let(*this);
 }
