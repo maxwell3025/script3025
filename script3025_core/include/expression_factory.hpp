@@ -1,12 +1,12 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 
-#include "expression.hpp"
-#include "application_expression.hpp"
-#include "id_expression.hpp"
-#include "lambda_expression.hpp"
-#include "let_expression.hpp"
-#include "pi_expression.hpp"
+#include "expression/expression.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
+#include "expression/subtypes/lambda_expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
+#include "expression/subtypes/pi_expression.hpp"
 
 namespace script3025 {
 

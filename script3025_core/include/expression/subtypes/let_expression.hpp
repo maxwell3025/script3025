@@ -1,8 +1,8 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_LET_EXPRESSION_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_LET_EXPRESSION_HPP
 
-#include "expression.hpp"
-#include "expression_visitor.hpp"
+#include "expression/expression_base.hpp"
+#include "expression/expression_visitor.hpp"
 
 namespace script3025 {
 

@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "parsing_utility.hpp"
 
 namespace script3025 {

@@ -1,5 +1,4 @@
-#include "lambda_expression.hpp"
-#include "pi_expression.hpp"
+#include "expression/subtypes/lambda_expression.hpp"
 
 namespace script3025 {
 

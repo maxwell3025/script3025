@@ -1,8 +1,8 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_LAZY_REDUCTION_VISITOR
 #define SCRIPT3025_SCRIPT3025_CORE_LAZY_REDUCTION_VISITOR
 
-#include "expression.hpp"
-#include "expression_visitor.hpp"
+#include "expression/expression_base.hpp"
+#include "expression/expression_visitor.hpp"
 
 namespace script3025 {
 

@@ -4,9 +4,10 @@
 #include <memory>
 #include <string>
 
-#include "expression.hpp"
-#include "parser.hpp"
 #include "spdlog/spdlog.h"
+#include "parser.hpp"
+
+#include "expression/expression.hpp"
 
 namespace script3025 {
 

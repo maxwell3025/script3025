@@ -1,5 +1,6 @@
-#include "expression_visitor.hpp"
-#include "expression.hpp"
+#include "expression/expression_visitor.hpp"
+
+#include "expression/expression_base.hpp"
 
 namespace script3025 {
 

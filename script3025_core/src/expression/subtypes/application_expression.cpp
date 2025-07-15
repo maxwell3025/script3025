@@ -1,7 +1,6 @@
-#include "application_expression.hpp"
-#include "pi_expression.hpp"
-#include "id_expression.hpp"
-#include "lambda_expression.hpp"
+#include "expression/subtypes/application_expression.hpp"
+
+#include "expression/subtypes/id_expression.hpp"
 
 namespace script3025 {
 

@@ -1,10 +1,11 @@
-#include "lazy_reduction_visitor.hpp"
-#include "replacing_visitor.hpp"
-#include "application_expression.hpp"
-#include "id_expression.hpp"
-#include "lambda_expression.hpp"
-#include "let_expression.hpp"
-#include "pi_expression.hpp"
+#include "expression/visitors/lazy_reduction_visitor.hpp"
+
+#include "expression/visitors/replacing_visitor.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
+#include "expression/subtypes/lambda_expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
+#include "expression/subtypes/pi_expression.hpp"
 
 namespace script3025 {
 

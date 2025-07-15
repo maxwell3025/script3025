@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "expression.hpp"
+#include "expression/expression.hpp"
 #include "expression_factory.hpp"
 #include "parser.hpp"
 

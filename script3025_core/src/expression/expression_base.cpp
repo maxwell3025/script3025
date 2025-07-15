@@ -1,14 +1,16 @@
-#include "expression.hpp"
-#include "expression_visitor.hpp"
-#include "equality_visitor.hpp"
-#include "cloning_visitor.hpp"
-#include "application_expression.hpp"
-#include "id_expression.hpp"
-#include "lambda_expression.hpp"
-#include "let_expression.hpp"
-#include "pi_expression.hpp"
-#include <unordered_map>
+#include "expression/expression_base.hpp"
+
 #include <iomanip>
+#include <unordered_map>
+
+#include "expression/expression_visitor.hpp"
+#include "expression/visitors/equality_visitor.hpp"
+#include "expression/visitors/cloning_visitor.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
+#include "expression/subtypes/lambda_expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
+#include "expression/subtypes/pi_expression.hpp"
 
 namespace script3025 {
 

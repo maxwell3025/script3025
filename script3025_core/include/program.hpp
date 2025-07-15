@@ -3,10 +3,11 @@
 
 #include <vector>
 
-#include "definition.hpp"
-#include "expression.hpp"
-#include "inductive_definition.hpp"
 #include "parser.hpp"
+
+#include "definition.hpp"
+#include "expression/expression.hpp"
+#include "inductive_definition.hpp"
 
 namespace script3025 {
 

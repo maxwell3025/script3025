@@ -1,13 +1,15 @@
-#include "cloning_visitor.hpp"
-#include "application_expression.hpp"
-#include "id_expression.hpp"
-#include "lambda_expression.hpp"
-#include "let_expression.hpp"
-#include "pi_expression.hpp"
+#include "expression/visitors/replacing_visitor.hpp"
+
+#include "expression/visitors/cloning_visitor.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
+#include "expression/subtypes/lambda_expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
+#include "expression/subtypes/pi_expression.hpp"
 
 namespace script3025 {
 
-void CloningVisitor::visit_application(const ApplicationExpression &e) {
+void ReplacingVisitor::visit_application(const ApplicationExpression &e) {
   std::unique_ptr<ApplicationExpression> new_expression =
       std::make_unique<ApplicationExpression>();
   pointer_map[&e] = new_expression.get();
@@ -25,23 +27,30 @@ void CloningVisitor::visit_application(const ApplicationExpression &e) {
   value = std::move(new_expression);
 }
 
-void CloningVisitor::visit_id(const IdExpression &e) {
-  std::unique_ptr<IdExpression> new_expression =
-      std::make_unique<IdExpression>();
-  pointer_map[&e] = new_expression.get();
+void ReplacingVisitor::visit_id(const IdExpression &e) {
+  if (e.source == target) {
+    value = replacement -> clone();
 
-  new_expression -> id = e.id;
-
-  if (pointer_map.find(e.source) != pointer_map.end()) {
-    new_expression -> source = pointer_map[e.source];
+    pointer_map[&e] = value.get();
   } else {
-    new_expression -> source = e.source;
-  }
+    std::unique_ptr<IdExpression> new_expression =
+        std::make_unique<IdExpression>();
 
-  value = std::move(new_expression);
+    pointer_map[&e] = new_expression.get();
+
+    new_expression -> id = e.id;
+
+    if (pointer_map.find(e.source) != pointer_map.end()) {
+      new_expression -> source = pointer_map[e.source];
+    } else {
+      new_expression -> source = e.source;
+    }
+
+    value = std::move(new_expression);
+  }
 }
 
-void CloningVisitor::visit_lambda(const LambdaExpression &e) {
+void ReplacingVisitor::visit_lambda(const LambdaExpression &e) {
   std::unique_ptr<LambdaExpression> new_expression =
       std::make_unique<LambdaExpression>();
   pointer_map[&e] = new_expression.get();
@@ -61,7 +70,7 @@ void CloningVisitor::visit_lambda(const LambdaExpression &e) {
   value = std::move(new_expression);
 }
 
-void CloningVisitor::visit_let(const LetExpression &e) {
+void ReplacingVisitor::visit_let(const LetExpression &e) {
   std::unique_ptr<LetExpression> new_expression =
       std::make_unique<LetExpression>();
   pointer_map[&e] = new_expression.get();
@@ -86,7 +95,7 @@ void CloningVisitor::visit_let(const LetExpression &e) {
   value = std::move(new_expression);
 }
 
-void CloningVisitor::visit_pi(const PiExpression &e) {
+void ReplacingVisitor::visit_pi(const PiExpression &e) {
   std::unique_ptr<PiExpression> new_expression =
       std::make_unique<PiExpression>();
   pointer_map[&e] = new_expression.get();

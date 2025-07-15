@@ -38,6 +38,55 @@ TEST(Parse, single_defn_simple) {
   }
 }
 
+/*
+  // induction is forall prop: prop(0) and prop(n) => prop(n + 1) implies prop(n)
+  //
+  // ind: Pi (prop:
+            Pi (k: Nat).
+            Type).
+          Pi (instance_0:
+            prop 0).
+          Pi (goal:
+            Pi (hypothesis: prop n).
+            prop (succ n)).
+          Pi (n:
+            Nat).
+          prop(n)
+  // ind is implemented as primitive recursion, so if you don't need type variance, prop can be a
+  // hard-coded lambda
+
+  + :=  lambda x : Nat.
+        lambda y : Nat. 
+          ind (lambda _: Nat. Nat) (x) (lambda sum. succ sum) (y)
+
+  // General Proof
+  //  a + b = b + a
+  //    induction over b:
+  //    a + 0 = 0 + a
+  //      induction over a:
+  //      0 + 0 = 0 + 0
+  //      succ a + 0 = 0 + succ a
+  //        succ a + 0 = succ (0 + a)
+  //          succ a + 0 = succ (0 + a)
+  //            succ a = succ (0 + a)
+  //              succ a = succ a
+  //    a + succ b = succ b + a
+  //      induction over a:
+  //      0 + succ b = succ b + 0
+  //        0 + succ b = succ b
+  //          
+  //      succ a + succ b = succ b + succ a
+  //        succ (succ a + b) = succ (succ b + a)
+  //  The question is: how would I write eq.cast in my type system?
+  //  So this means that Eq.rec
+  //  
+
+
+  add_sym :=  lambda x : Nat.
+              lambda y : Nat.
+                rfl 
+*/
+
 TEST(Parse, single_defn_complex) {
   script3025::parse(
     "def identity := lambda (x : Type). lambda (y : Type). lambda (z : Type). x"

@@ -23,44 +23,42 @@ FetchContent_MakeAvailable(spdlog)
 
 
 add_library(script3025_core
-  src/application_expression.cpp
+  src/expression/subtypes/application_expression.cpp
+  src/expression/subtypes/id_expression.cpp
+  src/expression/subtypes/lambda_expression.cpp
+  src/expression/subtypes/let_expression.cpp
+  src/expression/subtypes/pi_expression.cpp
+  src/expression/visitors/cloning_visitor.cpp
+  src/expression/visitors/equality_visitor.cpp
+  src/expression/visitors/lazy_reduction_visitor.cpp
+  src/expression/visitors/replacing_visitor.cpp
+  src/expression/expression_base.cpp
+  src/expression/expression_visitor.cpp
   src/cst_transformers.cpp
-  src/cloning_visitor.cpp
   src/definition.cpp
-  src/equality_visitor.cpp
-  src/expression.cpp
-  src/expression_visitor.cpp
-  src/id_expression.cpp
   src/inductive_definition.cpp
-  src/lambda_expression.cpp
-  src/lazy_reduction_visitor.cpp
-  src/let_expression.cpp
-  src/pi_expression.cpp
   src/parsing_utility.cpp
   src/program.cpp
-  src/stringify_visitor.cpp
-  src/replacing_visitor.cpp
   src/token.cpp
-  include/application_expression.hpp
+  include/expression/subtypes/application_expression.hpp
+  include/expression/subtypes/id_expression.hpp
+  include/expression/subtypes/lambda_expression.hpp
+  include/expression/subtypes/let_expression.hpp
+  include/expression/subtypes/pi_expression.hpp
+  include/expression/visitors/cloning_visitor.hpp
+  include/expression/visitors/equality_visitor.hpp
+  include/expression/visitors/lazy_reduction_visitor.hpp
+  include/expression/visitors/replacing_visitor.hpp
+  include/expression/expression_base.hpp
+  include/expression/expression_visitor.hpp
+  include/expression/expression.hpp
   include/cst_transformers.hpp
-  include/cloning_visitor.hpp
   include/definition.hpp
-  include/equality_visitor.hpp
-  include/expression.hpp
-  include/expression_factory.hpp
-  include/expression_visitor.hpp
-  include/id_expression.hpp
   include/inductive_definition.hpp
-  include/lambda_expression.hpp
-  include/lazy_reduction_visitor.hpp
-  include/let_expression.hpp
   include/parsing_utility.hpp
-  include/pi_expression.hpp
   include/program.hpp
-  include/replacing_visitor.hpp
-  include/script3025_core.hpp
-  include/stringify_visitor.hpp
   include/token.hpp
+  include/script3025_core.hpp
 )
 
 target_include_directories(script3025_core
