@@ -12,25 +12,13 @@ class ApplicationExpression : public Expression {
                         std::unique_ptr<Expression> &&argument);
   ApplicationExpression(const ApplicationExpression &other);
   ApplicationExpression();
-  bool is_normal() const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 
   std::unique_ptr<Expression> function;
   std::unique_ptr<Expression> argument;
- private:
-  /**
-   * @brief converts an application expression into weak-head normal form by
-   * recursively applying.
-   * 
-   * For example, if you have the expression F a b c d, this will first
-   * apply a, then b, then c, then d.
-   * 
-   * this uses lazy evaluation, since a b c d are not reduced to normal form
-   * first.
-  */
-  std::unique_ptr<Expression> get_whnf();
 
+ private:
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 

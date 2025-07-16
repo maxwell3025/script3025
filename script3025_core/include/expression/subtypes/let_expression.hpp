@@ -14,7 +14,6 @@ class LetExpression : public Expression {
                 std::unique_ptr<Expression> &&definition);
   LetExpression(const LetExpression &other);
   LetExpression();
-  bool is_normal() const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 

@@ -13,7 +13,6 @@ class PiExpression : public Expression {
                std::unique_ptr<Expression> &&definition);
   PiExpression(const PiExpression &other);
   PiExpression();
-  bool is_normal() const override;
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
 

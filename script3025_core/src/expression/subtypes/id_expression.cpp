@@ -10,12 +10,6 @@ IdExpression::IdExpression(const IdExpression &other)
 
 IdExpression::IdExpression() {}
 
-bool IdExpression::is_normal() const {
-  // Currently this is always true, although this needs to be changed once delta
-  // reductions and let expressions are implemented.
-  return true;
-}
-
 std::shared_ptr<spdlog::logger> IdExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

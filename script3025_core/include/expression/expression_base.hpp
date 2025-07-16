@@ -19,10 +19,6 @@ class Expression {
 
   virtual void accept(MutatingExpressionVisitor &visitor) = 0;
 
-  // @brief
-  // Returns true if this expression is in normal form within its context
-  virtual bool is_normal() const = 0;
-
   virtual ~Expression() = default;
 
   std::unique_ptr<Expression> clone(

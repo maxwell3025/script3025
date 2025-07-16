@@ -18,10 +18,6 @@ LetExpression::LetExpression(const LetExpression &other)
 
 LetExpression::LetExpression() {}
 
-bool LetExpression::is_normal() const {
-  return false;
-}
-
 void LetExpression::accept(ExpressionVisitor &visitor) const {
   visitor.visit_let(*this);
 }

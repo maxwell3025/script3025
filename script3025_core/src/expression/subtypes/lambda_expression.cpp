@@ -16,10 +16,6 @@ LambdaExpression::LambdaExpression(const LambdaExpression &other)
 
 LambdaExpression::LambdaExpression() {}
 
-bool LambdaExpression::is_normal() const {
-  return argument_type -> is_normal() && definition -> is_normal();
-}
-
 std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

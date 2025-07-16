@@ -16,10 +16,6 @@ PiExpression::PiExpression(const PiExpression &other)
 
 PiExpression::PiExpression() {}
 
-bool PiExpression::is_normal() const {
-  return argument_type -> is_normal() && definition -> is_normal();
-}
-
 std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {

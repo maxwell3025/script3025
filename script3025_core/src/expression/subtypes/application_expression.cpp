@@ -17,10 +17,6 @@ ApplicationExpression::ApplicationExpression(const ApplicationExpression &other)
 
 ApplicationExpression::ApplicationExpression() {}
 
-bool ApplicationExpression::is_normal() const {
-  return typeid(*function) == typeid(IdExpression);
-}
-
 std::shared_ptr<spdlog::logger> ApplicationExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {
