@@ -9,10 +9,16 @@ namespace script3025 {
 class LazyReductionVisitor : public MutatingExpressionVisitor {
  public:
   void visit_application(ApplicationExpression &rhs) override;
+  void visit_equality(EqualityExpression &rhs) override;
   void visit_id(IdExpression &rhs) override;
+  void visit_induction_keyword(InductionKeywordExpression &rhs) override;
   void visit_lambda(LambdaExpression &rhs) override;
   void visit_let(LetExpression &rhs) override;
+  void visit_nat_keyword(NatKeywordExpression &rhs) override;
+  void visit_nat_literal(NatLiteralExpression &rhs) override;
   void visit_pi(PiExpression &rhs) override;
+  void visit_replace_keyword(ReplaceKeywordExpression &rhs) override;
+  void visit_type_keyword(TypeKeywordExpression &rhs) override;
   
   std::unique_ptr<Expression> reduced_expression;
 };

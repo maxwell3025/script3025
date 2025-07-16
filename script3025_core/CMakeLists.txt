@@ -24,10 +24,16 @@ FetchContent_MakeAvailable(spdlog)
 
 add_library(script3025_core
   src/expression/subtypes/application_expression.cpp
+  src/expression/subtypes/equality_expression.cpp
   src/expression/subtypes/id_expression.cpp
+  src/expression/subtypes/induction_keyword_expression.cpp
   src/expression/subtypes/lambda_expression.cpp
   src/expression/subtypes/let_expression.cpp
+  src/expression/subtypes/nat_keyword_expression.cpp
+  src/expression/subtypes/nat_literal_expression.cpp
   src/expression/subtypes/pi_expression.cpp
+  src/expression/subtypes/replace_keyword_expression.cpp
+  src/expression/subtypes/type_keyword_expression.cpp
   src/expression/visitors/cloning_visitor.cpp
   src/expression/visitors/equality_visitor.cpp
   src/expression/visitors/lazy_reduction_visitor.cpp
@@ -41,10 +47,16 @@ add_library(script3025_core
   src/program.cpp
   src/token.cpp
   include/expression/subtypes/application_expression.hpp
+  include/expression/subtypes/equality_expression.hpp
   include/expression/subtypes/id_expression.hpp
+  include/expression/subtypes/induction_keyword_expression.hpp
   include/expression/subtypes/lambda_expression.hpp
   include/expression/subtypes/let_expression.hpp
+  include/expression/subtypes/nat_keyword_expression.hpp
+  include/expression/subtypes/nat_literal_expression.hpp
   include/expression/subtypes/pi_expression.hpp
+  include/expression/subtypes/replace_keyword_expression.hpp
+  include/expression/subtypes/type_keyword_expression.hpp
   include/expression/visitors/cloning_visitor.hpp
   include/expression/visitors/equality_visitor.hpp
   include/expression/visitors/lazy_reduction_visitor.hpp
@@ -54,6 +66,7 @@ add_library(script3025_core
   include/expression/expression.hpp
   include/cst_transformers.hpp
   include/definition.hpp
+  include/expression_factory.hpp
   include/inductive_definition.hpp
   include/parsing_utility.hpp
   include/program.hpp
