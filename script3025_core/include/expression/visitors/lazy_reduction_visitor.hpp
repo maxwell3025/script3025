@@ -18,6 +18,7 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
   void visit_nat_literal(NatLiteralExpression &rhs) override;
   void visit_pi(PiExpression &rhs) override;
   void visit_replace_keyword(ReplaceKeywordExpression &rhs) override;
+  void visit_succ_keyword(SuccKeywordExpression &e) override;
   void visit_type_keyword(TypeKeywordExpression &rhs) override;
   
   std::unique_ptr<Expression> reduced_expression;

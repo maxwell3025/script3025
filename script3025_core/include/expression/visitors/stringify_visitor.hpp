@@ -18,6 +18,7 @@ class StringifyVisitor : public ExpressionVisitor {
   void visit_nat_literal(const NatLiteralExpression &e) override;
   void visit_pi(const PiExpression &e) override;
   void visit_replace_keyword(const ReplaceKeywordExpression &e) override;
+  void visit_succ_keyword(const SuccKeywordExpression &e) override;
   void visit_type_keyword(const TypeKeywordExpression &e) override;
 };
 

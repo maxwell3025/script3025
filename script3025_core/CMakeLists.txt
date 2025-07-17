@@ -33,6 +33,7 @@ add_library(script3025_core
   src/expression/subtypes/nat_literal_expression.cpp
   src/expression/subtypes/pi_expression.cpp
   src/expression/subtypes/replace_keyword_expression.cpp
+  src/expression/subtypes/succ_keyword_expression.cpp
   src/expression/subtypes/type_keyword_expression.cpp
   src/expression/visitors/cloning_visitor.cpp
   src/expression/visitors/equality_visitor.cpp
@@ -56,6 +57,7 @@ add_library(script3025_core
   include/expression/subtypes/nat_literal_expression.hpp
   include/expression/subtypes/pi_expression.hpp
   include/expression/subtypes/replace_keyword_expression.hpp
+  include/expression/subtypes/succ_keyword_expression.hpp
   include/expression/subtypes/type_keyword_expression.hpp
   include/expression/visitors/cloning_visitor.hpp
   include/expression/visitors/equality_visitor.hpp

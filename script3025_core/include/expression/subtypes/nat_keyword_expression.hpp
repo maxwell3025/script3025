@@ -8,7 +8,6 @@ namespace script3025 {
 
 class NatKeywordExpression : public Expression {
  public:
-  NatKeywordExpression(const NatKeywordExpression &other);
   NatKeywordExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;

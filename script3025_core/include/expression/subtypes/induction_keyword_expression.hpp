@@ -8,7 +8,6 @@ namespace script3025 {
 
 class InductionKeywordExpression : public Expression {
  public:
-  InductionKeywordExpression(const InductionKeywordExpression &other);
   InductionKeywordExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;

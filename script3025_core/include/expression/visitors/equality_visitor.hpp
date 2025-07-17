@@ -19,6 +19,7 @@ class EqualityVisitor : public ExpressionVisitor {
   void visit_nat_literal(const NatLiteralExpression &rhs) override;
   void visit_pi(const PiExpression &rhs) override;
   void visit_replace_keyword(const ReplaceKeywordExpression &rhs) override;
+  void visit_succ_keyword(const SuccKeywordExpression &e) override;
   void visit_type_keyword(const TypeKeywordExpression &rhs) override;
 
   bool unequal;
