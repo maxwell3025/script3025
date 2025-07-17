@@ -26,4 +26,8 @@ void LetExpression::accept(MutatingExpressionVisitor &visitor) {
   visitor.visit_let(*this);
 }
 
+std::vector<Expression *> LetExpression::get_children() const {
+  return {argument_type.get(), argument_value.get(), definition.get()};
+}
+
 }

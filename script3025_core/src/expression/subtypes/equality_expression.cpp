@@ -21,4 +21,8 @@ void EqualityExpression::accept(MutatingExpressionVisitor &visitor) {
     visitor.visit_equality(*this);
 }
 
+std::vector<Expression *> EqualityExpression::get_children() const {
+  return {lhs.get(), rhs.get()};
+}
+
 }

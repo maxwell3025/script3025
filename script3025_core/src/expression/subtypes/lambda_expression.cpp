@@ -35,4 +35,8 @@ void LambdaExpression::accept(MutatingExpressionVisitor &visitor) {
   visitor.visit_lambda(*this);
 }
 
+std::vector<Expression *> LambdaExpression::get_children() const {
+  return {argument_type.get(), definition.get()};
+}
+
 }

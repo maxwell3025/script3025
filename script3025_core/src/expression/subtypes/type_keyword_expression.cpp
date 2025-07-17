@@ -21,4 +21,8 @@ void TypeKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
     visitor.visit_type_keyword(*this);
 }
 
+std::vector<Expression *> TypeKeywordExpression::get_children() const {
+  return {};
+}
+
 }

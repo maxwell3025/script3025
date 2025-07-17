@@ -14,6 +14,7 @@ class EqualityExpression : public Expression {
   EqualityExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
+  virtual std::vector<Expression *> get_children() const override;
 
   std::unique_ptr<Expression> lhs;
   std::unique_ptr<Expression> rhs;

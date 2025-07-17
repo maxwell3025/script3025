@@ -13,6 +13,7 @@ class TypeKeywordExpression : public Expression {
   TypeKeywordExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
+  virtual std::vector<Expression *> get_children() const override;
 
   size_t level;
 

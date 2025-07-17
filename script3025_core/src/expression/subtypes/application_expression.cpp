@@ -36,4 +36,8 @@ void ApplicationExpression::accept(MutatingExpressionVisitor &visitor) {
   visitor.visit_application(*this);
 }
 
+std::vector<Expression *> ApplicationExpression::get_children() const {
+  return {function.get(), argument.get()};
+}
+
 }

@@ -21,4 +21,8 @@ void SuccKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
     visitor.visit_succ_keyword(*this);
 }
 
+std::vector<Expression *> SuccKeywordExpression::get_children() const {
+  return {};
+}
+
 }

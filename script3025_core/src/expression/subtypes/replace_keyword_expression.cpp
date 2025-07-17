@@ -21,4 +21,8 @@ void ReplaceKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
     visitor.visit_replace_keyword(*this);
 }
 
+std::vector<Expression *> ReplaceKeywordExpression::get_children() const {
+  return {};
+}
+
 }

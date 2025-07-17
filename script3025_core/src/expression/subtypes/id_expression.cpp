@@ -29,4 +29,8 @@ void IdExpression::accept(MutatingExpressionVisitor &visitor) {
   visitor.visit_id(*this);
 }
 
+std::vector<Expression *> IdExpression::get_children() const {
+  return {};
+}
+
 } //namespace scritp3025

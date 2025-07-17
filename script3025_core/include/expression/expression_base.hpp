@@ -21,6 +21,8 @@ class Expression {
 
   virtual ~Expression() = default;
 
+  virtual std::vector<Expression *> get_children() const = 0;
+
   std::unique_ptr<Expression> clone(
       std::unordered_map<const Expression *, Expression *> initial_map = {});
 

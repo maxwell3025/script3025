@@ -35,4 +35,8 @@ void PiExpression::accept(MutatingExpressionVisitor &visitor) {
   visitor.visit_pi(*this);
 }
 
+std::vector<Expression *> PiExpression::get_children() const {
+  return {argument_type.get(), definition.get()};
+}
+
 }

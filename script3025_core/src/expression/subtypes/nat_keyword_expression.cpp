@@ -21,4 +21,8 @@ void NatKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
     visitor.visit_nat_keyword(*this);
 }
 
+std::vector<Expression *> NatKeywordExpression::get_children() const {
+  return {};
+}
+
 }

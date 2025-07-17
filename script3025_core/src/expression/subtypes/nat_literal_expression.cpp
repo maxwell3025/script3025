@@ -21,4 +21,8 @@ void NatLiteralExpression::accept(MutatingExpressionVisitor &visitor) {
     visitor.visit_nat_literal(*this);
 }
 
+std::vector<Expression *> NatLiteralExpression::get_children() const {
+  return {};
+}
+
 }

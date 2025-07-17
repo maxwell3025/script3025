@@ -13,6 +13,7 @@ class IdExpression : public Expression {
   IdExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
+  virtual std::vector<Expression *> get_children() const override;
 
   std::string id;
   Expression *source;

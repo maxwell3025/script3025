@@ -15,6 +15,7 @@ class PiExpression : public Expression {
   PiExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
+  virtual std::vector<Expression *> get_children() const override;
 
   std::string argument_id;
   std::unique_ptr<Expression> argument_type;
