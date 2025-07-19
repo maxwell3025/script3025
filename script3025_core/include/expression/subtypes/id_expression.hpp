@@ -8,12 +8,10 @@ namespace script3025 {
 
 class IdExpression : public Expression {
  public:
-  IdExpression(std::string &&id, Expression *source);
-  IdExpression(const IdExpression &other);
+  IdExpression(std::string id, Expression *source);
   IdExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
 
   std::string id;
   Expression *source;

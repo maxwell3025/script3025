@@ -2,19 +2,22 @@
 
 namespace script3025 {
 
-PiExpression::PiExpression(std::string &&argument_id,
+PiExpression::PiExpression(std::string argument_id,
                            std::unique_ptr<Expression> &&argument_type,
                            std::unique_ptr<Expression> &&definition)
                            : argument_id(argument_id),
-                           argument_type(std::move(argument_type)),
-                           definition(std::move(definition)) {}
-
-PiExpression::PiExpression(const PiExpression &other)
-    : argument_id(other.argument_id),
-    argument_type(other.argument_type -> clone()),
-    definition(other.definition -> clone()) {}
+                           Expression{std::move(argument_type),
+                                      std::move(definition)} {}
 
 PiExpression::PiExpression() {}
+
+void PiExpression::accept(ExpressionVisitor &visitor) const {
+  visitor.visit_pi(*this);
+}
+
+void PiExpression::accept(MutatingExpressionVisitor &visitor) {
+  visitor.visit_pi(*this);
+}
 
 std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
@@ -25,18 +28,6 @@ std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
         return logger;
       })();
   return logger;
-}
-
-void PiExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_pi(*this);
-}
-
-void PiExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_pi(*this);
-}
-
-std::vector<Expression *> PiExpression::get_children() const {
-  return {argument_type.get(), definition.get()};
 }
 
 }

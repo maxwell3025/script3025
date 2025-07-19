@@ -8,11 +8,10 @@ namespace script3025 {
 
 class NatLiteralExpression : public Expression {
  public:
-  NatLiteralExpression(const NatLiteralExpression &other);
+  NatLiteralExpression(size_t value);
   NatLiteralExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();

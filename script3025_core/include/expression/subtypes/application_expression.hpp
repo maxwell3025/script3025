@@ -10,14 +10,11 @@ class ApplicationExpression : public Expression {
  public:
   ApplicationExpression(std::unique_ptr<Expression> &&function,
                         std::unique_ptr<Expression> &&argument);
-  ApplicationExpression(const ApplicationExpression &other);
   ApplicationExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
-
-  std::unique_ptr<Expression> function;
-  std::unique_ptr<Expression> argument;
+  constexpr std::unique_ptr<Expression> &function() { return children[0]; }
+  constexpr std::unique_ptr<Expression> &argument() { return children[1]; }
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();

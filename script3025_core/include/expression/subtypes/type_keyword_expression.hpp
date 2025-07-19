@@ -9,11 +9,9 @@ namespace script3025 {
 class TypeKeywordExpression : public Expression {
  public:
   TypeKeywordExpression(size_t level);
-  TypeKeywordExpression(const TypeKeywordExpression &other);
   TypeKeywordExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
 
   size_t level;
 

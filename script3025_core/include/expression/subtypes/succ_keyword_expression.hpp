@@ -8,10 +8,8 @@ namespace script3025 {
 
 class SuccKeywordExpression : public Expression {
  public:
-  SuccKeywordExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();

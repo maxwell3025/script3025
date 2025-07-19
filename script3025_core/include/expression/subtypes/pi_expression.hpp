@@ -8,18 +8,16 @@ namespace script3025 {
 
 class PiExpression : public Expression {
  public:
-  PiExpression(std::string &&argument_id,
+  PiExpression(std::string argument_id,
                std::unique_ptr<Expression> &&argument_type,
                std::unique_ptr<Expression> &&definition);
-  PiExpression(const PiExpression &other);
   PiExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
+  constexpr std::unique_ptr<Expression>& argument_type() { return children[0]; }
+  constexpr std::unique_ptr<Expression>& definition() { return children[1]; }
 
   std::string argument_id;
-  std::unique_ptr<Expression> argument_type;
-  std::unique_ptr<Expression> definition;
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();

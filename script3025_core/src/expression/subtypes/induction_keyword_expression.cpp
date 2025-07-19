@@ -2,6 +2,14 @@
 
 namespace script3025 {
 
+void InductionKeywordExpression::accept(ExpressionVisitor &visitor) const {
+    visitor.visit_induction_keyword(*this);
+}
+
+void InductionKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
+    visitor.visit_induction_keyword(*this);
+}
+
 std::shared_ptr<spdlog::logger> InductionKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {
@@ -11,18 +19,6 @@ std::shared_ptr<spdlog::logger> InductionKeywordExpression::get_logger() {
         return logger;
       })();
   return logger;
-}
-
-void InductionKeywordExpression::accept(ExpressionVisitor &visitor) const {
-    visitor.visit_induction_keyword(*this);
-}
-
-void InductionKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-    visitor.visit_induction_keyword(*this);
-}
-
-std::vector<Expression *> InductionKeywordExpression::get_children() const {
-  return {};
 }
 
 }

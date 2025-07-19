@@ -2,11 +2,8 @@
 
 namespace script3025 {
 
-IdExpression::IdExpression(std::string &&id, Expression *source)
+IdExpression::IdExpression(std::string id, Expression *source)
                            : id(std::move(id)), source(source) {}
-
-IdExpression::IdExpression(const IdExpression &other)
-    : id(other.id), source(other.source), Expression(other) {}
 
 IdExpression::IdExpression() {}
 
@@ -27,10 +24,6 @@ void IdExpression::accept(ExpressionVisitor &visitor) const {
 
 void IdExpression::accept(MutatingExpressionVisitor &visitor) {
   visitor.visit_id(*this);
-}
-
-std::vector<Expression *> IdExpression::get_children() const {
-  return {};
 }
 
 } //namespace scritp3025

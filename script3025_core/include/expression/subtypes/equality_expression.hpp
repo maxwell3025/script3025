@@ -10,14 +10,11 @@ class EqualityExpression : public Expression {
  public:
   EqualityExpression(std::unique_ptr<Expression> &&lhs,
                      std::unique_ptr<Expression> &&rhs);
-  EqualityExpression(const EqualityExpression &other);
   EqualityExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  virtual std::vector<Expression *> get_children() const override;
-
-  std::unique_ptr<Expression> lhs;
-  std::unique_ptr<Expression> rhs;
+  constexpr std::unique_ptr<Expression> &lhs() { return children[0]; }
+  constexpr std::unique_ptr<Expression> &rhs() { return children[1]; }
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();

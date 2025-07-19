@@ -2,6 +2,14 @@
 
 namespace script3025 {
 
+void SuccKeywordExpression::accept(ExpressionVisitor &visitor) const {
+    visitor.visit_succ_keyword(*this);
+}
+
+void SuccKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
+    visitor.visit_succ_keyword(*this);
+}
+
 std::shared_ptr<spdlog::logger> SuccKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&] () -> std::shared_ptr<spdlog::logger> {
@@ -11,18 +19,6 @@ std::shared_ptr<spdlog::logger> SuccKeywordExpression::get_logger() {
         return logger;
       })();
   return logger;
-}
-
-void SuccKeywordExpression::accept(ExpressionVisitor &visitor) const {
-    visitor.visit_succ_keyword(*this);
-}
-
-void SuccKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-    visitor.visit_succ_keyword(*this);
-}
-
-std::vector<Expression *> SuccKeywordExpression::get_children() const {
-  return {};
 }
 
 }

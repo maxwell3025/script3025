@@ -19,9 +19,7 @@ class Expression {
 
   virtual void accept(MutatingExpressionVisitor &visitor) = 0;
 
-  virtual ~Expression() = default;
-
-  virtual std::vector<Expression *> get_children() const = 0;
+  virtual ~Expression() = 0;
 
   std::unique_ptr<Expression> clone(
       std::unordered_map<const Expression *, Expression *> initial_map = {});
@@ -41,6 +39,14 @@ class Expression {
   std::string to_string() const;
 
   static std::shared_ptr<spdlog::logger> get_logger();
+
+  std::vector<std::unique_ptr<Expression>> children;
+
+ protected:
+  Expression(std::initializer_list<std::unique_ptr<Expression>> input);
+
+  Expression() = default;
+
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Expression &expr) {
