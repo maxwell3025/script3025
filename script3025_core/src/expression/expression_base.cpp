@@ -4,13 +4,13 @@
 #include <unordered_map>
 
 #include "expression/expression_visitor.hpp"
-#include "expression/visitors/equality_visitor.hpp"
-#include "expression/visitors/cloning_visitor.hpp"
 #include "expression/subtypes/application_expression.hpp"
 #include "expression/subtypes/id_expression.hpp"
 #include "expression/subtypes/lambda_expression.hpp"
 #include "expression/subtypes/let_expression.hpp"
 #include "expression/subtypes/pi_expression.hpp"
+#include "expression/visitors/cloning_visitor.hpp"
+#include "expression/visitors/equality_visitor.hpp"
 
 namespace script3025 {
 
@@ -22,11 +22,11 @@ std::unique_ptr<Expression> Expression::clone(
   return std::move(visitor.value);
 }
 
-bool Expression::operator==(const Expression& rhs) const {
+bool Expression::operator==(const Expression &rhs) const {
   return !(*this != rhs);
 }
 
-bool Expression::operator!=(const Expression& rhs) const {
+bool Expression::operator!=(const Expression &rhs) const {
   EqualityVisitor visitor;
   visitor.lhs = this;
   visitor.unequal = false;
@@ -36,10 +36,11 @@ bool Expression::operator!=(const Expression& rhs) const {
 
 std::shared_ptr<spdlog::logger> Expression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
-      ([&] () -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("script3025::Expression", spdlog::color_mode::always);
-        logger-> set_level(spdlog::level::warn);
-        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+      ([&]() -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::Expression",
+                                         spdlog::color_mode::always);
+        logger->set_level(spdlog::level::warn);
+        logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
   return logger;
@@ -102,13 +103,13 @@ class DisambiguationVisitor : public ExpressionVisitor {
     name_stack.pop_back();
   }
 
-  std::vector<const Expression*> name_stack;
+  std::vector<const Expression *> name_stack;
   /** Which expressions are used in non-trivial ways? */
-  std::unordered_set<const Expression*> ambiguous_expressions;
+  std::unordered_set<const Expression *> ambiguous_expressions;
   /** Which expressions failed the lookup */
-  std::unordered_set<const Expression*> failed_lookups;
+  std::unordered_set<const Expression *> failed_lookups;
   /** Pointer to id introduced by that pointer */
-  std::unordered_map<const Expression*, std::string> id_map;
+  std::unordered_map<const Expression *, std::string> id_map;
 };
 
 class StringifyVisitor : public ExpressionVisitor {
@@ -124,9 +125,9 @@ class StringifyVisitor : public ExpressionVisitor {
   void visit_id(const IdExpression &e) {
     // Did lookup fail?
     if (failed_lookups.find(&e) != failed_lookups.end()) {
-      output << e.id << "[" << "0x" << std::setfill('0') <<
-                std::setw(sizeof(const IdExpression *)*2) << std::hex <<
-                e.source << "]";
+      output << e.id << "[" << "0x" << std::setfill('0')
+             << std::setw(sizeof(const IdExpression *) * 2) << std::hex
+             << e.source << "]";
       return;
     }
 
@@ -197,14 +198,17 @@ std::string Expression::to_string() const {
   StringifyVisitor stringify_visitor;
   stringify_visitor.special_names = std::move(special_names);
   stringify_visitor.id_map = std::move(disambiguation_visitor.id_map);
-  stringify_visitor.failed_lookups = std::move(disambiguation_visitor.failed_lookups);
+  stringify_visitor.failed_lookups =
+      std::move(disambiguation_visitor.failed_lookups);
   accept(stringify_visitor);
   return stringify_visitor.output.str();
 }
 
-} //namespace script3025
+Expression::Expression(std::initializer_list<std::unique_ptr<Expression>> input) : children(input) {}
+
+}  // namespace script3025
 
 fmt::format_context::iterator fmt::formatter<script3025::Expression>::format(
-    const script3025::Expression &expr, format_context& ctx) const {
+    const script3025::Expression &expr, format_context &ctx) const {
   return fmt::format_to(ctx.out(), "{0}", expr.to_string());
 }

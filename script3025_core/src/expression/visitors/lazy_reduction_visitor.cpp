@@ -1,121 +1,155 @@
 #include "expression/visitors/lazy_reduction_visitor.hpp"
 
+#include "expression/expression.hpp"
+#include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
-#include "expression/subtypes/application_expression.hpp"
-#include "expression/subtypes/id_expression.hpp"
-#include "expression/subtypes/lambda_expression.hpp"
-#include "expression/subtypes/let_expression.hpp"
-#include "expression/subtypes/pi_expression.hpp"
+#include "partial_clone_visitor.hpp"
 
 namespace script3025 {
+
+struct IdHash {
+  size_t operator()(std::pair<std::string, Expression *> id) {
+    return ((std::hash<std::string>{}(id.first)) << 1) ^
+           ((std::hash<Expression *>{}(id.second)));
+  }
+};
 
 class WHNFVisitor : public MutatingExpressionVisitor {
  public:
   void visit_application(ApplicationExpression &e) {
-    arguments.push_back(std::move(e.argument));
-    head = std::move(e.function);
-    head -> accept(*this);
+    arguments.push_back(std::move(e.argument()));
+    head = std::move(e.function());
+    visit(*head);
+  }
+
+  void visit_equality(PiExpression &e) {
+    if (arguments.size() != 0) {
+      SPDLOG_LOGGER_WARN(
+          get_logger(),
+          "Attempting to reduce expression with Eq expression as a function:\n"
+          "Eq expression:\n"
+          "{}\n"
+          "Expression:\n"
+          "{}\n");
+    }
   }
 
   void visit_id(IdExpression &e) {
-    // TODO condition on reduction type
-  
+    auto replacement_it = delta_table.find(std::make_pair(e.id, e.source));
+    if (replacement_it != delta_table.end()) {
+      Expression &replacement = *(replacement_it->second);
+      CloningVisitor visitor;
+      visitor.visit(replacement);
+      head = visitor.get();
+      visit(*head);
+    }
   }
-  
+
   void visit_lambda(LambdaExpression &e) {
-    // TODO condition on reduction type
-    ReplacingVisitor visitor;
-    visitor.target = &e;
-    visitor.replacement = arguments.back().get();
-    e.definition -> accept(visitor);
-    head = std::move(visitor.value);
+    ReplacingVisitor visitor(&e, e.argument_id, arguments.back().get());
+    visitor.visit(*e.definition());
     arguments.pop_back();
+    head = std::move(visitor.get());
+    visit(*head);
   }
-  
+
   void visit_let(LetExpression &e) {
-    // TODO condition on reduction type
-    ReplacingVisitor visitor;
-    visitor.target = &e;
-    visitor.replacement = e.argument_value.get();
-    e.definition -> accept(visitor);
-    head = std::move(visitor.value);
-    arguments.pop_back();
+    ReplacingVisitor visitor(&e, e.argument_id, e.argument_value().get());
+    visitor.visit(*e.definition());
+    head = std::move(visitor.get());
+    visit(*head);
   }
-  
+
   void visit_pi(PiExpression &e) {
-  
+    if (arguments.size() != 0) {
+      SPDLOG_LOGGER_WARN(
+          get_logger(),
+          "Attempting to reduce expression with Pi expression as a function:\n"
+          "Pi expression:\n"
+          "{}\n"
+          "Expression:\n"
+          "{}\n");
+    }
   }
 
   std::vector<std::unique_ptr<Expression>> arguments;
   std::unique_ptr<Expression> head;
+  std::unordered_map<std::pair<std::string, Expression *>, Expression *, IdHash>
+      delta_table;
+
+ private:
+  std::shared_ptr<spdlog::logger> WHNFVisitor::get_logger() {
+    static std::shared_ptr<spdlog::logger> logger =
+        ([&]() -> std::shared_ptr<spdlog::logger> {
+          logger = spdlog::stderr_color_mt("script3025::WHNFVisitor",
+                                           spdlog::color_mode::always);
+          logger->set_level(spdlog::level::warn);
+          logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+          return logger;
+        })();
+    return logger;
+  }
 };
 
 void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
   WHNFVisitor visitor;
   e.accept(visitor);
-  std::vector<std::unique_ptr<Expression>> arguments = std::move(visitor.arguments);
-  std::unique_ptr<Expression> head = std::move(visitor.head);
+  std::vector<std::unique_ptr<Expression>> orphan_arguments =
+      std::move(visitor.arguments);
 
-  head -> accept(*this);
-  head = std::move(reduced_expression);
+  visit(*visitor.head);
+  std::unique_ptr<Expression> merged_expression = std::move(reduced_expression);
 
-  while(!arguments.empty()) {
+  // Combine everything back into the head.
+  while (!orphan_arguments.empty()) {
     std::unique_ptr<ApplicationExpression> new_head =
         std::make_unique<ApplicationExpression>();
 
-    arguments.back() -> accept(*this);
-    new_head -> argument = std::move(reduced_expression);
+    new_head->function() = std::move(merged_expression);
 
-    new_head -> function = std::move(head);
+    visit(*orphan_arguments.back());
+    new_head->argument() = std::move(reduced_expression);
 
-    head = std::move(new_head);
+    merged_expression = std::move(new_head);
   }
 
-  reduced_expression = std::move(head);
+  reduced_expression = std::move(merged_expression);
 }
 
-void LazyReductionVisitor::visit_id(IdExpression &e) {}
-
-void LazyReductionVisitor::visit_lambda(LambdaExpression &e) {
-  std::unique_ptr<LambdaExpression> reduced_lambda =
-      std::make_unique<LambdaExpression>();
-
-  e.argument_type -> accept(*this);
-  reduced_lambda -> argument_type = std::move(reduced_expression);
-
-  e.definition -> accept(*this);
-  reduced_lambda -> definition = std::move(reduced_expression);
-
-  reduced_expression = std::move(reduced_lambda);
+void LazyReductionVisitor::visit_id(IdExpression &e) {
+  visit_default(e);
+  IdExpression &reduced_expression_casted =
+      static_cast<IdExpression &>(*reduced_expression);
+  reduced_expression_casted.id = std::move(e.id);
+  reduced_expression_casted.source = e.source;
 }
 
 void LazyReductionVisitor::visit_let(LetExpression &e) {
-  std::unique_ptr<LetExpression> reduced_let =
-      std::make_unique<LetExpression>();
-
-  e.argument_value -> accept(*this);
-  reduced_let -> argument_value = std::move(reduced_expression);
-
-  e.argument_type -> accept(*this);
-  reduced_let -> argument_type = std::move(reduced_expression);
-
-  e.definition -> accept(*this);
-  reduced_let -> definition = std::move(reduced_expression);
-
-  reduced_expression = std::move(reduced_let);
+  SPDLOG_LOGGER_ERROR(
+      get_logger(), "If we do zeta reductions, this should not still exist.\n");
 }
 
-void LazyReductionVisitor::visit_pi(PiExpression &e) {
-  std::unique_ptr<PiExpression> reduced_pi =
-      std::make_unique<PiExpression>();
+void LazyReductionVisitor::visit_default(Expression &e) {
+  std::unique_ptr<Expression> reduced = make_default_like(e);
 
-  e.argument_type -> accept(*this);
-  reduced_pi -> argument_type = std::move(reduced_expression);
+  for (size_t i = 0; i < e.children.size(); ++i) {
+    visit(*e.children[i]);
+    reduced->children[i] = std::move(reduced_expression);
+  }
 
-  e.definition -> accept(*this);
-  reduced_pi -> definition = std::move(reduced_expression);
-
-  reduced_expression = std::move(reduced_pi);
+  reduced_expression = std::move(reduced);
 }
 
-} // namespace script3025
+std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&]() -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::LazyReductionVisitor",
+                                         spdlog::color_mode::always);
+        logger->set_level(spdlog::level::warn);
+        logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+  return logger;
+}
+
+}  // namespace script3025

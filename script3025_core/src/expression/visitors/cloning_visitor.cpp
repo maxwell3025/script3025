@@ -1,30 +1,9 @@
 #include "expression/visitors/cloning_visitor.hpp"
 
-#include "expression/subtypes/application_expression.hpp"
-#include "expression/subtypes/id_expression.hpp"
-#include "expression/subtypes/lambda_expression.hpp"
-#include "expression/subtypes/let_expression.hpp"
-#include "expression/subtypes/pi_expression.hpp"
+#include "expression/expression.hpp"
+#include "expression/visitors/partial_clone_visitor.hpp"
 
 namespace script3025 {
-
-void CloningVisitor::visit_application(const ApplicationExpression &e) {
-  std::unique_ptr<ApplicationExpression> new_expression =
-      std::make_unique<ApplicationExpression>();
-  pointer_map[&e] = new_expression.get();
-
-  if (e.argument) {
-    e.argument -> accept(*this);
-    new_expression -> argument = std::move(value);
-  }
-
-  if (e.function) {
-    e.function -> accept(*this);
-    new_expression -> function = std::move(value);
-  }
-
-  value = std::move(new_expression);
-}
 
 void CloningVisitor::visit_id(const IdExpression &e) {
   std::unique_ptr<IdExpression> new_expression =
@@ -43,65 +22,50 @@ void CloningVisitor::visit_id(const IdExpression &e) {
 }
 
 void CloningVisitor::visit_lambda(const LambdaExpression &e) {
-  std::unique_ptr<LambdaExpression> new_expression =
-      std::make_unique<LambdaExpression>();
-  pointer_map[&e] = new_expression.get();
-
-  new_expression -> argument_id = e.argument_id;
-
-  if (e.argument_type) {
-    e.argument_type -> accept(*this);
-    new_expression -> argument_type = std::move(value);
-  }
-
-  if (e.definition) {
-    e.definition -> accept(*this);
-    new_expression -> definition = std::move(value);
-  }
-
-  value = std::move(new_expression);
+  visit_default(e);
+  LambdaExpression &casted_expression = static_cast<LambdaExpression &>(*value);
+  casted_expression.argument_id = e.argument_id;
 }
 
 void CloningVisitor::visit_let(const LetExpression &e) {
-  std::unique_ptr<LetExpression> new_expression =
-      std::make_unique<LetExpression>();
-  pointer_map[&e] = new_expression.get();
+  visit_default(e);
+  LetExpression &casted_expression = static_cast<LetExpression &>(*value);
+  casted_expression.argument_id = e.argument_id;
+}
 
-  new_expression -> argument_id = e.argument_id;
-
-  if (e.argument_value) {
-    e.argument_value -> accept(*this);
-    new_expression -> argument_value = std::move(value);
-  }
-
-  if (e.argument_type) {
-    e.argument_type -> accept(*this);
-    new_expression -> argument_type = std::move(value);
-  }
-
-  if (e.definition) {
-    e.definition -> accept(*this);
-    new_expression -> definition = std::move(value);
-  }
-
-  value = std::move(new_expression);
+void CloningVisitor::visit_nat_literal(const NatLiteralExpression &e) {
+  visit_default(e);
+  NatLiteralExpression &casted_expression =
+      static_cast<NatLiteralExpression &>(*value);
+  // TODO implement special handling
 }
 
 void CloningVisitor::visit_pi(const PiExpression &e) {
-  std::unique_ptr<PiExpression> new_expression =
-      std::make_unique<PiExpression>();
+  visit_default(e);
+  PiExpression &casted_expression = static_cast<PiExpression &>(*value);
+  casted_expression.argument_id = e.argument_id;
+}
+
+void CloningVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
+  visit_default(e);
+  TypeKeywordExpression &casted_expression =
+      static_cast<TypeKeywordExpression &>(*value);
+  casted_expression.level = e.level;
+}
+
+std::unique_ptr<Expression> CloningVisitor::get() {
+  return std::move(value);
+}
+
+void CloningVisitor::visit_default(const Expression &e) {
+  std::unique_ptr<Expression> new_expression = make_default_like(e);
+
   pointer_map[&e] = new_expression.get();
 
-  new_expression -> argument_id = e.argument_id;
-
-  if (e.argument_type) {
-    e.argument_type -> accept(*this);
-    new_expression -> argument_type = std::move(value);
-  }
-
-  if (e.definition) {
-    e.definition -> accept(*this);
-    new_expression -> definition = std::move(value);
+  for (size_t i = 0; i < e.children.size(); ++i) {
+    if (e.children[i]) visit(*e.children[i]);
+    else value = nullptr;
+    new_expression -> children[i] = std::move(get());
   }
 
   value = std::move(new_expression);
