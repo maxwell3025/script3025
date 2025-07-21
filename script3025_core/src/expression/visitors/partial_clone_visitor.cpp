@@ -31,6 +31,9 @@ void PartialCloneVisitor::visit_pi(const PiExpression &e) {
 void PartialCloneVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e) {
   make_default_like<ReplaceKeywordExpression>();
 }
+void PartialCloneVisitor::visit_reflexive_keyword(const ReflexiveKeywordExpression &e) {
+  make_default_like<ReflexiveKeywordExpression>();
+}
 void PartialCloneVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
   make_default_like<SuccKeywordExpression>();
 }

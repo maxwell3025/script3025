@@ -29,6 +29,7 @@ class ExpressionVisitor {
   virtual void visit_nat_literal(const NatLiteralExpression &e);
   virtual void visit_pi(const PiExpression &e);
   virtual void visit_replace_keyword(const ReplaceKeywordExpression &e);
+  virtual void visit_reflexive_keyword(const ReflexiveKeywordExpression &e);
   virtual void visit_succ_keyword(const SuccKeywordExpression &e);
   virtual void visit_type_keyword(const TypeKeywordExpression &e);
   void visit(const Expression &e);
@@ -49,6 +50,7 @@ class MutatingExpressionVisitor {
   virtual void visit_nat_literal(NatLiteralExpression &e);
   virtual void visit_pi(PiExpression &e);
   virtual void visit_replace_keyword(ReplaceKeywordExpression &e);
+  virtual void visit_reflexive_keyword(ReflexiveKeywordExpression &e);
   virtual void visit_succ_keyword(SuccKeywordExpression &e);
   virtual void visit_type_keyword(TypeKeywordExpression &e);
   void visit(Expression &e);

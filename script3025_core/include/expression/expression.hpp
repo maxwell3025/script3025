@@ -11,6 +11,7 @@
 #include "expression/subtypes/nat_literal_expression.hpp"
 #include "expression/subtypes/pi_expression.hpp"
 #include "expression/subtypes/replace_keyword_expression.hpp"
+#include "expression/subtypes/reflexive_keyword_expression.hpp"
 #include "expression/subtypes/succ_keyword_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
 #include "expression/expression_base.hpp"

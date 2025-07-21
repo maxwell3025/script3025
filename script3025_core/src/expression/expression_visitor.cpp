@@ -44,6 +44,10 @@ void ExpressionVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e)
   visit_default(e);
 }
 
+void ExpressionVisitor::visit_reflexive_keyword(const ReflexiveKeywordExpression &e) {
+  visit_default(e);
+}
+
 void ExpressionVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
   visit_default(e);
 }
@@ -95,6 +99,10 @@ void MutatingExpressionVisitor::visit_pi(PiExpression &e) {
 }
 
 void MutatingExpressionVisitor::visit_replace_keyword(ReplaceKeywordExpression &e) {
+  visit_default(e);
+}
+
+void MutatingExpressionVisitor::visit_reflexive_keyword(ReflexiveKeywordExpression &e) {
   visit_default(e);
 }
 
