@@ -4,7 +4,8 @@
 
 namespace script3025 {
 
-EqualityVisitor::EqualityVisitor() : unequal(false) {}
+EqualityVisitor::EqualityVisitor(const Expression *lhs)
+    : unequal(false), lhs(lhs) {}
 
 void EqualityVisitor::visit_id(const IdExpression &rhs) {
   pointer_map[lhs] = &rhs;
@@ -59,6 +60,10 @@ void EqualityVisitor::visit_default(const Expression &rhs) {
       unequal |= static_cast<bool>(lhs->children[i]);
     }
   }
+}
+
+bool EqualityVisitor::get() const {
+  return !unequal;
 }
 
 }  // namespace script3025

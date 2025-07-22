@@ -30,6 +30,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case Token::NUMBER:
     os << "n";
     break;
+  case Token::EQ:
+    os << "=";
+    break;
   case Token::LAMBDA:
     os << "λ";
     break;
@@ -46,12 +49,15 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     os << "A";
     break;
   case Token::EXPR_PAREN:
-    os << "E₂";
+    os << "E₃";
     break;
   case Token::EXPR_APP:
-    os << "E₁";
+    os << "E₂";
     break;
   case Token::EXPR_ABS:
+    os << "E₁";
+    break;
+  case Token::EXPR_EQ:
     os << "E₀";
     break;
   case Token::DEFN:

@@ -20,6 +20,6 @@ class IdExpression : public Expression {
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

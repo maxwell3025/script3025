@@ -45,9 +45,4 @@ std::unique_ptr<Expression> PartialCloneVisitor::get() {
   return std::move(value);
 }
 
-template <typename ExpressionSubtype>
-std::unique_ptr<ExpressionSubtype> PartialCloneVisitor::make_default_like() {
-  value = std::make_unique<ExpressionSubtype>();
-}
-
 }  // namespace script3025

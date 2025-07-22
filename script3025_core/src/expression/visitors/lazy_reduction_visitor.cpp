@@ -8,7 +8,7 @@
 namespace script3025 {
 
 struct IdHash {
-  size_t operator()(std::pair<std::string, Expression *> id) {
+  size_t operator()(std::pair<std::string, Expression *> id) const {
     return ((std::hash<std::string>{}(id.first)) << 1) ^
            ((std::hash<Expression *>{}(id.second)));
   }
@@ -78,7 +78,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
       delta_table;
 
  private:
-  std::shared_ptr<spdlog::logger> WHNFVisitor::get_logger() {
+  std::shared_ptr<spdlog::logger> get_logger() {
     static std::shared_ptr<spdlog::logger> logger =
         ([&]() -> std::shared_ptr<spdlog::logger> {
           logger = spdlog::stderr_color_mt("script3025::WHNFVisitor",

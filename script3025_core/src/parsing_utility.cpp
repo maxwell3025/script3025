@@ -123,6 +123,11 @@ std::vector<AnnotatedToken> tokenize(std::string text) {
       new_token.token = Token::COLON;
       annotated_tokens.push_back(new_token);
       continue;
+    case '=':
+      new_token.text = text.substr(start, i - start);
+      new_token.token = Token::EQ;
+      annotated_tokens.push_back(new_token);
+      continue;
     case ' ':
     case '\t':
     case '\n':
@@ -175,6 +180,8 @@ ParsedCode parse(std::string text) {
           .rule(Token::ABS, Token::LET, Token::ID, Token::COLON,
                 Token::EXPR_ABS, Token::ASSIGN, Token::EXPR_ABS, Token::IN,
                 Token::EXPR_ABS)
+
+          .rule(Token::EXPR_EQ, Token::EXPR_ABS, Token::EQ, Token::EXPR_ABS)
 
           .rule(Token::EXPR_ABS, Token::ABS)
           .rule(Token::EXPR_ABS, Token::EXPR_APP, Token::ABS)

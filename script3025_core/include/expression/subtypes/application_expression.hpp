@@ -13,13 +13,15 @@ class ApplicationExpression : public Expression {
   ApplicationExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  constexpr std::unique_ptr<Expression> &function() { return children[0]; }
-  constexpr std::unique_ptr<Expression> &argument() { return children[1]; }
+  inline std::unique_ptr<Expression> &function() { return children[0]; }
+  inline std::unique_ptr<Expression> &argument() { return children[1]; }
+  inline const std::unique_ptr<Expression> &function() const { return children[0]; }
+  inline const std::unique_ptr<Expression> &argument() const { return children[1]; }
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

@@ -14,6 +14,7 @@ enum class Token {
   PI,
   ID,
   NUMBER,
+  EQ,
   PERIOD,
   COLON,
   LET,
@@ -30,7 +31,8 @@ enum class Token {
   EXPR_APP,
   // This is the lowest-precedence expression. Use this whn you just need a generic expressionn.
   EXPR_ABS,
-  EXPR = EXPR_ABS,
+  EXPR_EQ,
+  EXPR = EXPR_EQ,
   DEFN,
   IDEFN,
   PROG,

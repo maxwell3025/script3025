@@ -13,13 +13,15 @@ class EqualityExpression : public Expression {
   EqualityExpression();
   void accept(ExpressionVisitor &visitor) const override;
   void accept(MutatingExpressionVisitor &visitor) override;
-  constexpr std::unique_ptr<Expression> &lhs() { return children[0]; }
-  constexpr std::unique_ptr<Expression> &rhs() { return children[1]; }
+  inline std::unique_ptr<Expression> &lhs() { return children[0]; }
+  inline std::unique_ptr<Expression> &rhs() { return children[1]; }
+  inline const std::unique_ptr<Expression> &lhs() const { return children[0]; }
+  inline const std::unique_ptr<Expression> &rhs() const { return children[1]; }
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

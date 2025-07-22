@@ -23,16 +23,16 @@ std::unique_ptr<Expression> Expression::clone(
 }
 
 bool Expression::operator==(const Expression &rhs) const {
-  return !(*this != rhs);
+  EqualityVisitor visitor(this);
+  rhs.accept(visitor);
+  return visitor.get();
 }
 
 bool Expression::operator!=(const Expression &rhs) const {
-  EqualityVisitor visitor;
-  visitor.lhs = this;
-  visitor.unequal = false;
-  rhs.accept(visitor);
-  return visitor.unequal;
+  return !(*this == rhs);
 }
+
+Expression::~Expression() {}
 
 std::shared_ptr<spdlog::logger> Expression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
@@ -49,8 +49,8 @@ std::shared_ptr<spdlog::logger> Expression::get_logger() {
 class DisambiguationVisitor : public ExpressionVisitor {
  public:
   void visit_application(const ApplicationExpression &e) {
-    visit(*e.function);
-    visit(*e.argument);
+    visit(*e.function());
+    visit(*e.argument());
   }
 
   void visit_id(const IdExpression &e) {
@@ -79,27 +79,27 @@ class DisambiguationVisitor : public ExpressionVisitor {
   }
 
   void visit_lambda(const LambdaExpression &e) {
-    visit(*e.argument_type);
+    visit(*e.argument_type());
     id_map[&e] = e.argument_id;
     name_stack.push_back(&e);
-    visit(*e.definition);
+    visit(*e.definition());
     name_stack.pop_back();
   }
 
   void visit_let(const LetExpression &e) {
-    visit(*e.argument_type);
-    visit(*e.argument_value);
+    visit(*e.argument_type());
+    visit(*e.argument_value());
     id_map[&e] = e.argument_id;
     name_stack.push_back(&e);
-    visit(*e.definition);
+    visit(*e.definition());
     name_stack.pop_back();
   }
 
   void visit_pi(const PiExpression &e) {
-    visit(*e.argument_type);
+    visit(*e.argument_type());
     id_map[&e] = e.argument_id;
     name_stack.push_back(&e);
-    visit(*e.definition);
+    visit(*e.definition());
     name_stack.pop_back();
   }
 
@@ -110,15 +110,22 @@ class DisambiguationVisitor : public ExpressionVisitor {
   std::unordered_set<const Expression *> failed_lookups;
   /** Pointer to id introduced by that pointer */
   std::unordered_map<const Expression *, std::string> id_map;
+
+ protected:
+  void visit_default(const Expression &e) {
+    for (const std::unique_ptr<Expression> &child : e.children) {
+      visit(*child);
+    }
+  }
 };
 
 class StringifyVisitor : public ExpressionVisitor {
  public:
   void visit_application(const ApplicationExpression &e) {
     output << "(";
-    visit(*e.function);
+    visit(*e.function());
     output << ")(";
-    visit(*e.argument);
+    visit(*e.argument());
     output << ")";
   }
 
@@ -153,25 +160,25 @@ class StringifyVisitor : public ExpressionVisitor {
 
   void visit_lambda(const LambdaExpression &e) {
     output << "λ (" << e.argument_id << " : ";
-    visit(*e.argument_type);
+    visit(*e.argument_type());
     output << "). ";
-    visit(*e.definition);
+    visit(*e.definition());
   }
 
   void visit_let(const LetExpression &e) {
     output << "let (" << e.argument_id << " : ";
-    visit(*e.argument_type);
+    visit(*e.argument_type());
     output << ") = ";
-    visit(*e.argument_value);
+    visit(*e.argument_value());
     output << " in ";
-    visit(*e.definition);
+    visit(*e.definition());
   }
 
   void visit_pi(const PiExpression &e) {
     output << "Π (" << e.argument_id << " : ";
-    visit(*e.argument_type);
+    visit(*e.argument_type());
     output << "). ";
-    visit(*e.definition);
+    visit(*e.definition());
   }
 
   std::unordered_map<const Expression *, std::string> special_names;
@@ -203,8 +210,6 @@ std::string Expression::to_string() const {
   accept(stringify_visitor);
   return stringify_visitor.output.str();
 }
-
-Expression::Expression(std::initializer_list<std::unique_ptr<Expression>> input) : children(input) {}
 
 }  // namespace script3025
 

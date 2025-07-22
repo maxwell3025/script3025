@@ -14,6 +14,7 @@ class NatLiteralExpression;
 class NatKeywordExpression;
 class PiExpression;
 class ReplaceKeywordExpression;
+class ReflexiveKeywordExpression;
 class SuccKeywordExpression;
 class TypeKeywordExpression;
 

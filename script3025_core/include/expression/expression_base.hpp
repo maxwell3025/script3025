@@ -3,10 +3,9 @@
 
 #include <string>
 
-#include "spdlog/fmt/fmt.h"
-
-#include "token.hpp"
 #include "parser.hpp"
+#include "spdlog/fmt/fmt.h"
+#include "token.hpp"
 
 namespace script3025 {
 
@@ -28,11 +27,11 @@ class Expression {
   // Returns true iff the 2 expressions are syntactically equal.
   // 2 expressions might reduce to the same normal form but not be equal in this
   // sense.
-  bool operator==(const Expression& other) const;
+  bool operator==(const Expression &other) const;
 
   // @brief
   // Returns the negation of `operator==`.
-  bool operator!=(const Expression& other) const;
+  bool operator!=(const Expression &other) const;
 
   // @brief
   // Converts the current expression into a string
@@ -43,27 +42,21 @@ class Expression {
   std::vector<std::unique_ptr<Expression>> children;
 
  protected:
-  Expression(std::initializer_list<std::unique_ptr<Expression>> input);
-
   Expression() = default;
-
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Expression &expr) {
   return os << expr.to_string();
 }
 
-} // namespace script3025
+}  // namespace script3025
 
 template <>
-struct fmt::formatter<script3025::Expression>
-{
-  constexpr auto parse(format_parse_context &ctx) {
-    return ctx.begin();
-  }
+struct fmt::formatter<script3025::Expression> {
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
 
-  format_context::iterator format(const script3025::Expression & expr,
-                                  format_context& ctx) const;
+  format_context::iterator format(const script3025::Expression &expr,
+                                  format_context &ctx) const;
 };
 
 #endif

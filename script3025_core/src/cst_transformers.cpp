@@ -23,17 +23,14 @@ void collapse_oop(parser::ConcreteSyntaxTree<Token> &tree) {
   }
 
   switch (tree.symbol) {
+  case Token::EXPR_EQ:
   case Token::EXPR_ABS:
   case Token::EXPR_APP:
+  case Token::EXPR_PAREN:
     if (tree.children.size() == 1) {
       tree.children = std::move(tree.children[0].children);
     }
     tree.symbol = Token::EXPR;
-  case Token::EXPR_PAREN:
-    tree.symbol = Token::EXPR;
-    break;
-  default:
-    break;
   }
 }
 

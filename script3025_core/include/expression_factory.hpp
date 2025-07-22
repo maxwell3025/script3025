@@ -2,11 +2,6 @@
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 
 #include "expression/expression.hpp"
-#include "expression/subtypes/application_expression.hpp"
-#include "expression/subtypes/id_expression.hpp"
-#include "expression/subtypes/lambda_expression.hpp"
-#include "expression/subtypes/let_expression.hpp"
-#include "expression/subtypes/pi_expression.hpp"
 
 namespace script3025 {
 
@@ -169,10 +164,39 @@ std::unique_ptr<Expression> create_expression(
 
     return std::make_unique<ApplicationExpression>(std::move(function),
                                                    std::move(argument));
+  } else if (sentential_form == std::vector({Token::EXPR, Token::EQ, Token::EXPR})) {
+    std::unique_ptr<Expression> lhs = create_expression(
+        source.children[0], string_iterator);
+
+    std::unique_ptr<Expression> rhs = create_expression(
+        source.children[1], string_iterator);
+
+    return std::make_unique<EqualityExpression>(std::move(lhs),
+                                                std::move(rhs));
   } else if (sentential_form == std::vector({Token::ID})) {
-    std::string id(*string_iterator);
+    std::string id = std::move(*string_iterator);
     ++string_iterator;
-    return std::make_unique<IdExpression>(std::move(id), nullptr);
+    if (id == "inductive") {
+      return std::make_unique<InductionKeywordExpression>();
+    } else if (id == "Nat") {
+      return std::make_unique<NatKeywordExpression>();
+    } else if (id == "refl") {
+      return std::make_unique<ReflexiveKeywordExpression>();
+    } else if (id == "subst") {
+      return std::make_unique<ReplaceKeywordExpression>();
+    } else if (id == "succ") {
+      return std::make_unique<SuccKeywordExpression>();
+    } else if (id == "Type") {
+      return std::make_unique<TypeKeywordExpression>();
+    } else {
+      return std::make_unique<IdExpression>(std::move(id), nullptr);
+    }
+  } else if (sentential_form == std::vector({Token::NUMBER})) {
+    std::string value = std::move(*string_iterator);
+    ++string_iterator;
+    // TODO
+    // return std::make_unique<NatLiteralExpression>(std::move(id), nullptr);
+    throw std::runtime_error(__FILE__": Unimplemented.");
   } else {
     std::stringstream sentential_form_string;
     for (const Token &token : sentential_form) {

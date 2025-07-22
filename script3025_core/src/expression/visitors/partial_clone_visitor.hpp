@@ -26,7 +26,9 @@ class PartialCloneVisitor : public ExpressionVisitor {
 
  private:
   template <typename ExpressionSubtype>
-  std::unique_ptr<ExpressionSubtype> make_default_like();
+  void make_default_like() {
+    value = std::make_unique<ExpressionSubtype>();
+  }
 };
 
 inline std::unique_ptr<Expression> make_default_like(const Expression &e) {
