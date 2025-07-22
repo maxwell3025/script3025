@@ -63,9 +63,6 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case Token::DEFN:
     os << "D";
     break;
-  case Token::IDEFN:
-    os << "I";
-    break;
   case Token::PROG:
     os << "P";
     break;
