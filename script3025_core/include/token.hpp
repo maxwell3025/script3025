@@ -34,7 +34,6 @@ enum class Token {
   // This is the lowest-precedence expression. Use this when you just need a generic expression.
   EXPR = EXPR_EQ,
   DEFN,
-  IDEFN,
   PROG,
   // terminal character
   END

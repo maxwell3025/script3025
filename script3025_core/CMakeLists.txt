@@ -46,7 +46,6 @@ add_library(script3025_core
   src/expression/expression_visitor.cpp
   src/cst_transformers.cpp
   src/definition.cpp
-  src/inductive_definition.cpp
   src/parsing_utility.cpp
   src/program.cpp
   src/token.cpp
@@ -73,7 +72,6 @@ add_library(script3025_core
   include/cst_transformers.hpp
   include/definition.hpp
   include/expression_factory.hpp
-  include/inductive_definition.hpp
   include/parsing_utility.hpp
   include/program.hpp
   include/token.hpp
