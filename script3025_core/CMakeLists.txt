@@ -45,7 +45,6 @@ add_library(script3025_core
   src/expression/expression_base.cpp
   src/expression/expression_visitor.cpp
   src/cst_transformers.cpp
-  src/definition.cpp
   src/parsing_utility.cpp
   src/program.cpp
   src/token.cpp
@@ -70,7 +69,6 @@ add_library(script3025_core
   include/expression/expression_visitor.hpp
   include/expression/expression.hpp
   include/cst_transformers.hpp
-  include/definition.hpp
   include/expression_factory.hpp
   include/parsing_utility.hpp
   include/program.hpp
