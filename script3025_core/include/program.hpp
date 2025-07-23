@@ -21,32 +21,36 @@ class Program {
     return global_definitions_;
   }
 
-  constexpr const std::vector<std::string> &global_names() const {
-    return global_names_;
+  constexpr const std::vector<std::string> &global_ids() const {
+    return global_ids_;
   }
 
   inline const Expression &global(std::string id) const {
     return *global_definitions_.at(id);
   }
 
-  inline const bool comes_before(std::string a, std::string b) const {
-    if (ordering_.find(a) == ordering_.end()) return false;
-    if (ordering_.find(b) == ordering_.end()) return false;
-    return ordering_.at(a) < ordering_.at(b);
+  inline bool comes_before(std::string a, std::string b) const {
+    if (id_ordering_.find(a) == id_ordering_.end()) return false;
+    if (id_ordering_.find(b) == id_ordering_.end()) return false;
+    return id_ordering_.at(a) < id_ordering_.at(b);
   }
 
-  inline void push_definition(std::string name,
+  inline bool has_id(std::string id) const {
+    return global_definitions_.find(id) != global_definitions_.end();
+  }
+
+  inline void push_definition(std::string id,
                               std::unique_ptr<Expression> definition) {
-    if (global_definitions_.find(name) != global_definitions_.end()) return;
-    global_definitions_.emplace(name, std::move(definition));
-    ordering_.emplace(name, global_names_.size());
-    global_names_.push_back(name);
+    if (has_id(id)) return;
+    global_definitions_.emplace(id, std::move(definition));
+    id_ordering_.emplace(id, global_ids_.size());
+    global_ids_.push_back(id);
   }
 
   inline void pop_definition() {
-    global_definitions_.erase(global_names_.back());
-    ordering_.erase(global_names_.back());
-    global_names_.pop_back();
+    global_definitions_.erase(global_ids_.back());
+    id_ordering_.erase(global_ids_.back());
+    global_ids_.pop_back();
   }
 
   std::string to_string() const;
@@ -110,10 +114,10 @@ class Program {
 
   static std::shared_ptr<spdlog::logger> get_logger();
 
-  std::unordered_map<std::string, size_t> ordering_;
+  std::unordered_map<std::string, size_t> id_ordering_;
   std::unordered_map<std::string, std::unique_ptr<Expression>>
       global_definitions_;
-  std::vector<std::string> global_names_;
+  std::vector<std::string> global_ids_;
 };
 
 inline std::ostream &operator<<(std::ostream &os, const script3025::Program &prog) {

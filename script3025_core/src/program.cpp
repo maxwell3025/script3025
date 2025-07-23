@@ -24,10 +24,10 @@ Program::Program(std::string source) {
 
 std::string Program::to_string() const {
   std::stringstream output;
-  for (size_t i = 0; i < global_names().size(); ++i) {
-    const std::string &id = global_names()[i];
+  for (size_t i = 0; i < global_ids().size(); ++i) {
+    const std::string &id = global_ids()[i];
     output << "def " << id << ":=" << global(id);
-    if (i < global_names().size() - 1) output << std::endl;
+    if (i < global_ids().size() - 1) output << std::endl;
   }
   return output.str();
 }
