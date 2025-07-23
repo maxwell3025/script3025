@@ -1,7 +1,9 @@
 #include "program.hpp"
 
-#include "parsing_utility.hpp"
+#include <sstream>
+
 #include "cst_transformers.hpp"
+#include "parsing_utility.hpp"
 
 namespace script3025 {
 
@@ -18,6 +20,16 @@ Program::Program(std::string source) {
 
   auto iterator = token_text.begin();
   add_program(*code.cst, iterator);
+}
+
+std::string Program::to_string() const {
+  std::stringstream output;
+  for (size_t i = 0; i < global_names().size(); ++i) {
+    const std::string &id = global_names()[i];
+    output << "def " << id << ":=" << global(id);
+    if (i < global_names().size() - 1) output << std::endl;
+  }
+  return output.str();
 }
 
 std::shared_ptr<spdlog::logger> Program::get_logger() {

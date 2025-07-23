@@ -3,10 +3,12 @@
 
 #include <vector>
 
+#include "parser.hpp"
+#include "spdlog/fmt/fmt.h"
+#include "spdlog/fmt/ranges.h"
+
 #include "expression/expression.hpp"
 #include "expression_factory.hpp"
-#include "parser.hpp"
-#include "spdlog/fmt/ranges.h"
 
 namespace script3025 {
 
@@ -45,6 +47,8 @@ class Program {
     ordering_.erase(global_names_.back());
     global_names_.pop_back();
   }
+
+  std::string to_string() const;
 
   std::unique_ptr<Expression> get_type(const std::string &target);
 
@@ -111,6 +115,20 @@ class Program {
   std::vector<std::string> global_names_;
 };
 
+inline std::ostream &operator<<(std::ostream &os, const script3025::Program &prog) {
+  return os << prog.to_string();
+}
+
 }  // namespace script3025
+
+template <>
+struct fmt::formatter<script3025::Program> {
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+
+  format_context::iterator format(const script3025::Program &prog,
+                                  format_context &ctx) const {
+    return fmt::format_to(ctx.out(), "{0}", prog.to_string());
+  };
+};
 
 #endif

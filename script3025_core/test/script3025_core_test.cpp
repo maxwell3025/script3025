@@ -16,21 +16,14 @@ std::shared_ptr<spdlog::logger> get_logger() {
 
 TEST(Program, simple) {
   script3025::Program program("def identity := lambda (x : Type). x");
-
-  for (const std::string &global_id : program.global_names()) {
-    SPDLOG_LOGGER_INFO(get_logger(), "{}:\n{}", global_id,
-                       *program.global_definitions().at(global_id));
-  }
+  SPDLOG_LOGGER_INFO(get_logger(), "{}", program);
 }
 
 TEST(Program, multi) {
-  script3025::Program program("def foo := lambda (x : Type). x \n"
-                              "def bar := lambda (x : Type). foo x");
-
-  for (const std::string &global_id : program.global_names()) {
-    SPDLOG_LOGGER_INFO(get_logger(), "{}:\n{}", global_id,
-                       *program.global_definitions().at(global_id));
-  }
+  script3025::Program program(
+      "def foo := lambda (x : Type). x \n"
+      "def bar := lambda (x : Type). foo x");
+  SPDLOG_LOGGER_INFO(get_logger(), "{}", program);
 }
 
 /*
