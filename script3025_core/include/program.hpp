@@ -55,9 +55,13 @@ class Program {
 
   std::string to_string() const;
 
-  std::unique_ptr<Expression> get_type(const std::string &target);
+  std::unique_ptr<Expression> type(const std::string &id);
 
-  std::unique_ptr<Expression> get_reduced(const std::string &target);
+  std::unique_ptr<Expression> reduce(const std::string &id);
+
+  std::unique_ptr<Expression> reduce(const Expression &expr);
+
+  bool check_types();
 
  private:
   template <typename Iterator>
