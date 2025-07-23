@@ -3,7 +3,6 @@
 
 #include "expression/expression.hpp"
 #include "cst_transformers.hpp"
-#include "definition.hpp"
 #include "expression_factory.hpp"
 #include "parsing_utility.hpp"
 #include "program.hpp"

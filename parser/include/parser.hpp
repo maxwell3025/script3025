@@ -188,6 +188,15 @@ struct ConcreteSyntaxTree {
   ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other) : symbol(other.symbol),
       children(std::move(other.children)){}
 
+  [[nodiscard]] std::vector<T> sentence() {
+    std::vector<T> sentence;
+    std::for_each(children.begin(), children.end(),
+                  [&](const ConcreteSyntaxTree<T> &child) {
+                    sentence.push_back(child.symbol);
+                  });
+    return sentence;
+  }
+  
   std::string to_string() const {
     std::stringstream output;
     std::vector<std::string> stack;
