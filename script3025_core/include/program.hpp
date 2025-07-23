@@ -37,6 +37,7 @@ class Program {
 
   inline void push_definition(std::string name,
                               std::unique_ptr<Expression> definition) {
+    if (global_definitions_.find(name) != global_definitions_.end()) return;
     global_definitions_.emplace(name, std::move(definition));
     ordering_.emplace(name, global_names_.size());
     global_names_.push_back(name);
