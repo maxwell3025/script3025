@@ -3,82 +3,113 @@
 
 #include <vector>
 
-#include "spdlog/fmt/ranges.h"
-#include "parser.hpp"
-
 #include "expression/expression.hpp"
 #include "expression_factory.hpp"
+#include "parser.hpp"
+#include "spdlog/fmt/ranges.h"
 
 namespace script3025 {
 
 class Program {
  public:
+  Program(std::string source);
+
+  constexpr const std::unordered_map<std::string, std::unique_ptr<Expression>> &
+  global_definitions() const {
+    return global_definitions_;
+  }
+
+  constexpr const std::vector<std::string> &global_names() const {
+    return global_names_;
+  }
+
+  inline const Expression &global(std::string id) const {
+    return *global_definitions_.at(id);
+  }
+
+  inline const bool comes_before(std::string a, std::string b) const {
+    if (ordering_.find(a) == ordering_.end()) return false;
+    if (ordering_.find(b) == ordering_.end()) return false;
+    return ordering_.at(a) < ordering_.at(b);
+  }
+
+  inline void push_definition(std::string name,
+                              std::unique_ptr<Expression> definition) {
+    global_definitions_.emplace(name, std::move(definition));
+    ordering_.emplace(name, global_names_.size());
+    global_names_.push_back(name);
+  }
+
+  inline void pop_definition() {
+    global_definitions_.erase(global_names_.back());
+    ordering_.erase(global_names_.back());
+    global_names_.pop_back();
+  }
+
+  std::unique_ptr<Expression> get_type(const std::string &target);
+
+  std::unique_ptr<Expression> get_reduced(const std::string &target);
+
+ private:
   template <typename Iterator>
-  Program(parser::ConcreteSyntaxTree<Token> &source, Iterator &string_iterator);
+  void add_program(parser::ConcreteSyntaxTree<Token> &source,
+                   Iterator &string_iterator) {
+    if (source.symbol != Token::PROG) {
+      SPDLOG_LOGGER_ERROR(
+          get_logger(),
+          "Expected a concrete syntax tree with type {}. Received {}",
+          Token::PROG, source.symbol);
+      throw std::runtime_error(
+          "Attempted to construct program from non-program node.");
+    }
+    for (parser::ConcreteSyntaxTree<Token> &child : source.children) {
+      if (child.symbol != Token::DEFN) {
+        SPDLOG_LOGGER_ERROR(get_logger(),
+                            "Received malformed syntax tree:\n"
+                            "{}",
+                            source);
+        continue;
+      }
+      add_definition(child, string_iterator);
+    }
+  }
 
   template <typename Iterator>
   void add_definition(parser::ConcreteSyntaxTree<Token> &source,
-                      Iterator &string_iterator);
-
-  std::unordered_map<std::string, std::unique_ptr<Expression>> definitions;
-  std::vector<std::string> definition_order;
-
- private:
-  static std::shared_ptr<spdlog::logger> get_logger();
-};
-
-template <typename Iterator>
-Program::Program(parser::ConcreteSyntaxTree<Token> &source,
-                 Iterator &string_iterator) {
-  if (source.symbol != Token::PROG) {
-    SPDLOG_LOGGER_ERROR(
-        get_logger(),
-        "Expected a concrete syntax tree with type {}. Received {}",
-        Token::PROG, source.symbol);
-    throw std::runtime_error(
-        "Attempted to construct program from non-program node.");
-  }
-  for (parser::ConcreteSyntaxTree<Token> &child : source.children) {
-    if (child.symbol != Token::DEFN) {
-      SPDLOG_LOGGER_ERROR(get_logger(),
-                          "Received malformed syntax tree:\n"
-                          "{}",
-                          source);
-      continue;
+                      Iterator &string_iterator) {
+    if (source.symbol != Token::DEFN) {
+      SPDLOG_LOGGER_ERROR(
+          get_logger(),
+          "Expected a concrete syntax tree with type {}. Received {}",
+          Token::PROG, source.symbol);
+      return;
     }
-    add_definition(child, string_iterator);
-  }
-}
 
-template <typename Iterator>
-void Program::add_definition(parser::ConcreteSyntaxTree<Token> &source,
-                             Iterator &string_iterator) {
-  if (source.symbol != Token::DEFN) {
-    SPDLOG_LOGGER_ERROR(
-        get_logger(),
-        "Expected a concrete syntax tree with type {}. Received {}",
-        Token::PROG, source.symbol);
-    return;
-  }
+    static const std::vector<Token> defn_sentence{Token::DEF, Token::ID,
+                                                  Token::ASSIGN, Token::EXPR};
 
-  static const std::vector<Token> defn_sentence{Token::DEF, Token::ID,
-                                                Token::ASSIGN, Token::EXPR};
+    if (source.sentence() != defn_sentence) {
+      SPDLOG_LOGGER_ERROR(
+          get_logger(),
+          "Expected a concrete syntax tree with form {}. Received {}",
+          defn_sentence, source.sentence());
+      return;
+    }
 
-  if (source.sentence() != defn_sentence) {
-    SPDLOG_LOGGER_ERROR(
-        get_logger(),
-        "Expected a concrete syntax tree with form {}. Received {}",
-        defn_sentence, source.sentence());
-    return;
+    ++string_iterator;
+    std::string id = *string_iterator;
+    ++string_iterator;
+    ++string_iterator;
+    push_definition(id, create_expression(source.children[3], string_iterator));
   }
 
-  ++string_iterator;
-  std::string id = *string_iterator;
-  definition_order.push_back(id);
-  ++string_iterator;
-  ++string_iterator;
-  definitions[id] = create_expression(source.children[3], string_iterator);
-}
+  static std::shared_ptr<spdlog::logger> get_logger();
+
+  std::unordered_map<std::string, size_t> ordering_;
+  std::unordered_map<std::string, std::unique_ptr<Expression>>
+      global_definitions_;
+  std::vector<std::string> global_names_;
+};
 
 }  // namespace script3025
 

@@ -14,28 +14,22 @@ std::shared_ptr<spdlog::logger> get_logger() {
   return logger;
 }
 
-TEST(Parse, single_defn_simple) {
-  script3025::ParsedCode parsed_code =
-      script3025::parse("def identity := lambda (x : Type). x");
-  script3025::collect_lists(*parsed_code.cst);
-  script3025::collapse_oop(*parsed_code.cst);
+TEST(Program, simple) {
+  script3025::Program program("def identity := lambda (x : Type). x");
 
-  SPDLOG_LOGGER_INFO(get_logger(),
-                     "CST:\n"
-                     "{}",
-                     parsed_code.cst->to_string());
+  for (const std::string &global_id : program.global_names()) {
+    SPDLOG_LOGGER_INFO(get_logger(), "{}:\n{}", global_id,
+                       *program.global_definitions().at(global_id));
+  }
+}
 
-  std::vector<std::string> token_text(parsed_code.annotated_tokens.size());
-  std::transform(parsed_code.annotated_tokens.begin(),
-                 parsed_code.annotated_tokens.end(), token_text.begin(),
-                 [&](script3025::AnnotatedToken t) { return t.text; });
+TEST(Program, multi) {
+  script3025::Program program("def foo := lambda (x : Type). x \n"
+                              "def bar := lambda (x : Type). foo x");
 
-  auto string_iterator = token_text.begin();
-  script3025::Program program(*(parsed_code.cst), string_iterator);
-
-  for (const auto &definition : program.definitions) {
-    SPDLOG_LOGGER_INFO(get_logger(), "{}:\n{}", definition.first,
-                       *definition.second);
+  for (const std::string &global_id : program.global_names()) {
+    SPDLOG_LOGGER_INFO(get_logger(), "{}:\n{}", global_id,
+                       *program.global_definitions().at(global_id));
   }
 }
 
@@ -89,27 +83,3 @@ TEST(Parse, single_defn_simple) {
               lambda y : Nat.
                 rfl
 */
-
-TEST(Parse, single_defn_complex) {
-  script3025::parse(
-      "def identity := lambda (x : Type). lambda (y : Type). lambda (z : "
-      "Type). x");
-}
-
-TEST(Parse, multi_defn) {
-  script3025::ParsedCode code = script3025::parse(
-      "def identity := lambda (x : Type). x\n"
-      "def identity_two := lambda (y : Type). y");
-
-  script3025::collect_lists(*code.cst);
-  SPDLOG_LOGGER_INFO(get_logger(),
-                     "collect_lists produced the following CST:\n"
-                     "{}",
-                     code.cst->to_string());
-
-  script3025::collapse_oop(*code.cst);
-  SPDLOG_LOGGER_INFO(get_logger(),
-                     "collapse_oop produced the following CST:\n"
-                     "{}",
-                     code.cst->to_string());
-}
