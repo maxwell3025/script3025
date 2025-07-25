@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "cst_transformers.hpp"
+#include "expression/visitors/scope_hygiene_visitor.hpp"
 #include "parsing_utility.hpp"
 
 namespace script3025 {
@@ -30,6 +31,12 @@ std::string Program::to_string() const {
     if (i < global_ids().size() - 1) output << std::endl;
   }
   return output.str();
+}
+
+bool Program::check_types() {
+  for (const auto &definition_pair : global_definitions())
+    if (!is_hygenic(*definition_pair.second)) return false;
+  return true;
 }
 
 std::shared_ptr<spdlog::logger> Program::get_logger() {

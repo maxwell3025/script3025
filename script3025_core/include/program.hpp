@@ -3,12 +3,12 @@
 
 #include <vector>
 
+#include "expression/expression.hpp"
+#include "expression/visitors/normalizing_visitor.hpp"
+#include "expression_factory.hpp"
 #include "parser.hpp"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/ranges.h"
-
-#include "expression/expression.hpp"
-#include "expression_factory.hpp"
 
 namespace script3025 {
 
@@ -113,7 +113,10 @@ class Program {
     std::string id = *string_iterator;
     ++string_iterator;
     ++string_iterator;
-    push_definition(id, create_expression(source.children[3], string_iterator));
+    std::unique_ptr<Expression> definition =
+        create_expression(source.children[3], string_iterator);
+    NormalizingVisitor().visit(*definition);
+    push_definition(id, std::move(definition));
   }
 
   static std::shared_ptr<spdlog::logger> get_logger();
@@ -124,7 +127,8 @@ class Program {
   std::vector<std::string> global_ids_;
 };
 
-inline std::ostream &operator<<(std::ostream &os, const script3025::Program &prog) {
+inline std::ostream &operator<<(std::ostream &os,
+                                const script3025::Program &prog) {
   return os << prog.to_string();
 }
 
