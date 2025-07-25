@@ -12,8 +12,8 @@ class TypeKeywordExpression : public KeywordExpression {
  public:
   explicit TypeKeywordExpression(mpz_class level);
   TypeKeywordExpression();
-  void accept(ExpressionVisitor &visitor) const override;
-  void accept(MutatingExpressionVisitor &visitor) override;
+  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_type_keyword(*this); }
+  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_type_keyword(*this); }
 
   mpz_class level_;
 

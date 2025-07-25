@@ -12,14 +12,6 @@ LambdaExpression::LambdaExpression(std::string argument_id,
 
 LambdaExpression::LambdaExpression() {}
 
-void LambdaExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_lambda(*this);
-}
-
-void LambdaExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_lambda(*this);
-}
-
 std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

@@ -12,14 +12,6 @@ PiExpression::PiExpression(std::string argument_id,
 
 PiExpression::PiExpression() {}
 
-void PiExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_pi(*this);
-}
-
-void PiExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_pi(*this);
-}
-
 std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

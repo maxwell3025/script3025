@@ -10,14 +10,6 @@
 
 namespace script3025 {
 
-std::unique_ptr<Expression> Expression::clone(
-    std::unordered_map<const Expression *, Expression *> initial_map) {
-  CloningVisitor visitor;
-  visitor.pointer_map = initial_map;
-  accept(visitor);
-  return std::move(visitor.value);
-}
-
 bool Expression::operator==(const Expression &rhs) const {
   EqualityVisitor visitor(this);
   rhs.accept(visitor);
@@ -42,7 +34,7 @@ std::shared_ptr<spdlog::logger> Expression::get_logger() {
   return logger;
 }
 
-class DisambiguationVisitor : public ExpressionVisitor {
+class DisambiguationVisitor : public ConstExpressionVisitor {
  public:
   void visit_application(const ApplicationExpression &e) {
     visit(*e.function());
@@ -74,29 +66,15 @@ class DisambiguationVisitor : public ExpressionVisitor {
     }
   }
 
-  void visit_lambda(const LambdaExpression &e) {
-    visit(*e.argument_type());
-    id_map[&e] = e.argument_id;
-    name_stack.push_back(&e);
-    visit(*e.definition());
-    name_stack.pop_back();
-  }
-
-  void visit_let(const LetExpression &e) {
-    visit(*e.argument_type());
-    visit(*e.argument_value());
-    id_map[&e] = e.argument_id;
-    name_stack.push_back(&e);
-    visit(*e.definition());
-    name_stack.pop_back();
-  }
-
-  void visit_pi(const PiExpression &e) {
-    visit(*e.argument_type());
-    id_map[&e] = e.argument_id;
-    name_stack.push_back(&e);
-    visit(*e.definition());
-    name_stack.pop_back();
+  void visit_scope(const ScopeExpression &e) {
+    for (const std::unique_ptr<Expression> &child : e.children) {
+      if (child == e.definition()) {
+        id_map[&e] = e.argument_id;
+        name_stack.push_back(&e);
+      }
+      visit(*child);
+      if (child == e.definition()) name_stack.pop_back();
+    }
   }
 
   std::vector<const Expression *> name_stack;
@@ -128,7 +106,7 @@ struct BindingPower {
 
 constexpr BindingPower binding_power;
 
-class StringifyVisitor : public ExpressionVisitor {
+class StringifyVisitor : public ConstExpressionVisitor {
  public:
   void visit_application(const ApplicationExpression &e) {
     const bool wrap =
@@ -153,9 +131,8 @@ class StringifyVisitor : public ExpressionVisitor {
   }
 
   void visit_equality(const EqualityExpression &e) {
-    const bool wrap =
-        binding_power.equality.left < min_binding_power_left_ ||
-        binding_power.equality.right < min_binding_power_right_;
+    const bool wrap = binding_power.equality.left < min_binding_power_left_ ||
+                      binding_power.equality.right < min_binding_power_right_;
     const size_t right_binding_power = min_binding_power_right_;
     const size_t left_binding_power = min_binding_power_left_;
 
@@ -296,7 +273,6 @@ class StringifyVisitor : public ExpressionVisitor {
   void visit_succ_keyword(const SuccKeywordExpression &e) { output << "succ"; }
 
   void visit_type_keyword(const TypeKeywordExpression &e) {
-
     const bool wrap =
         binding_power.application.left < min_binding_power_left_ ||
         binding_power.application.right < min_binding_power_right_;

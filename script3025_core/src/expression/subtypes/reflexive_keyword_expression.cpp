@@ -2,14 +2,6 @@
 
 namespace script3025 {
 
-void ReflexiveKeywordExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_reflexive_keyword(*this);
-}
-
-void ReflexiveKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_reflexive_keyword(*this);
-}
-
 std::shared_ptr<spdlog::logger> ReflexiveKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
