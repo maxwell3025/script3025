@@ -42,7 +42,6 @@ add_library(script3025_core
   src/expression/visitors/cloning_visitor.cpp
   src/expression/visitors/equality_visitor.cpp
   src/expression/visitors/lazy_reduction_visitor.cpp
-  src/expression/visitors/partial_clone_visitor.cpp
   src/expression/visitors/partial_clone_visitor.hpp
   src/expression/visitors/replacing_visitor.cpp
   src/expression/expression_base.cpp

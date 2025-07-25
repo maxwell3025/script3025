@@ -9,22 +9,16 @@ namespace script3025 {
 class CloningVisitor : public ConstExpressionVisitor {
  public:
   void visit_id(const IdExpression &e) override;
-  void visit_lambda(const LambdaExpression &e) override;
-  void visit_let(const LetExpression &e) override;
+  void visit_scope(const ScopeExpression &e) override;
   void visit_nat_literal(const NatLiteralExpression &e) override;
-  void visit_pi(const PiExpression &e) override;
   void visit_type_keyword(const TypeKeywordExpression &e) override;
   std::unique_ptr<Expression> get();
-
-  std::unique_ptr<Expression> value;
-  std::unordered_map<const Expression *, Expression *> pointer_map;
 
  protected:
   void visit_expression(const Expression &e) override;
 
- private:
-  template <typename ExpressionSubtype>
-  std::unique_ptr<ExpressionSubtype> clone(const Expression &e);
+  std::unique_ptr<Expression> value_;
+  std::unordered_map<const Expression *, Expression *> pointer_map_;
 };
 
 } // namespace script3025

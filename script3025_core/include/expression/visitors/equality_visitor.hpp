@@ -20,7 +20,7 @@ class EqualityVisitor : public ConstExpressionVisitor {
  private:
   bool unequal;
   const Expression *lhs;
-  std::unordered_map<const Expression *, const Expression *> pointer_map;
+  std::unordered_map<const Expression *, const Expression *> pointer_map_;
 };
 
 }  // namespace script3025

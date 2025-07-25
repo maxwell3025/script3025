@@ -91,6 +91,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 };
 
+// TODO none of this is pointer-correct. this needs to be fixed
 void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
   WHNFVisitor visitor;
   e.accept(visitor);
@@ -122,11 +123,6 @@ void LazyReductionVisitor::visit_id(IdExpression &e) {
       static_cast<IdExpression &>(*reduced_expression);
   reduced_expression_casted.id = std::move(e.id);
   reduced_expression_casted.source = e.source;
-}
-
-void LazyReductionVisitor::visit_let(LetExpression &e) {
-  SPDLOG_LOGGER_ERROR(
-      get_logger(), "If we do zeta reductions, this should not still exist.\n");
 }
 
 void LazyReductionVisitor::visit_expression(Expression &e) {
