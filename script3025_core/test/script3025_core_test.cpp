@@ -16,7 +16,7 @@ std::shared_ptr<spdlog::logger> get_logger() {
 
 TEST(Program, simple) {
   script3025::Program program("def identity := lambda (x : Type). x");
-  SPDLOG_LOGGER_INFO(get_logger(), "{}", program);
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
   EXPECT_TRUE(program.check_types()) << "program failed to type check";
 }
 
@@ -24,7 +24,7 @@ TEST(Program, multi) {
   script3025::Program program(
       "def foo := lambda (x : Type). x \n"
       "def bar := lambda (x : Type). foo x");
-  SPDLOG_LOGGER_INFO(get_logger(), "{}", program);
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
 }
 
 /*

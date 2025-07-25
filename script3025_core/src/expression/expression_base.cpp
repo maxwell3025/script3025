@@ -3,12 +3,8 @@
 #include <iomanip>
 #include <unordered_map>
 
+#include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
-#include "expression/subtypes/application_expression.hpp"
-#include "expression/subtypes/id_expression.hpp"
-#include "expression/subtypes/lambda_expression.hpp"
-#include "expression/subtypes/let_expression.hpp"
-#include "expression/subtypes/pi_expression.hpp"
 #include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/equality_visitor.hpp"
 
@@ -126,6 +122,14 @@ class StringifyVisitor : public ExpressionVisitor {
     visit(*e.function());
     output << ")(";
     visit(*e.argument());
+
+  }
+
+  void visit_equality(const EqualityExpression &e) {
+    output << "(";
+    visit(*e.lhs());
+    output << ")=(";
+    visit(*e.rhs());
     output << ")";
   }
 
@@ -158,6 +162,10 @@ class StringifyVisitor : public ExpressionVisitor {
     output << displayed_id;
   }
 
+  void visit_induction_keyword(const InductionKeywordExpression &e) {
+    output << "induction";
+  }
+
   void visit_lambda(const LambdaExpression &e) {
     output << "λ (" << e.argument_id << " : ";
     visit(*e.argument_type());
@@ -174,11 +182,31 @@ class StringifyVisitor : public ExpressionVisitor {
     visit(*e.definition());
   }
 
+  void visit_nat_keyword(const NatKeywordExpression &e) { output << "Nat"; }
+
+  void visit_nat_literal(const NatLiteralExpression &e) {
+    // TODO
+  }
+
   void visit_pi(const PiExpression &e) {
     output << "Π (" << e.argument_id << " : ";
     visit(*e.argument_type());
     output << "). ";
     visit(*e.definition());
+  }
+
+  void visit_replace_keyword(const ReplaceKeywordExpression &e) {
+    output << "subst";
+  }
+
+  void visit_reflexive_keyword(const ReflexiveKeywordExpression &e) {
+    output << "refl";
+  }
+
+  void visit_succ_keyword(const SuccKeywordExpression &e) { output << "succ"; }
+
+  void visit_type_keyword(const TypeKeywordExpression &e) {
+    output << "(Type)(" << e.level << ")";
   }
 
   std::unordered_map<const Expression *, std::string> special_names;
