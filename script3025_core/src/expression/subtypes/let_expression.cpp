@@ -6,7 +6,7 @@ LetExpression::LetExpression(std::string argument_id,
                              std::unique_ptr<Expression> &&argument_type,
                              std::unique_ptr<Expression> &&argument_value,
                              std::unique_ptr<Expression> &&definition)
-    : argument_id(argument_id) {
+    : ScopeExpression(std::move(argument_id)) {
   children.emplace_back(std::move(argument_type));
   children.emplace_back(std::move(argument_value));
   children.emplace_back(std::move(definition));

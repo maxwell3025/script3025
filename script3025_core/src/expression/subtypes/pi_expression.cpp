@@ -5,7 +5,7 @@ namespace script3025 {
 PiExpression::PiExpression(std::string argument_id,
                            std::unique_ptr<Expression> &&argument_type,
                            std::unique_ptr<Expression> &&definition)
-    : argument_id(argument_id) {
+    : ScopeExpression(std::move(argument_id)) {
   children.emplace_back(std::move(argument_type));
   children.emplace_back(std::move(definition));
 }
