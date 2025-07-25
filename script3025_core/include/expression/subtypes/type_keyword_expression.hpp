@@ -3,12 +3,12 @@
 
 #include <gmpxx.h>
 
-#include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/keyword_expression.hpp"
 
 namespace script3025 {
 
-class TypeKeywordExpression : public Expression {
+class TypeKeywordExpression : public KeywordExpression {
  public:
   explicit TypeKeywordExpression(mpz_class level);
   TypeKeywordExpression();
@@ -21,6 +21,6 @@ class TypeKeywordExpression : public Expression {
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif
