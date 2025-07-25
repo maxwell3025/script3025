@@ -40,7 +40,7 @@ void EqualityVisitor::visit_type_keyword(const TypeKeywordExpression &rhs) {
 
   if (typeid(lhs) != typeid(TypeKeywordExpression)) unequal = true;
 
-  if (static_cast<const TypeKeywordExpression *>(lhs)->level != rhs.level)
+  if (static_cast<const TypeKeywordExpression *>(lhs)->level_ != rhs.level_)
     unequal = true;
 }
 

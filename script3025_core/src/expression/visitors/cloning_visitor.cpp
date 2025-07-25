@@ -50,7 +50,7 @@ void CloningVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
   visit_default(e);
   TypeKeywordExpression &casted_expression =
       static_cast<TypeKeywordExpression &>(*value);
-  casted_expression.level = e.level;
+  casted_expression.level_ = e.level_;
 }
 
 std::unique_ptr<Expression> CloningVisitor::get() {

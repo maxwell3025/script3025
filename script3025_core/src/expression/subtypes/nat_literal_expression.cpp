@@ -2,9 +2,9 @@
 
 namespace script3025 {
 
-NatLiteralExpression::NatLiteralExpression(size_t value) {}
+NatLiteralExpression::NatLiteralExpression(mpz_class value) : value_(value) {}
 
-NatLiteralExpression::NatLiteralExpression() {}
+NatLiteralExpression::NatLiteralExpression() : value_(0) {}
 
 void NatLiteralExpression::accept(ExpressionVisitor &visitor) const {
   visitor.visit_nat_literal(*this);

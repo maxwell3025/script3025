@@ -21,6 +21,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GMP REQUIRED gmp=6.3.0)
+
 
 add_library(script3025_core
   src/expression/subtypes/application_expression.cpp
@@ -86,6 +89,7 @@ target_include_directories(script3025_core
 
 target_link_libraries(script3025_core
   PUBLIC parser
+  PRIVATE gmp
 )
 
 add_executable(script3025_core_test
