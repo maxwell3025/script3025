@@ -3,12 +3,8 @@
 #include <iomanip>
 #include <unordered_map>
 
+#include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
-#include "expression/subtypes/application_expression.hpp"
-#include "expression/subtypes/id_expression.hpp"
-#include "expression/subtypes/lambda_expression.hpp"
-#include "expression/subtypes/let_expression.hpp"
-#include "expression/subtypes/pi_expression.hpp"
 #include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/equality_visitor.hpp"
 
@@ -119,14 +115,63 @@ class DisambiguationVisitor : public ExpressionVisitor {
   }
 };
 
+struct OperatorBindingPower {
+  size_t left;
+  size_t right;
+};
+
+struct BindingPower {
+  OperatorBindingPower application{5, 6};
+  OperatorBindingPower scope{0, 3};
+  OperatorBindingPower equality{1, 1};
+};
+
+constexpr BindingPower binding_power;
+
 class StringifyVisitor : public ExpressionVisitor {
  public:
   void visit_application(const ApplicationExpression &e) {
-    output << "(";
+    const bool wrap =
+        binding_power.application.left < min_binding_power_left_ ||
+        binding_power.application.right < min_binding_power_right_;
+    const size_t right_binding_power = min_binding_power_right_;
+    const size_t left_binding_power = min_binding_power_left_;
+
+    if (wrap) output << "(";
+
+    min_binding_power_left_ = wrap ? 0 : left_binding_power;
+    min_binding_power_right_ = binding_power.application.left + 1;
     visit(*e.function());
-    output << ")(";
+
+    output << " ";
+
+    min_binding_power_left_ = binding_power.application.right + 1;
+    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.argument());
-    output << ")";
+
+    if (wrap) output << ")";
+  }
+
+  void visit_equality(const EqualityExpression &e) {
+    const bool wrap =
+        binding_power.equality.left < min_binding_power_left_ ||
+        binding_power.equality.right < min_binding_power_right_;
+    const size_t right_binding_power = min_binding_power_right_;
+    const size_t left_binding_power = min_binding_power_left_;
+
+    if (wrap) output << "(";
+
+    min_binding_power_left_ = wrap ? 0 : left_binding_power;
+    min_binding_power_right_ = binding_power.equality.left + 1;
+    visit(*e.lhs());
+
+    output << "=";
+
+    min_binding_power_left_ = binding_power.equality.right + 1;
+    min_binding_power_right_ = wrap ? 0 : right_binding_power;
+    visit(*e.rhs());
+
+    if (wrap) output << ")";
   }
 
   void visit_id(const IdExpression &e) {
@@ -158,32 +203,116 @@ class StringifyVisitor : public ExpressionVisitor {
     output << displayed_id;
   }
 
+  void visit_induction_keyword(const InductionKeywordExpression &e) {
+    output << "induction";
+  }
+
   void visit_lambda(const LambdaExpression &e) {
-    output << "λ (" << e.argument_id << " : ";
+    const bool wrap = binding_power.equality.right < min_binding_power_right_;
+    const size_t right_binding_power = min_binding_power_right_;
+    const size_t left_binding_power = min_binding_power_left_;
+
+    if (wrap) output << "(";
+
+    output << "λ (" << e.argument_id << ":";
+
+    min_binding_power_left_ = 0;
+    min_binding_power_right_ = 0;
     visit(*e.argument_type());
+
     output << "). ";
+
+    min_binding_power_left_ = binding_power.scope.right + 1;
+    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.definition());
+
+    if (wrap) output << ")";
   }
 
   void visit_let(const LetExpression &e) {
-    output << "let (" << e.argument_id << " : ";
+    const bool wrap = binding_power.equality.right < min_binding_power_right_;
+    const size_t right_binding_power = min_binding_power_right_;
+    const size_t left_binding_power = min_binding_power_left_;
+
+    if (wrap) output << "(";
+
+    output << "let (" << e.argument_id << ":";
+
+    min_binding_power_left_ = 0;
+    min_binding_power_right_ = 0;
     visit(*e.argument_type());
-    output << ") = ";
+
+    output << ":=";
+
+    min_binding_power_left_ = 0;
+    min_binding_power_right_ = 0;
     visit(*e.argument_value());
+
     output << " in ";
+
+    min_binding_power_left_ = binding_power.scope.right + 1;
+    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.definition());
+
+    if (wrap) output << ")";
+  }
+
+  void visit_nat_keyword(const NatKeywordExpression &e) { output << "Nat"; }
+
+  void visit_nat_literal(const NatLiteralExpression &e) {
+    // TODO
   }
 
   void visit_pi(const PiExpression &e) {
-    output << "Π (" << e.argument_id << " : ";
+    const bool wrap = binding_power.equality.right < min_binding_power_right_;
+    const size_t right_binding_power = min_binding_power_right_;
+    const size_t left_binding_power = min_binding_power_left_;
+
+    if (wrap) output << "(";
+
+    output << "Π (" << e.argument_id << ":";
+
+    min_binding_power_left_ = 0;
+    min_binding_power_right_ = 0;
     visit(*e.argument_type());
+
     output << "). ";
+
+    min_binding_power_left_ = binding_power.scope.right + 1;
+    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.definition());
+
+    if (wrap) output << ")";
+  }
+
+  void visit_replace_keyword(const ReplaceKeywordExpression &e) {
+    output << "subst";
+  }
+
+  void visit_reflexive_keyword(const ReflexiveKeywordExpression &e) {
+    output << "refl";
+  }
+
+  void visit_succ_keyword(const SuccKeywordExpression &e) { output << "succ"; }
+
+  void visit_type_keyword(const TypeKeywordExpression &e) {
+
+    const bool wrap =
+        binding_power.application.left < min_binding_power_left_ ||
+        binding_power.application.right < min_binding_power_right_;
+    const size_t right_binding_power = min_binding_power_right_;
+    const size_t left_binding_power = min_binding_power_left_;
+
+    if (wrap) output << "(";
+    output << "Type " << e.level;
+    if (wrap) output << ")";
   }
 
   std::unordered_map<const Expression *, std::string> special_names;
   std::unordered_map<const Expression *, std::string> id_map;
   std::unordered_set<const Expression *> failed_lookups;
+  size_t min_binding_power_left_ = 0;
+  size_t min_binding_power_right_ = 0;
   std::stringstream output;
 };
 
