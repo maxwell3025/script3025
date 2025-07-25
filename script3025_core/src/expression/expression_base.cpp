@@ -108,7 +108,7 @@ class DisambiguationVisitor : public ExpressionVisitor {
   std::unordered_map<const Expression *, std::string> id_map;
 
  protected:
-  void visit_default(const Expression &e) {
+  void visit_expression(const Expression &e) {
     for (const std::unique_ptr<Expression> &child : e.children) {
       visit(*child);
     }

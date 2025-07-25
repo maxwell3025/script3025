@@ -15,7 +15,7 @@ class EqualityVisitor : public ExpressionVisitor {
   bool get() const;
 
  protected:
-  void visit_default(const Expression &e) override;
+  void visit_expression(const Expression &e) override;
 
  private:
   bool unequal;

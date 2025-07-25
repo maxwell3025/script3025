@@ -117,7 +117,7 @@ void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
 }
 
 void LazyReductionVisitor::visit_id(IdExpression &e) {
-  visit_default(e);
+  visit_expression(e);
   IdExpression &reduced_expression_casted =
       static_cast<IdExpression &>(*reduced_expression);
   reduced_expression_casted.id = std::move(e.id);
@@ -129,7 +129,7 @@ void LazyReductionVisitor::visit_let(LetExpression &e) {
       get_logger(), "If we do zeta reductions, this should not still exist.\n");
 }
 
-void LazyReductionVisitor::visit_default(Expression &e) {
+void LazyReductionVisitor::visit_expression(Expression &e) {
   std::unique_ptr<Expression> reduced = make_default_like(e);
 
   for (size_t i = 0; i < e.children.size(); ++i) {

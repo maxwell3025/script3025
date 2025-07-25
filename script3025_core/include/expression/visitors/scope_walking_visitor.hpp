@@ -34,7 +34,7 @@ class ScopeWalkingVisitor : public MutatingExpressionVisitor {
   }
 
  protected:
-  void visit_default(Expression &e) override {
+  void visit_expression(Expression &e) override {
     for (std::unique_ptr<Expression> &child : e.children) {
       visit(*child);
     }

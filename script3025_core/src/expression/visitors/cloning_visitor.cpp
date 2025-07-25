@@ -22,32 +22,32 @@ void CloningVisitor::visit_id(const IdExpression &e) {
 }
 
 void CloningVisitor::visit_lambda(const LambdaExpression &e) {
-  visit_default(e);
+  visit_expression(e);
   LambdaExpression &casted_expression = static_cast<LambdaExpression &>(*value);
   casted_expression.argument_id = e.argument_id;
 }
 
 void CloningVisitor::visit_let(const LetExpression &e) {
-  visit_default(e);
+  visit_expression(e);
   LetExpression &casted_expression = static_cast<LetExpression &>(*value);
   casted_expression.argument_id = e.argument_id;
 }
 
 void CloningVisitor::visit_nat_literal(const NatLiteralExpression &e) {
-  visit_default(e);
+  visit_expression(e);
   NatLiteralExpression &casted_expression =
       static_cast<NatLiteralExpression &>(*value);
   // TODO implement special handling
 }
 
 void CloningVisitor::visit_pi(const PiExpression &e) {
-  visit_default(e);
+  visit_expression(e);
   PiExpression &casted_expression = static_cast<PiExpression &>(*value);
   casted_expression.argument_id = e.argument_id;
 }
 
 void CloningVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
-  visit_default(e);
+  visit_expression(e);
   TypeKeywordExpression &casted_expression =
       static_cast<TypeKeywordExpression &>(*value);
   casted_expression.level_ = e.level_;
@@ -57,7 +57,7 @@ std::unique_ptr<Expression> CloningVisitor::get() {
   return std::move(value);
 }
 
-void CloningVisitor::visit_default(const Expression &e) {
+void CloningVisitor::visit_expression(const Expression &e) {
   std::unique_ptr<Expression> new_expression = make_default_like(e);
 
   pointer_map[&e] = new_expression.get();

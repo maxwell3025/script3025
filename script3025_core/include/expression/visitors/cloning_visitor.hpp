@@ -20,7 +20,7 @@ class CloningVisitor : public ExpressionVisitor {
   std::unordered_map<const Expression *, Expression *> pointer_map;
 
  protected:
-  void visit_default(const Expression &e) override;
+  void visit_expression(const Expression &e) override;
 
  private:
   template <typename ExpressionSubtype>

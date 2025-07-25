@@ -24,7 +24,7 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
   std::unique_ptr<Expression> reduced_expression;
 
  protected:
-  void visit_default(Expression &e);
+  void visit_expression(Expression &e);
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();
