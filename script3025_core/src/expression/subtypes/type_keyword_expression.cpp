@@ -2,9 +2,9 @@
 
 namespace script3025 {
 
-TypeKeywordExpression::TypeKeywordExpression(size_t level) : level(level) {}
+TypeKeywordExpression::TypeKeywordExpression(mpz_class level) : level_(level) {}
 
-TypeKeywordExpression::TypeKeywordExpression() : level(0) {}
+TypeKeywordExpression::TypeKeywordExpression() : level_(0) {}
 
 void TypeKeywordExpression::accept(ExpressionVisitor &visitor) const {
   visitor.visit_type_keyword(*this);

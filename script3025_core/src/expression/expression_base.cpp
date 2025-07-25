@@ -260,7 +260,7 @@ class StringifyVisitor : public ExpressionVisitor {
   void visit_nat_keyword(const NatKeywordExpression &e) { output << "Nat"; }
 
   void visit_nat_literal(const NatLiteralExpression &e) {
-    // TODO
+    output << e.value_.get_str();
   }
 
   void visit_pi(const PiExpression &e) {
@@ -304,7 +304,7 @@ class StringifyVisitor : public ExpressionVisitor {
     const size_t left_binding_power = min_binding_power_left_;
 
     if (wrap) output << "(";
-    output << "Type " << e.level;
+    output << "Type " << e.level_.get_str();
     if (wrap) output << ")";
   }
 
