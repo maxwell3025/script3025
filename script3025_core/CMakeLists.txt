@@ -39,6 +39,7 @@ add_library(script3025_core
   src/expression/visitors/cloning_visitor.cpp
   src/expression/visitors/equality_visitor.cpp
   src/expression/visitors/lazy_reduction_visitor.cpp
+  src/expression/visitors/normalizing_visitor.cpp
   src/expression/visitors/partial_clone_visitor.cpp
   src/expression/visitors/partial_clone_visitor.hpp
   src/expression/visitors/replacing_visitor.cpp
@@ -64,6 +65,7 @@ add_library(script3025_core
   include/expression/visitors/cloning_visitor.hpp
   include/expression/visitors/equality_visitor.hpp
   include/expression/visitors/lazy_reduction_visitor.hpp
+  include/expression/visitors/normalizing_visitor.hpp
   include/expression/visitors/replacing_visitor.hpp
   include/expression/expression_base.hpp
   include/expression/expression_visitor.hpp
