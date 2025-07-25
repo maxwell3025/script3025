@@ -11,12 +11,20 @@ class ApplicationExpression : public Expression {
   ApplicationExpression(std::unique_ptr<Expression> &&function,
                         std::unique_ptr<Expression> &&argument);
   ApplicationExpression();
-  void accept(ExpressionVisitor &visitor) const override;
-  void accept(MutatingExpressionVisitor &visitor) override;
+  void accept(ExpressionVisitor<true> &visitor) const override {
+    visitor.visit_application(*this);
+  }
+  void accept(ExpressionVisitor<false> &visitor) override {
+    visitor.visit_application(*this);
+  }
   inline std::unique_ptr<Expression> &function() { return children[0]; }
   inline std::unique_ptr<Expression> &argument() { return children[1]; }
-  inline const std::unique_ptr<Expression> &function() const { return children[0]; }
-  inline const std::unique_ptr<Expression> &argument() const { return children[1]; }
+  inline const std::unique_ptr<Expression> &function() const {
+    return children[0];
+  }
+  inline const std::unique_ptr<Expression> &argument() const {
+    return children[1];
+  }
 
  private:
   static std::shared_ptr<spdlog::logger> get_logger();

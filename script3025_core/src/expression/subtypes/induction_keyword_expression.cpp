@@ -2,14 +2,6 @@
 
 namespace script3025 {
 
-void InductionKeywordExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_induction_keyword(*this);
-}
-
-void InductionKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_induction_keyword(*this);
-}
-
 std::shared_ptr<spdlog::logger> InductionKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

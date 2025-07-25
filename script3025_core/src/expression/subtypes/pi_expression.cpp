@@ -5,20 +5,12 @@ namespace script3025 {
 PiExpression::PiExpression(std::string argument_id,
                            std::unique_ptr<Expression> &&argument_type,
                            std::unique_ptr<Expression> &&definition)
-    : argument_id(argument_id) {
+    : ScopeExpression(std::move(argument_id)) {
   children.emplace_back(std::move(argument_type));
   children.emplace_back(std::move(definition));
 }
 
 PiExpression::PiExpression() {}
-
-void PiExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_pi(*this);
-}
-
-void PiExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_pi(*this);
-}
 
 std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

@@ -3,17 +3,17 @@
 
 #include <gmpxx.h>
 
-#include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/keyword_expression.hpp"
 
 namespace script3025 {
 
-class TypeKeywordExpression : public Expression {
+class TypeKeywordExpression : public KeywordExpression {
  public:
   explicit TypeKeywordExpression(mpz_class level);
   TypeKeywordExpression();
-  void accept(ExpressionVisitor &visitor) const override;
-  void accept(MutatingExpressionVisitor &visitor) override;
+  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_type_keyword(*this); }
+  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_type_keyword(*this); }
 
   mpz_class level_;
 
@@ -21,6 +21,6 @@ class TypeKeywordExpression : public Expression {
   static std::shared_ptr<spdlog::logger> get_logger();
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

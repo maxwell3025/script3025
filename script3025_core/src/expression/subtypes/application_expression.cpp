@@ -13,14 +13,6 @@ ApplicationExpression::ApplicationExpression(
 
 ApplicationExpression::ApplicationExpression() {}
 
-void ApplicationExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_application(*this);
-}
-
-void ApplicationExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_application(*this);
-}
-
 std::shared_ptr<spdlog::logger> ApplicationExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

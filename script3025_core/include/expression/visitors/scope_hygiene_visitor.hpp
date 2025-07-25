@@ -7,9 +7,9 @@
 
 namespace script3025 {
 
-class ScopeHygieneVisitor : public ScopeWalkingVisitor {
+class ScopeHygieneVisitor : public ScopeWalkingVisitor<true> {
  public:
-  void visit_id(IdExpression &e) override {
+  void visit_id(const IdExpression &e) override {
     if (!e.source) return;
     for (size_t i = lexical_scope_[e.id].size(); i-- != 0;) {
       if (lexical_scope_[e.id][i] == e.source) return;
@@ -25,11 +25,6 @@ class ScopeHygieneVisitor : public ScopeWalkingVisitor {
 
 bool is_hygenic(const Expression &e) {
   ScopeHygieneVisitor visitor;
-  // TODO: this is rather ugly and unprincipled.
-  // This should be solved with a deep refactoring where the base visitor
-  // classes and ScopeWalkingVisitor are made into templates over constness.
-  // use std::add_const and std::conditional and use a bool to switch.
-  visitor.visit(const_cast<Expression &>(e));
   return visitor.get();
 }
 

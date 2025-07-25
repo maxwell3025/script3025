@@ -6,7 +6,7 @@
 
 namespace script3025 {
 
-class EqualityVisitor : public ExpressionVisitor {
+class EqualityVisitor : public ConstExpressionVisitor {
  public:
   EqualityVisitor(const Expression *lhs);
   void visit_id(const IdExpression &rhs) override;
@@ -15,12 +15,12 @@ class EqualityVisitor : public ExpressionVisitor {
   bool get() const;
 
  protected:
-  void visit_default(const Expression &e) override;
+  void visit_expression(const Expression &e) override;
 
  private:
   bool unequal;
   const Expression *lhs;
-  std::unordered_map<const Expression *, const Expression *> pointer_map;
+  std::unordered_map<const Expression *, const Expression *> pointer_map_;
 };
 
 }  // namespace script3025

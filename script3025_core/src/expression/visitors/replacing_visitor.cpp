@@ -15,8 +15,8 @@ void ReplacingVisitor::visit_id(const IdExpression &e) {
   if (e.source == search_source && e.id == search_id) {
     CloningVisitor visitor;
     visitor.visit(*replacement);
-    value = visitor.get();
-    pointer_map[&e] = value.get();
+    value_ = visitor.get();
+    pointer_map_[&e] = value_.get();
   } else {
     CloningVisitor::visit_id(e);
   }

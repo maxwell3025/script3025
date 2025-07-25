@@ -19,12 +19,4 @@ std::shared_ptr<spdlog::logger> IdExpression::get_logger() {
   return logger;
 }
 
-void IdExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_id(*this);
-}
-
-void IdExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_id(*this);
-}
-
 }  // namespace script3025

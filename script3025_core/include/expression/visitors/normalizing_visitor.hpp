@@ -7,7 +7,7 @@
 
 namespace script3025 {
 
-class NormalizingVisitor : public ScopeWalkingVisitor {
+class NormalizingVisitor : public ScopeWalkingVisitor<false> {
  public:
   void visit_id(IdExpression &e) override { e.source = get_source(e.id); }
 };

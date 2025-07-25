@@ -4,6 +4,8 @@ project(script3025)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_options(-Wall -Wextra -pedantic)
+
 enable_testing()
 
 # Here, we configure the spdlog level

@@ -5,20 +5,12 @@ namespace script3025 {
 LambdaExpression::LambdaExpression(std::string argument_id,
                                    std::unique_ptr<Expression> &&argument_type,
                                    std::unique_ptr<Expression> &&definition)
-    : argument_id(std::move(argument_id)) {
+    : ScopeExpression(std::move(argument_id)) {
   children.emplace_back(std::move(argument_type));
   children.emplace_back(std::move(definition));
 }
 
 LambdaExpression::LambdaExpression() {}
-
-void LambdaExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_lambda(*this);
-}
-
-void LambdaExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_lambda(*this);
-}
 
 std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

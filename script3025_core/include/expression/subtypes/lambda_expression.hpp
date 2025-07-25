@@ -1,25 +1,23 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_LAMBDA_EXPRESSION_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_LAMBDA_EXPRESSION_HPP
 
-#include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "scope_expression.hpp"
 
 namespace script3025 {
 
-class LambdaExpression : public Expression {
+class LambdaExpression : public ScopeExpression {
  public:
   LambdaExpression(std::string argument_id,
                    std::unique_ptr<Expression>&& argument_type,
                    std::unique_ptr<Expression>&& definition);
   LambdaExpression();
-  void accept(ExpressionVisitor& visitor) const override;
-  void accept(MutatingExpressionVisitor& visitor) override;
-  inline std::unique_ptr<Expression>& argument_type() { return children[0]; }
-  inline std::unique_ptr<Expression>& definition() { return children[1]; }
-  inline const std::unique_ptr<Expression>& argument_type() const {
-    return children[0];
-  }
-  inline const std::unique_ptr<Expression>& definition() const { return children[1]; }
+  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_lambda(*this); }
+  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_lambda(*this); }
+  std::unique_ptr<Expression>& argument_type() override { return children[0]; }
+  std::unique_ptr<Expression>& definition() override { return children[1]; }
+  const std::unique_ptr<Expression>& argument_type() const override { return children[0]; }
+  const std::unique_ptr<Expression>& definition() const override { return children[1]; }
 
   std::string argument_id;
 

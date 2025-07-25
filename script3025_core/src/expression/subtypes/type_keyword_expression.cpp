@@ -6,14 +6,6 @@ TypeKeywordExpression::TypeKeywordExpression(mpz_class level) : level_(level) {}
 
 TypeKeywordExpression::TypeKeywordExpression() : level_(0) {}
 
-void TypeKeywordExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_type_keyword(*this);
-}
-
-void TypeKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_type_keyword(*this);
-}
-
 std::shared_ptr<spdlog::logger> TypeKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
