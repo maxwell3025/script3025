@@ -2,14 +2,6 @@
 
 namespace script3025 {
 
-void NatKeywordExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_nat_keyword(*this);
-}
-
-void NatKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_nat_keyword(*this);
-}
-
 std::shared_ptr<spdlog::logger> NatKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

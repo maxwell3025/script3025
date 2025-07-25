@@ -1,6 +1,8 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_VISITOR_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_VISITOR_HPP
 
+#include <type_traits>
+
 namespace script3025 {
 
 class Expression;
@@ -20,55 +22,55 @@ class SuccKeywordExpression;
 class ScopeExpression;
 class TypeKeywordExpression;
 
+template <const bool is_const>
 class ExpressionVisitor {
  public:
-  virtual void visit_lambda(const LambdaExpression &e);
-  virtual void visit_let(const LetExpression &e);
-  virtual void visit_pi(const PiExpression &e);
+  template <typename T>
+  using ref = std::conditional_t<is_const, const T&, T&>;
 
-  virtual void visit_induction_keyword(const InductionKeywordExpression &e);
-  virtual void visit_nat_keyword(const NatKeywordExpression &e);
-  virtual void visit_replace_keyword(const ReplaceKeywordExpression &e);
-  virtual void visit_reflexive_keyword(const ReflexiveKeywordExpression &e);
-  virtual void visit_succ_keyword(const SuccKeywordExpression &e);
-  virtual void visit_type_keyword(const TypeKeywordExpression &e);
+  virtual void visit_lambda(ref<LambdaExpression> e) { visit_scope(e); }
+  virtual void visit_let(ref<LetExpression> e) { visit_scope(e); }
+  virtual void visit_pi(ref<PiExpression> e) { visit_scope(e); }
 
-  virtual void visit_application(const ApplicationExpression &e);
-  virtual void visit_equality(const EqualityExpression &e);
-  virtual void visit_id(const IdExpression &e);
-  virtual void visit_nat_literal(const NatLiteralExpression &e);
-  void visit(const Expression &e);
+  virtual void visit_induction_keyword(ref<InductionKeywordExpression> e) {
+    visit_keyword(e);
+  }
+  virtual void visit_nat_keyword(ref<NatKeywordExpression> e) {
+    visit_keyword(e);
+  }
+  virtual void visit_replace_keyword(ref<ReplaceKeywordExpression> e) {
+    visit_keyword(e);
+  }
+  virtual void visit_reflexive_keyword(ref<ReflexiveKeywordExpression> e) {
+    visit_keyword(e);
+  }
+  virtual void visit_succ_keyword(ref<SuccKeywordExpression> e) {
+    visit_keyword(e);
+  }
+  virtual void visit_type_keyword(ref<TypeKeywordExpression> e) {
+    visit_keyword(e);
+  }
 
- protected:
-  virtual void visit_expression(const Expression &e);
-  virtual void visit_keyword(const KeywordExpression &e);
-  virtual void visit_scope(const ScopeExpression &e);
-};
-
-class MutatingExpressionVisitor {
- public:
-  virtual void visit_lambda(LambdaExpression &e);
-  virtual void visit_let(LetExpression &e);
-  virtual void visit_pi(PiExpression &e);
-
-  virtual void visit_induction_keyword(InductionKeywordExpression &e);
-  virtual void visit_nat_keyword(NatKeywordExpression &e);
-  virtual void visit_replace_keyword(ReplaceKeywordExpression &e);
-  virtual void visit_reflexive_keyword(ReflexiveKeywordExpression &e);
-  virtual void visit_succ_keyword(SuccKeywordExpression &e);
-  virtual void visit_type_keyword(TypeKeywordExpression &e);
-
-  virtual void visit_application(ApplicationExpression &e);
-  virtual void visit_equality(EqualityExpression &e);
-  virtual void visit_id(IdExpression &e);
-  virtual void visit_nat_literal(NatLiteralExpression &e);
-  void visit(Expression &e);
+  virtual void visit_application(ref<ApplicationExpression> e) {
+    visit_expression(e);
+  }
+  virtual void visit_equality(ref<EqualityExpression> e) {
+    visit_expression(e);
+  }
+  virtual void visit_id(ref<IdExpression> e) { visit_expression(e); }
+  virtual void visit_nat_literal(ref<NatLiteralExpression> e) {
+    visit_expression(e);
+  }
+  void visit(ref<Expression> e) { e.accept(*this); }
 
  protected:
-  virtual void visit_expression(Expression &e);
-  virtual void visit_keyword(KeywordExpression &e);
-  virtual void visit_scope(ScopeExpression &e);
+  virtual void visit_expression(ref<Expression> e) {}
+  virtual void visit_keyword(ref<KeywordExpression> e) { visit_expression(e); }
+  virtual void visit_scope(ref<ScopeExpression> e) { visit_expression(e); }
 };
+
+using ConstExpressionVisitor = ExpressionVisitor<true>;
+using MutatingExpressionVisitor = ExpressionVisitor<false>;
 
 }  // namespace script3025
 

@@ -5,7 +5,7 @@
 
 namespace script3025 {
 
-class PartialCloneVisitor : public ExpressionVisitor {
+class PartialCloneVisitor : public ConstExpressionVisitor {
  public:
   void visit_application(const ApplicationExpression &e) override;
   void visit_equality(const EqualityExpression &e) override;

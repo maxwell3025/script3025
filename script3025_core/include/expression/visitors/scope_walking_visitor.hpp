@@ -9,49 +9,56 @@
 
 namespace script3025 {
 
-class ScopeWalkingVisitor : public MutatingExpressionVisitor {
+template <const bool is_const>
+class ScopeWalkingVisitor : public ExpressionVisitor<is_const> {
  public:
-  void visit_lambda(LambdaExpression &e) override {
-    visit(*e.argument_type());
+  template <typename T>
+  using ref = std::conditional_t<is_const, const T &, T &>;
+
+  using expression_ptr =
+      std::conditional_t<is_const, const Expression *, Expression *>;
+
+  void visit_lambda(ref<LambdaExpression> e) override {
+    this->visit(*e.argument_type());
     push_source(e.argument_id, &e);
-    visit(*e.definition());
+    this->visit(*e.definition());
     pop_source(e.argument_id);
   }
 
-  void visit_let(LetExpression &e) override {
-    visit(*e.argument_type());
-    visit(*e.argument_value());
+  void visit_let(ref<LetExpression> e) override {
+    this->visit(*e.argument_type());
+    this->visit(*e.argument_value());
     push_source(e.argument_id, &e);
-    visit(*e.definition());
+    this->visit(*e.definition());
     pop_source(e.argument_id);
   }
 
-  void visit_pi(PiExpression &e) override {
-    visit(*e.argument_type());
+  void visit_pi(ref<PiExpression> e) override {
+    this->visit(*e.argument_type());
     push_source(e.argument_id, &e);
-    visit(*e.definition());
+    this->visit(*e.definition());
     pop_source(e.argument_id);
   }
 
  protected:
-  void visit_expression(Expression &e) override {
-    for (std::unique_ptr<Expression> &child : e.children) {
-      visit(*child);
+  void visit_expression(ref<Expression> e) override {
+    for (ref<std::unique_ptr<Expression>> child : e.children) {
+      this->visit(*child);
     }
   }
 
-  Expression *get_source(std::string name) {
+  expression_ptr get_source(std::string name) {
     if (lexical_scope_[name].size() == 0) return nullptr;
     return lexical_scope_[name].back();
   }
 
-  void push_source(std::string name, Expression *source) {
+  void push_source(std::string name, expression_ptr source) {
     lexical_scope_[name].push_back(source);
   }
 
   void pop_source(std::string name) { lexical_scope_[name].pop_back(); }
 
-  std::unordered_map<std::string, std::vector<Expression *>> lexical_scope_;
+  std::unordered_map<std::string, std::vector<expression_ptr>> lexical_scope_;
 };
 
 }  // namespace script3025

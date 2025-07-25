@@ -9,14 +9,14 @@
 
 namespace script3025 {
 
+template <const bool is_const>
 class ExpressionVisitor;
-class MutatingExpressionVisitor;
 
 class Expression {
  public:
-  virtual void accept(ExpressionVisitor &visitor) const = 0;
+  virtual void accept(ExpressionVisitor<true> &visitor) const = 0;
 
-  virtual void accept(MutatingExpressionVisitor &visitor) = 0;
+  virtual void accept(ExpressionVisitor<false> &visitor) = 0;
 
   virtual ~Expression() = 0;
 

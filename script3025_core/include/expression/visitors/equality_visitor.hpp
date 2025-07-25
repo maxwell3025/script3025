@@ -6,7 +6,7 @@
 
 namespace script3025 {
 
-class EqualityVisitor : public ExpressionVisitor {
+class EqualityVisitor : public ConstExpressionVisitor {
  public:
   EqualityVisitor(const Expression *lhs);
   void visit_id(const IdExpression &rhs) override;

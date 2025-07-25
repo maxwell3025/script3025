@@ -46,7 +46,6 @@ add_library(script3025_core
   src/expression/visitors/partial_clone_visitor.hpp
   src/expression/visitors/replacing_visitor.cpp
   src/expression/expression_base.cpp
-  src/expression/expression_visitor.cpp
   src/cst_transformers.cpp
   src/parsing_utility.cpp
   src/program.cpp

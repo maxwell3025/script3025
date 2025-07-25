@@ -42,7 +42,7 @@ std::shared_ptr<spdlog::logger> Expression::get_logger() {
   return logger;
 }
 
-class DisambiguationVisitor : public ExpressionVisitor {
+class DisambiguationVisitor : public ConstExpressionVisitor{
  public:
   void visit_application(const ApplicationExpression &e) {
     visit(*e.function());
@@ -128,7 +128,7 @@ struct BindingPower {
 
 constexpr BindingPower binding_power;
 
-class StringifyVisitor : public ExpressionVisitor {
+class StringifyVisitor : public ConstExpressionVisitor{
  public:
   void visit_application(const ApplicationExpression &e) {
     const bool wrap =

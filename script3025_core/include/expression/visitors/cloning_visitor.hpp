@@ -6,7 +6,7 @@
 
 namespace script3025 {
 
-class CloningVisitor : public ExpressionVisitor {
+class CloningVisitor : public ConstExpressionVisitor {
  public:
   void visit_id(const IdExpression &e) override;
   void visit_lambda(const LambdaExpression &e) override;
