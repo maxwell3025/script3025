@@ -12,8 +12,8 @@ class NatLiteralExpression : public Expression {
  public:
   NatLiteralExpression(mpz_class value);
   NatLiteralExpression();
-  void accept(ExpressionVisitor &visitor) const override;
-  void accept(MutatingExpressionVisitor &visitor) override;
+  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_nat_literal(*this); }
+  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_nat_literal(*this); }
 
   mpz_class value_;
 

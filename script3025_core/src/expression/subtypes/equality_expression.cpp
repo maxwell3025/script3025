@@ -10,14 +10,6 @@ EqualityExpression::EqualityExpression(std::unique_ptr<Expression> &&lhs,
 
 EqualityExpression::EqualityExpression() {}
 
-void EqualityExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_equality(*this);
-}
-
-void EqualityExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_equality(*this);
-}
-
 std::shared_ptr<spdlog::logger> EqualityExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

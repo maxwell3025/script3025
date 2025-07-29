@@ -2,14 +2,6 @@
 
 namespace script3025 {
 
-void ReplaceKeywordExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_replace_keyword(*this);
-}
-
-void ReplaceKeywordExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_replace_keyword(*this);
-}
-
 std::shared_ptr<spdlog::logger> ReplaceKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

@@ -6,14 +6,6 @@ NatLiteralExpression::NatLiteralExpression(mpz_class value) : value_(value) {}
 
 NatLiteralExpression::NatLiteralExpression() : value_(0) {}
 
-void NatLiteralExpression::accept(ExpressionVisitor &visitor) const {
-  visitor.visit_nat_literal(*this);
-}
-
-void NatLiteralExpression::accept(MutatingExpressionVisitor &visitor) {
-  visitor.visit_nat_literal(*this);
-}
-
 std::shared_ptr<spdlog::logger> NatLiteralExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
