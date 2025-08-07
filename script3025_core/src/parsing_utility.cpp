@@ -2,9 +2,13 @@
 
 namespace script3025 {
 
-[[nodiscard]] static bool is_alphanumeric(char c) {
+namespace {
+
+[[nodiscard]] bool is_alphanumeric(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
+
+}  // namespace
 
 std::vector<AnnotatedToken> tokenize(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =

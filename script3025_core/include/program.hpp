@@ -25,30 +25,29 @@ class Program {
     return global_ids_;
   }
 
-  [[nodiscard]] inline const Expression &global(const std::string &id) const {
+  [[nodiscard]] const Expression &global(const std::string &id) const {
     return *global_definitions_.at(id);
   }
 
-  [[nodiscard]] inline bool comes_before(const std::string &a,
-                                         const std::string &b) const {
+  [[nodiscard]] bool comes_before(const std::string &a,
+                                  const std::string &b) const {
     if (id_ordering_.find(a) == id_ordering_.end()) return false;
     if (id_ordering_.find(b) == id_ordering_.end()) return false;
     return id_ordering_.at(a) < id_ordering_.at(b);
   }
 
-  [[nodiscard]] inline bool has_id(const std::string &id) const {
+  [[nodiscard]] bool has_id(const std::string &id) const {
     return global_definitions_.find(id) != global_definitions_.end();
   }
 
-  inline void push_definition(std::string id,
-                              std::unique_ptr<Expression> definition) {
+  void push_definition(std::string id, std::unique_ptr<Expression> definition) {
     if (has_id(id)) return;
     global_definitions_.emplace(id, std::move(definition));
     id_ordering_.emplace(id, global_ids_.size());
     global_ids_.push_back(id);
   }
 
-  inline void pop_definition() {
+  void pop_definition() {
     global_definitions_.erase(global_ids_.back());
     id_ordering_.erase(global_ids_.back());
     global_ids_.pop_back();
