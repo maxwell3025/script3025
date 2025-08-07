@@ -13,8 +13,8 @@
 #include <variant>
 #include <vector>
 
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 namespace parser {
 
@@ -25,7 +25,7 @@ struct ConcreteSyntaxTree;
 
 // @brief
 // Object which parses strings of type `T` into `ConcreteSyntaxTree`s.
-// 
+//
 // To construct an instance of `Parser`, use `ParserBuilder`.
 //
 // Formally, this is a [LR(1)](https://en.wikipedia.org/wiki/LR_parser) parser.
@@ -41,14 +41,15 @@ class ParserBuilder;
 
 namespace {
 
-// From https://stackoverflow.com/questions/29855908/c-unordered-set-of-vectors#answer-29855973
+// From
+// https://stackoverflow.com/questions/29855908/c-unordered-set-of-vectors#answer-29855973
 template <typename T>
 struct VectorHash {
-  size_t operator()(const std::vector<T>& v) const {
+  size_t operator()(const std::vector<T> &v) const {
     std::hash<T> hasher;
     size_t seed = 0;
     for (T i : v) {
-      seed ^= hasher(i) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+      seed ^= hasher(i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
   }
@@ -56,7 +57,7 @@ struct VectorHash {
 
 template <typename T, typename H = std::hash<T>>
 struct UnorderedSetHash {
-  size_t operator()(const std::unordered_set<T, H>& set) const {
+  size_t operator()(const std::unordered_set<T, H> &set) const {
     H hasher;
     size_t seed = 0;
     for (T element : set) {
@@ -79,35 +80,37 @@ using PartialRuleset = std::unordered_set<std::vector<T>, VectorHash<T>>;
 template <typename T>
 using TotalRuleset = std::unordered_map<T, PartialRuleset<T>>;
 
-template<typename T>
-void vectorize(std::vector<T> &vector) {}
+template <typename T>
+void vectorize(std::vector<T> &) {}
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 void vectorize(std::vector<T> &vector, T first_element,
                Args... remaining_elements) {
   vector.push_back(first_element);
   vectorize<T>(vector, remaining_elements...);
 }
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 std::vector<T> vectorize(Args... elements) {
   std::vector<T> output;
   vectorize<T>(output, elements...);
   return output;
-} // LCOV_EXCL_LINE
+}  // LCOV_EXCL_LINE
 
-template<typename T>
+template <typename T>
 struct CanonicalSetEntry {
-  public:
+ public:
   T target;
   const std::vector<T> sentential_form;
   size_t index;
   T following_symbol;
 
-  CanonicalSetEntry(
-      T target, const std::vector<T> &sentential_form, T following_symbol)
-    : target(target), sentential_form(sentential_form), index(0),
-      following_symbol(following_symbol) {}
+  CanonicalSetEntry(T target, const std::vector<T> &sentential_form,
+                    T following_symbol)
+      : target(target),
+        sentential_form(sentential_form),
+        index(0),
+        following_symbol(following_symbol) {}
 
   CanonicalSetEntry<T> next() const {
     CanonicalSetEntry<T> next = CanonicalSetEntry(*this);
@@ -116,10 +119,8 @@ struct CanonicalSetEntry {
   }
 
   bool operator==(const CanonicalSetEntry &rhs) const {
-    return target == rhs.target &&
-    sentential_form == rhs.sentential_form &&
-    index == rhs.index &&
-    following_symbol == rhs.following_symbol;
+    return target == rhs.target && sentential_form == rhs.sentential_form &&
+           index == rhs.index && following_symbol == rhs.following_symbol;
   }
 };
 
@@ -132,14 +133,12 @@ struct CanonicalSetEntryHash {
     VectorHash<T> vec_hasher;
 
     size_t seed = 0;
-    seed ^= t_hasher     (entry.following_symbol)
-        + 0x9e3779b9 + (seed<<6) + (seed>>2);
-    seed ^= size_t_hasher(entry.index)
-        + 0x9e3779b9 + (seed<<6) + (seed>>2);
-    seed ^= vec_hasher   (entry.sentential_form)
-        + 0x9e3779b9 + (seed<<6) + (seed>>2);
-    seed ^= t_hasher     (entry.target)
-        + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    seed ^= t_hasher(entry.following_symbol) + 0x9e3779b9 + (seed << 6) +
+            (seed >> 2);
+    seed ^= size_t_hasher(entry.index) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= vec_hasher(entry.sentential_form) + 0x9e3779b9 + (seed << 6) +
+            (seed >> 2);
+    seed ^= t_hasher(entry.target) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     return seed;
   }
 };
@@ -166,27 +165,29 @@ struct AnnotatedNode {
   size_t annotation;
 
   // TODO also try doing this with a non-reference type ans see if it breaks.
-  AnnotatedNode(ConcreteSyntaxTree<T> &&symbol, size_t annotation) :
-                symbol(std::move(symbol)), annotation(annotation) {}
-  
-  AnnotatedNode(AnnotatedNode &&other) : symbol(std::move(other.symbol)),
-                                        annotation(other.annotation) {}
+  AnnotatedNode(ConcreteSyntaxTree<T> &&symbol, size_t annotation)
+      : symbol(std::move(symbol)), annotation(annotation) {}
+
+  AnnotatedNode(AnnotatedNode &&other)
+      : symbol(std::move(other.symbol)), annotation(other.annotation) {}
 };
 
-} // namespace
+}  // namespace
 
 template <typename T>
 struct ConcreteSyntaxTree {
   template <typename U>
-  friend std::ostream &operator<<(std::ostream &os, const ConcreteSyntaxTree<U> &tree);
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const ConcreteSyntaxTree<U> &tree);
+
  public:
   T symbol;
   std::vector<ConcreteSyntaxTree<T>> children;
 
   ConcreteSyntaxTree(T symbol) : symbol(symbol) {}
 
-  ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other) : symbol(other.symbol),
-      children(std::move(other.children)){}
+  ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other)
+      : symbol(other.symbol), children(std::move(other.children)) {}
 
   [[nodiscard]] std::vector<T> sentence() {
     std::vector<T> sentence;
@@ -196,7 +197,7 @@ struct ConcreteSyntaxTree {
                   });
     return sentence;
   }
-  
+
   std::string to_string() const {
     std::stringstream output;
     std::vector<std::string> stack;
@@ -205,7 +206,9 @@ struct ConcreteSyntaxTree {
   }
 
  private:
-  void stringify_internal(std::ostream &os, std::vector<std::string> &current_stack, bool is_last) const {
+  void stringify_internal(std::ostream &os,
+                          std::vector<std::string> &current_stack,
+                          bool is_last) const {
     for (const std::string &c : current_stack) {
       os << c;
     }
@@ -224,7 +227,7 @@ struct ConcreteSyntaxTree {
     }
 
     os << symbol << std::endl;
-    for(size_t child_index = 0; child_index < children.size(); ++child_index) {
+    for (size_t child_index = 0; child_index < children.size(); ++child_index) {
       children[child_index].stringify_internal(
           os, current_stack, child_index == children.size() - 1);
     }
@@ -249,12 +252,12 @@ class Parser {
  public:
   // @brief
   // Parse a token iterator into a `ConcreteSyntaxTree`.
-  template<typename Iterator>
+  template <typename Iterator>
   ConcreteSyntaxTree<T> parse(Iterator begin, Iterator end);
 
  private:
   Parser(const std::vector<std::unordered_map<T, Action<T>>> &action_table,
-          T goal, T end);
+         T goal, T end);
   static std::shared_ptr<spdlog::logger> get_logger();
 
   T goal_symbol;
@@ -269,28 +272,31 @@ class ParserBuilder {
 
   // @brief
   // Adds a rule to the grammar stored by the builder.
-  // 
+  //
   // @example
   // ```
   // ParserBuilder<char> my_parser_builder('G', '$');
   // // adds A -> bBA to the grammar.
   // my_parser_builder.add_rule('A', 'b', 'B', 'A');
   // ```
-  template<typename... Args>
+  template <typename... Args>
   ParserBuilder &rule(T nonterminal, Args... sentence);
 
   // @brief
   // Build an instance of `Parser` according to the rules given thus far.
-  // 
+  //
   // This method may fail if the given grammar is not LR(1).
   //
   // @throws TODO
   Parser<T> build();
 
  private:
-  using CanonicalSet = std::unordered_set<CanonicalSetEntry<T>, CanonicalSetEntryHash<T>>;
-  using CanonicalSetHash = UnorderedSetHash<CanonicalSetEntry<T>, CanonicalSetEntryHash<T>>;
-  using CanonicalCollection = std::unordered_set<CanonicalSet, CanonicalSetHash>;
+  using CanonicalSet =
+      std::unordered_set<CanonicalSetEntry<T>, CanonicalSetEntryHash<T>>;
+  using CanonicalSetHash =
+      UnorderedSetHash<CanonicalSetEntry<T>, CanonicalSetEntryHash<T>>;
+  using CanonicalCollection =
+      std::unordered_set<CanonicalSet, CanonicalSetHash>;
 
   // Populates `terminals` and `nonterminals` according to `ruleset`.
   void infer_types();
@@ -300,7 +306,7 @@ class ParserBuilder {
   // `possibly_empty` should be a superset of the non-terminals that can
   // actually evaluate to the empty string.
   bool is_sentence_empty(const std::vector<T> &sentence);
-  
+
   // Returns `true` if `possibly_empty` and the rules for `symbol` guarantee
   // that `symbol` produces a nonempty string.
   // Otherwise, returns `false`.
@@ -351,7 +357,7 @@ void ParserBuilder<T>::infer_types() {
   }
 
   for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
-    const T &nonterminal = it -> first;
+    const T &nonterminal = it->first;
     nonterminals.insert(nonterminal);
     terminals.erase(nonterminal);
   }
@@ -370,9 +376,9 @@ bool ParserBuilder<T>::is_sentence_empty(const std::vector<T> &sentence) {
 template <typename T>
 bool ParserBuilder<T>::definitely_nonempty(const T &symbol) {
   bool symbol_has_rule = ruleset.find(symbol) == ruleset.end();
-  const PartialRuleset<T> &productions = symbol_has_rule ?
-      PartialRuleset<T>() : ruleset.at(symbol);
-  
+  const PartialRuleset<T> &productions =
+      symbol_has_rule ? PartialRuleset<T>() : ruleset.at(symbol);
+
   for (const std::vector<T> &sentence : productions) {
     if (is_sentence_empty(sentence)) {
       return false;
@@ -404,7 +410,7 @@ std::unordered_set<T> ParserBuilder<T>::generate_empty_set() {
 
 template <typename T>
 std::unordered_map<T, std::unordered_set<T>>
-    ParserBuilder<T>::generate_first_set() {
+ParserBuilder<T>::generate_first_set() {
   bool changed = true;
   while (changed) {
     changed = false;
@@ -417,10 +423,9 @@ std::unordered_map<T, std::unordered_set<T>>
         } else if (nonterminals.find(sentence[0]) == nonterminals.end()) {
           first_set[symbol].insert(sentence[0]);
         } else {
-
           for (const T &prefix_symbol : sentence) {
-            first_set[symbol].merge(std::unordered_set<T>(
-                first_set[prefix_symbol]));
+            first_set[symbol].merge(
+                std::unordered_set<T>(first_set[prefix_symbol]));
             if (possibly_empty.find(prefix_symbol) == possibly_empty.end()) {
               break;
             }
@@ -455,15 +460,13 @@ Parser<T> ParserBuilder<T>::build() {
   std::deque<CanonicalSet> bfs_queue;
 
   // On the set S, and seeing a lookahead L, do action action_table[S, L].
-  std::unordered_map<
-    CanonicalSet,
-    std::unordered_map<T, Action<T>>,
-    CanonicalSetHash> action_table;
+  std::unordered_map<CanonicalSet, std::unordered_map<T, Action<T>>,
+                     CanonicalSetHash>
+      action_table;
 
   CanonicalSet initial_set;
-  initial_set.insert(CanonicalSetEntry<T>(goal_symbol,
-                                          std::vector<T>{goal_symbol},
-                                          terminal_symbol));
+  initial_set.insert(CanonicalSetEntry<T>(
+      goal_symbol, std::vector<T>{goal_symbol}, terminal_symbol));
 
   std::vector<CanonicalSet> numbering;
 
@@ -474,19 +477,18 @@ Parser<T> ParserBuilder<T>::build() {
     CanonicalSet current_set = bfs_queue.front();
     bfs_queue.pop_front();
 
-    if (canonical_collection.find(current_set) !=
-        canonical_collection.end()) continue;
+    if (canonical_collection.find(current_set) != canonical_collection.end())
+      continue;
 
     canonical_collection.insert(current_set);
 
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Processing canonical set {}:\n"
                         "{}",
-                        numbering.size(),
-                        stringify(current_set));
+                        numbering.size(), stringify(current_set));
 
     numbering.push_back(current_set);
-    
+
     // Figure out how to handle the lookahead for each canonical set.
     // We defer construction of shifts until after the numbering is stable
     for (T symbol : symbols) {
@@ -501,14 +503,13 @@ Parser<T> ParserBuilder<T>::build() {
             SPDLOG_LOGGER_ERROR(get_logger(),
                                 "Error: Reduce-Reduce conflict with \'{}\' on\n"
                                 "{}",
-                                symbol,
-                                stringify(current_set));
+                                symbol, stringify(current_set));
             throw std::runtime_error("Reduce-Reduce conflict");
           }
           found_action = true;
-          action_table[current_set].insert({
-              symbol,
-              ReduceAction<T>(entry.sentential_form.size(), entry.target)});
+          action_table[current_set].insert(
+              {symbol,
+               ReduceAction<T>(entry.sentential_form.size(), entry.target)});
         }
       }
       CanonicalSet shifted = shift(current_set, symbol);
@@ -517,8 +518,7 @@ Parser<T> ParserBuilder<T>::build() {
           SPDLOG_LOGGER_ERROR(get_logger(),
                               "Error: Shift-Reduce conflict with \'{}\' on\n"
                               "{}",
-                              symbol,
-                              stringify(current_set));
+                              symbol, stringify(current_set));
           throw std::runtime_error("Shift-Reduce conflict");
         }
         bfs_queue.push_back(shifted);
@@ -527,17 +527,16 @@ Parser<T> ParserBuilder<T>::build() {
   }
 
   // Populate the action table with the shift actions.
-  for (size_t canonical_set_index = 0;
-        canonical_set_index < numbering.size(); ++canonical_set_index) {
+  for (size_t canonical_set_index = 0; canonical_set_index < numbering.size();
+       ++canonical_set_index) {
     CanonicalSet canonical_set = numbering[canonical_set_index];
     for (T symbol : symbols) {
       CanonicalSet shifted_set = shift(canonical_set, symbol);
       if (!shifted_set.empty()) {
         size_t new_index = 0;
-        while(numbering[new_index] != shifted_set) ++new_index;
-        action_table[canonical_set].insert({
-            symbol,
-            Action<T>(ShiftAction<T>(new_index))});
+        while (numbering[new_index] != shifted_set) ++new_index;
+        action_table[canonical_set].insert(
+            {symbol, Action<T>(ShiftAction<T>(new_index))});
       }
     }
   }
@@ -546,7 +545,7 @@ Parser<T> ParserBuilder<T>::build() {
   for (CanonicalSet canonical_set : numbering) {
     action_table_vector.push_back(action_table[canonical_set]);
   }
-  
+
   return Parser<T>(action_table_vector, goal_symbol, terminal_symbol);
 }
 
@@ -570,7 +569,7 @@ void ParserBuilder<T>::extend(CanonicalSet &canonical_set) const {
       std::unordered_set<T> possible_follows;
       size_t following_symbol_index = entry.index + 1;
       for (; following_symbol_index < entry.sentential_form.size();
-          ++following_symbol_index) {
+           ++following_symbol_index) {
         T following_symbol = entry.sentential_form[following_symbol_index];
 
         // We merge all of the first symbols for the current following symbol
@@ -581,9 +580,8 @@ void ParserBuilder<T>::extend(CanonicalSet &canonical_set) const {
           possible_follows.merge(
               std::unordered_set<T>(first_set.at(following_symbol)));
         }
-        
-        if (possibly_empty.find(following_symbol) ==
-            possibly_empty.end()) {
+
+        if (possibly_empty.find(following_symbol) == possibly_empty.end()) {
           break;
         }
       }
@@ -593,13 +591,10 @@ void ParserBuilder<T>::extend(CanonicalSet &canonical_set) const {
       }
 
       for (T follow_symbol : possible_follows) {
-        for (const std::vector<T> &sentential_form
-            : ruleset.at(current_symbol)) {
+        for (const std::vector<T> &sentential_form :
+             ruleset.at(current_symbol)) {
           new_entries.insert(CanonicalSetEntry<T>(
-            current_symbol,
-            sentential_form,
-            follow_symbol
-          ));
+              current_symbol, sentential_form, follow_symbol));
         }
       }
     }
@@ -612,10 +607,9 @@ typename ParserBuilder<T>::CanonicalSet ParserBuilder<T>::shift(
     const CanonicalSet &canonical_set, T lookahead) const {
   CanonicalSet shifted_set;
   for (const CanonicalSetEntry<T> &current_entry : canonical_set) {
-    if (current_entry.index == current_entry.sentential_form.size())
-        continue;
+    if (current_entry.index == current_entry.sentential_form.size()) continue;
     if (current_entry.sentential_form[current_entry.index] != lookahead)
-        continue;
+      continue;
     shifted_set.insert(current_entry.next());
   }
   extend(shifted_set);
@@ -641,20 +635,21 @@ std::string ParserBuilder<T>::stringify(
   return output.str();
 }
 
-template<typename T>
+template <typename T>
 std::shared_ptr<spdlog::logger> ParserBuilder<T>::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
-      ([&] () -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("parser::ParserBuilder", spdlog::color_mode::always);
-        logger-> set_level(spdlog::level::warn);
-        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+      ([&]() -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("parser::ParserBuilder",
+                                         spdlog::color_mode::always);
+        logger->set_level(spdlog::level::warn);
+        logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
   return logger;
 }
 
-template<typename T>
-template<typename Iterator>
+template <typename T>
+template <typename Iterator>
 ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
   std::vector<AnnotatedNode<T>> stack;
   while (true) {
@@ -668,7 +663,6 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
     for (auto it = begin; it != end; ++it) {
       stack_trace << *it;
     }
-    stack_trace;
     SPDLOG_LOGGER_TRACE(get_logger(), "{}", stack_trace.str());
 
     if (begin == end && stack.size() == 1) {
@@ -698,20 +692,19 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
 
     Action<T> current_action =
         action_table[current_state].at(current_lookahead);
-    
+
     if (std::holds_alternative<ShiftAction<T>>(current_action)) {
       ShiftAction<T> shift_action = std::get<ShiftAction<T>>(current_action);
 
       ConcreteSyntaxTree<T> node = ConcreteSyntaxTree<T>(current_lookahead);
 
-      stack.push_back(AnnotatedNode<T>(std::move(node),
-                                        shift_action.resulting_state));
+      stack.push_back(
+          AnnotatedNode<T>(std::move(node), shift_action.resulting_state));
 
       ++begin;
     } else if (std::holds_alternative<ReduceAction<T>>(current_action)) {
-      ReduceAction<T> reduce_action = std::get<ReduceAction<T>>(
-          current_action);
-      
+      ReduceAction<T> reduce_action = std::get<ReduceAction<T>>(current_action);
+
       ConcreteSyntaxTree<T> node = ConcreteSyntaxTree<T>(reduce_action.result);
 
       if (stack.size() < reduce_action.pop_qty) {
@@ -721,8 +714,9 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
       }
 
       for (size_t i = 0; i < reduce_action.pop_qty; i++) {
-        (node.children).emplace_back(std::move(
-            stack[stack.size() - reduce_action.pop_qty + i].symbol));
+        (node.children)
+            .emplace_back(std::move(
+                stack[stack.size() - reduce_action.pop_qty + i].symbol));
         stack[stack.size() - reduce_action.pop_qty + i].symbol;
       }
 
@@ -742,52 +736,53 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
                             "Error: no action on state {} with symbol {}",
                             pre_reduce_state, reduce_action.result);
       }
-      Action<T> action = action_table[pre_reduce_state].at(
-          reduce_action.result);
+      Action<T> action =
+          action_table[pre_reduce_state].at(reduce_action.result);
 
       if (!std::holds_alternative<ShiftAction<T>>(action)) {
-        SPDLOG_LOGGER_ERROR(get_logger(),
-                            "Error: non-shift action on state {} with symbol {}",
-                            pre_reduce_state, reduce_action.result);
+        SPDLOG_LOGGER_ERROR(
+            get_logger(), "Error: non-shift action on state {} with symbol {}",
+            pre_reduce_state, reduce_action.result);
       }
       ShiftAction<T> shift_action = std::get<ShiftAction<T>>(action);
 
-      stack.push_back(AnnotatedNode<T>(std::move(node),
-                                        shift_action.resulting_state));
+      stack.push_back(
+          AnnotatedNode<T>(std::move(node), shift_action.resulting_state));
     }
   }
 }
 
-template<typename T>
-Parser<T>::Parser(const std::vector<std::unordered_map<T, Action<T>>>
-                  &action_table, T goal, T end) : goal_symbol(goal),
-                  terminal_symbol(end), action_table(action_table) {}
+template <typename T>
+Parser<T>::Parser(
+    const std::vector<std::unordered_map<T, Action<T>>> &action_table, T goal,
+    T end)
+    : goal_symbol(goal), terminal_symbol(end), action_table(action_table) {}
 
-template<typename T>
+template <typename T>
 std::shared_ptr<spdlog::logger> Parser<T>::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
-      ([&] () -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("parser::Parser", spdlog::color_mode::always);
-        logger-> set_level(spdlog::level::warn);
-        logger-> set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+      ([&]() -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("parser::Parser",
+                                         spdlog::color_mode::always);
+        logger->set_level(spdlog::level::warn);
+        logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
   return logger;
 }
 
-} // namespace parser
+}  // namespace parser
 
 template <typename T>
-struct fmt::formatter<parser::ConcreteSyntaxTree<T>>
-{
-  template<typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
+struct fmt::formatter<parser::ConcreteSyntaxTree<T>> {
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
-  template<typename FormatContext>
-  auto format(parser::ConcreteSyntaxTree<T> const& tree, FormatContext& ctx)
-      const {
+  template <typename FormatContext>
+  auto format(parser::ConcreteSyntaxTree<T> const &tree,
+              FormatContext &ctx) const {
     return fmt::format_to(ctx.out(), "{0}", tree.to_string());
   }
 };
