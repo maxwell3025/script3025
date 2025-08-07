@@ -1,7 +1,20 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 
+#include <iterator>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
 #include "expression/expression.hpp"
+#include "parser.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
+#include "token.hpp"
 
 namespace script3025 {
 

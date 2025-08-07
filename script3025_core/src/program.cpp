@@ -1,10 +1,18 @@
 #include "program.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "cst_transformers.hpp"
 #include "expression/visitors/scope_hygiene_visitor.hpp"
 #include "parsing_utility.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace script3025 {
 

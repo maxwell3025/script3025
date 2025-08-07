@@ -1,6 +1,8 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EQUALITY_VISITOR_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EQUALITY_VISITOR_HPP
 
+#include <unordered_map>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
 

@@ -1,14 +1,24 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_PROGRAM_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_PROGRAM_HPP
 
+#include <cstddef>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "expression/expression.hpp"
 #include "expression/visitors/normalizing_visitor.hpp"
 #include "expression_factory.hpp"
 #include "parser.hpp"
-#include "spdlog/fmt/fmt.h"
-#include "spdlog/fmt/ranges.h"
+#include "spdlog/fmt/bundled/base.h"
+#include "spdlog/fmt/ranges.h"  // IWYU pragma: keep due to template weirdness
+#include "spdlog/logger.h"
+#include "spdlog/spdlog.h"
+#include "token.hpp"
 
 namespace script3025 {
 

@@ -1,6 +1,10 @@
 #include "expression/visitors/replacing_visitor.hpp"
 
+#include <string>
+#include <utility>
+
 #include "expression/expression.hpp"
+#include "expression/visitors/cloning_visitor.hpp"
 
 namespace script3025 {
 

@@ -1,7 +1,9 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_PARSING_UTILITY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_PARSING_UTILITY_HPP
 
-#include <unordered_set>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "parser.hpp"
 #include "token.hpp"

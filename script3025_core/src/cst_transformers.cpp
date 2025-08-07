@@ -1,5 +1,10 @@
 #include "cst_transformers.hpp"
 
+#include <utility>
+
+#include "parser.hpp"
+#include "token.hpp"
+
 namespace script3025 {
 
 void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {

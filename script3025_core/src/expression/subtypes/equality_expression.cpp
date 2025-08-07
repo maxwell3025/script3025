@@ -1,5 +1,14 @@
 #include "expression/subtypes/equality_expression.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include <memory>
+#include <utility>
+
+#include "expression/expression.hpp"
+
 namespace script3025 {
 
 EqualityExpression::EqualityExpression(std::unique_ptr<Expression> &&lhs,

@@ -2,7 +2,9 @@
 #define SCRIPT3025_PARSER_PARSER_HPP
 
 #include <algorithm>
+#include <cstddef>
 #include <deque>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -10,9 +12,13 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <variant>
 #include <vector>
 
+#include "spdlog/common.h"
+#include "spdlog/fmt/bundled/base.h"
+#include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 

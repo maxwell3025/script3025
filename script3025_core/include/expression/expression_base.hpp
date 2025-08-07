@@ -1,11 +1,14 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_BASE_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_BASE_HPP
 
+#include <memory>
+#include <ostream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "parser.hpp"
-#include "spdlog/fmt/fmt.h"
-#include "token.hpp"
+#include "spdlog/fmt/bundled/base.h"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 

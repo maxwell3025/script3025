@@ -1,5 +1,13 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,readability-make-member-function-const,readability-convert-member-function-to-static,readability-redundant-inline-specifier,misc-use-anonymous-namespace,misc-definitions-in-headers,misc-use-internal-linkage'
+Checks: 'clang-diagnostic-*,
+         clang-analyzer-*,
+         readability-make-member-function-const,
+         readability-convert-member-function-to-static,
+         readability-redundant-inline-specifier,
+         misc-use-anonymous-namespace,
+         misc-definitions-in-headers,
+         misc-use-internal-linkage,
+         misc-include-cleaner'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''

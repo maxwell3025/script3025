@@ -1,5 +1,7 @@
 #include "expression/visitors/equality_visitor.hpp"
 
+#include <cstddef>
+
 #include "expression/expression.hpp"
 
 namespace script3025 {

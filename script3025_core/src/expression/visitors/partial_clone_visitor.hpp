@@ -1,7 +1,11 @@
 #ifndef SCRIPT3025_CORE_EXPRESSION_VISITORS_PARTIAL_CLONE_VISITOR_HPP
 #define SCRIPT3025_CORE_EXPRESSION_VISITORS_PARTIAL_CLONE_VISITOR_HPP
 
+#include <memory>
+#include <utility>
+
 #include "expression/expression.hpp"
+#include "expression/expression_visitor.hpp"
 
 namespace script3025 {
 

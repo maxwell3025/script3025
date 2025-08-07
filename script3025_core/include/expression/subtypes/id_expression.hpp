@@ -1,8 +1,12 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_ID_EXPRESSION_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_ID_EXPRESSION_HPP
 
+#include <memory>
+#include <string>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 

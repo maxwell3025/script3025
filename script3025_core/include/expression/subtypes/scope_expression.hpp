@@ -1,6 +1,10 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_SUBTYPES_SCOPE_EXPRESSION_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_SUBTYPES_SCOPE_EXPRESSION_HPP
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
 

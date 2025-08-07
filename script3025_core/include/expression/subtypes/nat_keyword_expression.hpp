@@ -1,8 +1,11 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_NAT_KEYWORD_EXPRESSION_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_NAT_KEYWORD_EXPRESSION_HPP
 
+#include <memory>
+
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/keyword_expression.hpp"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 

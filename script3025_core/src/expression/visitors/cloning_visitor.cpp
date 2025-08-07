@@ -1,5 +1,9 @@
 #include "expression/visitors/cloning_visitor.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <utility>
+
 #include "expression/expression.hpp"
 #include "expression/visitors/partial_clone_visitor.hpp"
 

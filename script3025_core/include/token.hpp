@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "spdlog/fmt/fmt.h"
+#include "spdlog/fmt/bundled/base.h"
 
 namespace script3025 {
 

@@ -1,11 +1,37 @@
 #include "expression/expression_base.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/fmt/bundled/base.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include <cstddef>
 #include <iomanip>
+#include <ios>
+#include <memory>
+#include <sstream>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
-#include "expression/visitors/cloning_visitor.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/equality_expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
+#include "expression/subtypes/induction_keyword_expression.hpp"
+#include "expression/subtypes/lambda_expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
+#include "expression/subtypes/nat_keyword_expression.hpp"
+#include "expression/subtypes/nat_literal_expression.hpp"
+#include "expression/subtypes/pi_expression.hpp"
+#include "expression/subtypes/reflexive_keyword_expression.hpp"
+#include "expression/subtypes/replace_keyword_expression.hpp"
+#include "expression/subtypes/scope_expression.hpp"
+#include "expression/subtypes/succ_keyword_expression.hpp"
+#include "expression/subtypes/type_keyword_expression.hpp"
 #include "expression/visitors/equality_visitor.hpp"
 
 namespace script3025 {

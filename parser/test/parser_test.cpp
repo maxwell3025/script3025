@@ -2,9 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <iostream>
-#include <unordered_map>
-#include <unordered_set>
+#include <string>
 
 namespace parser {
 ParserBuilder<char> get_dyck_ruleset() {

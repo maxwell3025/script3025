@@ -1,5 +1,12 @@
 #include "expression/subtypes/let_expression.hpp"
 
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "expression/expression_base.hpp"
+#include "expression/subtypes/scope_expression.hpp"
+
 namespace script3025 {
 
 LetExpression::LetExpression(std::string argument_id,

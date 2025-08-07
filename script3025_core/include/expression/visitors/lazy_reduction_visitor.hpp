@@ -1,8 +1,11 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_LAZY_REDUCTION_VISITOR
 #define SCRIPT3025_SCRIPT3025_CORE_LAZY_REDUCTION_VISITOR
 
+#include <memory>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 

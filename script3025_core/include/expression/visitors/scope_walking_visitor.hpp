@@ -2,10 +2,13 @@
 #define SCRIPT3025_CORE_EXPRESSION_VISITORS_SCOPE_WALKING_VISITOR_HPP
 
 #include <memory>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
-#include "spdlog/spdlog.h"
 
 namespace script3025 {
 

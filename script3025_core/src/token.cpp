@@ -1,6 +1,8 @@
 #include "token.hpp"
 
 #include <iomanip>
+#include <ios>
+#include <ostream>
 
 namespace script3025 {
 

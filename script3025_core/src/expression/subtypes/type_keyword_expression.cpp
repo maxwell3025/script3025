@@ -1,5 +1,12 @@
 #include "expression/subtypes/type_keyword_expression.hpp"
 
+#include <gmpxx.h>
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include <memory>
+
 namespace script3025 {
 
 TypeKeywordExpression::TypeKeywordExpression(mpz_class level) : level_(level) {}

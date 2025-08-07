@@ -1,6 +1,8 @@
 #ifndef SCRIPT3025_CORE_INCLUDE_EXPRESSION_VISITORS_SCOPE_HYGIENE_VISITOR_HPP
 #define SCRIPT3025_CORE_INCLUDE_EXPRESSION_VISITORS_SCOPE_HYGIENE_VISITOR_HPP
 
+#include <cstddef>
+
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/visitors/scope_walking_visitor.hpp"

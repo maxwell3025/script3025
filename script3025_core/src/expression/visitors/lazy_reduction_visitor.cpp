@@ -1,6 +1,20 @@
 #include "expression/visitors/lazy_reduction_visitor.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include "expression/expression.hpp"
+#include "expression/expression_visitor.hpp"
 #include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "partial_clone_visitor.hpp"

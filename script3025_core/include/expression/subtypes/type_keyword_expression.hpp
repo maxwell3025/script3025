@@ -3,8 +3,11 @@
 
 #include <gmpxx.h>
 
+#include <memory>
+
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/keyword_expression.hpp"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 

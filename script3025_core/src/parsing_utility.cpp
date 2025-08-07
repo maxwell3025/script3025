@@ -1,5 +1,19 @@
 #include "parsing_utility.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "parser.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
+#include "token.hpp"
+
 namespace script3025 {
 
 namespace {
