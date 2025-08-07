@@ -40,9 +40,21 @@ Loggers are implemented as lazy-loaded static variables. Do not change their imp
 # Building And Running
 Since you are not able to use `cd`, use the following commands for testing.
 
+A *full test cycle* will include .
+
 **Configure**
 ```bash
 cmake -S . -B build
+```
+
+**Format**
+```bash
+./format
+```
+
+**Lint**
+```bash
+./lint
 ```
 
 **Build**
@@ -54,16 +66,3 @@ cmake --build build -- -Bj 16
 ```bash
 ctest -VV --test-dir build
 ```
-
-# Formatting
-Make sure to frequently format the code with 
-```bash
-./format
-```
-
-# Linting
-Run `clang-tidy` checks with:
-```bash
-./check-clang-tidy
-```
-
