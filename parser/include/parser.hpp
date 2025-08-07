@@ -189,7 +189,7 @@ struct ConcreteSyntaxTree {
   ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other)
       : symbol(other.symbol), children(std::move(other.children)) {}
 
-  [[nodiscard]] std::vector<T> sentence() {
+  [[nodiscard]] std::vector<T> sentence() const {
     std::vector<T> sentence;
     std::for_each(children.begin(), children.end(),
                   [&](const ConcreteSyntaxTree<T> &child) {
