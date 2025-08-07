@@ -18,8 +18,8 @@ struct ParsedCode {
   std::vector<AnnotatedToken> annotated_tokens;
 };
 
-[[nodiscard]] std::vector<AnnotatedToken> tokenize(std::string text);
-[[nodiscard]] ParsedCode parse(std::string text);
+[[nodiscard]] std::vector<AnnotatedToken> tokenize(const std::string& text);
+[[nodiscard]] ParsedCode parse(const std::string& text);
 
 }  // namespace script3025
 

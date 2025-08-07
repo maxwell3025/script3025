@@ -14,7 +14,7 @@ namespace script3025 {
 
 class Program {
  public:
-  Program(std::string source);
+  Program(const std::string &source);
 
   constexpr const std::unordered_map<std::string, std::unique_ptr<Expression>> &
   global_definitions() const {
@@ -25,17 +25,18 @@ class Program {
     return global_ids_;
   }
 
-  [[nodiscard]] inline const Expression &global(std::string id) const {
+  [[nodiscard]] inline const Expression &global(const std::string &id) const {
     return *global_definitions_.at(id);
   }
 
-  [[nodiscard]] inline bool comes_before(std::string a, std::string b) const {
+  [[nodiscard]] inline bool comes_before(const std::string &a,
+                                         const std::string &b) const {
     if (id_ordering_.find(a) == id_ordering_.end()) return false;
     if (id_ordering_.find(b) == id_ordering_.end()) return false;
     return id_ordering_.at(a) < id_ordering_.at(b);
   }
 
-  [[nodiscard]] inline bool has_id(std::string id) const {
+  [[nodiscard]] inline bool has_id(const std::string &id) const {
     return global_definitions_.find(id) != global_definitions_.end();
   }
 
@@ -61,7 +62,7 @@ class Program {
 
   [[nodiscard]] std::unique_ptr<Expression> reduce(const Expression &expr);
 
-  bool check_types();
+  bool check_types() const;
 
  private:
   template <typename Iterator>

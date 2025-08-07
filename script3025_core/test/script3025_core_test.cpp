@@ -21,9 +21,10 @@ TEST(Program, simple) {
 }
 
 TEST(Program, multi) {
-  script3025::Program program(
+  const script3025::Program program(
       "def foo := lambda (x : Type). x \n"
       "def bar := lambda (x : Type). foo x");
+
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
 }
 

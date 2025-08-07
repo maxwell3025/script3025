@@ -8,7 +8,7 @@
 
 namespace script3025 {
 
-Program::Program(std::string source) {
+Program::Program(const std::string &source) {
   ParsedCode code = parse(source);
 
   script3025::collect_lists(*code.cst);
@@ -33,7 +33,7 @@ std::string Program::to_string() const {
   return output.str();
 }
 
-bool Program::check_types() {
+bool Program::check_types() const {
   for (const auto &definition_pair : global_definitions())
     if (!is_hygenic(*definition_pair.second)) return false;
   return true;

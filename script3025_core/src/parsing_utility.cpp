@@ -6,7 +6,7 @@ namespace script3025 {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
-std::vector<AnnotatedToken> tokenize(std::string text) {
+std::vector<AnnotatedToken> tokenize(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::tokenize",
@@ -19,7 +19,7 @@ std::vector<AnnotatedToken> tokenize(std::string text) {
   std::vector<AnnotatedToken> annotated_tokens;
   size_t i = 0;
   while (i < text.size()) {
-    size_t start = i;
+    const size_t start = i;
     AnnotatedToken new_token;
 
     // Recognize numbers
@@ -152,7 +152,7 @@ std::vector<AnnotatedToken> tokenize(std::string text) {
   return annotated_tokens;
 }
 
-ParsedCode parse(std::string text) {
+ParsedCode parse(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::parse",
@@ -162,7 +162,7 @@ ParsedCode parse(std::string text) {
         return logger;
       })();
 
-  static std::unique_ptr<parser::Parser<Token>> basic_parser =
+  static const std::unique_ptr<parser::Parser<Token>> basic_parser =
       std::make_unique<parser::Parser<Token>>(
           parser::ParserBuilder<Token>(Token::PROG, Token::END)
               .rule(Token::PROG)
