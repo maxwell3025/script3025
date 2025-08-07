@@ -69,7 +69,7 @@ class ExpressionVisitor {
   void visit(ref<Expression> e) { e.accept(*this); }
 
  protected:
-  virtual void visit_expression(ref<Expression> e) {}
+  virtual void visit_expression(ref<Expression>) {}
   virtual void visit_keyword(ref<KeywordExpression> e) { visit_expression(e); }
   virtual void visit_scope(ref<ScopeExpression> e) { visit_expression(e); }
 };

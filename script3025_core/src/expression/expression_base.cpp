@@ -180,14 +180,14 @@ class StringifyVisitor : public ConstExpressionVisitor {
     output << displayed_id;
   }
 
-  void visit_induction_keyword(const InductionKeywordExpression &e) {
+  void visit_induction_keyword(const InductionKeywordExpression &) {
     output << "induction";
   }
 
   void visit_lambda(const LambdaExpression &e) {
     const bool wrap = binding_power.equality.right < min_binding_power_right_;
     const size_t right_binding_power = min_binding_power_right_;
-    const size_t left_binding_power = min_binding_power_left_;
+    // const size_t left_binding_power = min_binding_power_left_;
 
     if (wrap) output << "(";
 
@@ -209,7 +209,7 @@ class StringifyVisitor : public ConstExpressionVisitor {
   void visit_let(const LetExpression &e) {
     const bool wrap = binding_power.equality.right < min_binding_power_right_;
     const size_t right_binding_power = min_binding_power_right_;
-    const size_t left_binding_power = min_binding_power_left_;
+    // const size_t left_binding_power = min_binding_power_left_;
 
     if (wrap) output << "(";
 
@@ -234,7 +234,7 @@ class StringifyVisitor : public ConstExpressionVisitor {
     if (wrap) output << ")";
   }
 
-  void visit_nat_keyword(const NatKeywordExpression &e) { output << "Nat"; }
+  void visit_nat_keyword(const NatKeywordExpression &) { output << "Nat"; }
 
   void visit_nat_literal(const NatLiteralExpression &e) {
     output << e.value_.get_str();
@@ -243,7 +243,7 @@ class StringifyVisitor : public ConstExpressionVisitor {
   void visit_pi(const PiExpression &e) {
     const bool wrap = binding_power.equality.right < min_binding_power_right_;
     const size_t right_binding_power = min_binding_power_right_;
-    const size_t left_binding_power = min_binding_power_left_;
+    // const size_t left_binding_power = min_binding_power_left_;
 
     if (wrap) output << "(";
 
@@ -262,22 +262,22 @@ class StringifyVisitor : public ConstExpressionVisitor {
     if (wrap) output << ")";
   }
 
-  void visit_replace_keyword(const ReplaceKeywordExpression &e) {
+  void visit_replace_keyword(const ReplaceKeywordExpression &) {
     output << "subst";
   }
 
-  void visit_reflexive_keyword(const ReflexiveKeywordExpression &e) {
+  void visit_reflexive_keyword(const ReflexiveKeywordExpression &) {
     output << "refl";
   }
 
-  void visit_succ_keyword(const SuccKeywordExpression &e) { output << "succ"; }
+  void visit_succ_keyword(const SuccKeywordExpression &) { output << "succ"; }
 
   void visit_type_keyword(const TypeKeywordExpression &e) {
     const bool wrap =
         binding_power.application.left < min_binding_power_left_ ||
         binding_power.application.right < min_binding_power_right_;
-    const size_t right_binding_power = min_binding_power_right_;
-    const size_t left_binding_power = min_binding_power_left_;
+    // const size_t right_binding_power = min_binding_power_right_;
+    // const size_t left_binding_power = min_binding_power_left_;
 
     if (wrap) output << "(";
     output << "Type " << e.level_.get_str();

@@ -22,7 +22,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     visit(*head);
   }
 
-  void visit_equality(PiExpression &e) {
+  void visit_equality(PiExpression &) {
     if (arguments.size() != 0) {
       SPDLOG_LOGGER_WARN(
           get_logger(),
@@ -60,7 +60,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     visit(*head);
   }
 
-  void visit_pi(PiExpression &e) {
+  void visit_pi(PiExpression &) {
     if (arguments.size() != 0) {
       SPDLOG_LOGGER_WARN(
           get_logger(),

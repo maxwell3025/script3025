@@ -25,6 +25,7 @@ class ScopeHygieneVisitor : public ScopeWalkingVisitor<true> {
 
 [[nodiscard]] bool is_hygenic(const Expression &e) {
   ScopeHygieneVisitor visitor;
+  e.accept(visitor);
   return visitor.get();
 }
 
