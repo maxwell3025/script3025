@@ -12,7 +12,7 @@ class EqualityVisitor : public ConstExpressionVisitor {
   void visit_id(const IdExpression &rhs) override;
   void visit_nat_literal(const NatLiteralExpression &rhs) override;
   void visit_type_keyword(const TypeKeywordExpression &rhs) override;
-  bool get() const;
+  [[nodiscard]] bool get() const;
 
  protected:
   void visit_expression(const Expression &e) override;

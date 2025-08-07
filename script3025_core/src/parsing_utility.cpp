@@ -2,7 +2,7 @@
 
 namespace script3025 {
 
-bool is_alphanumeric(char c) {
+[[nodiscard]] static bool is_alphanumeric(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 

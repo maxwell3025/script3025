@@ -47,7 +47,7 @@ class ScopeWalkingVisitor : public ExpressionVisitor<is_const> {
     }
   }
 
-  expression_ptr get_source(std::string name) {
+  [[nodiscard]] expression_ptr get_source(std::string name) {
     if (lexical_scope_[name].size() == 0) return nullptr;
     return lexical_scope_[name].back();
   }

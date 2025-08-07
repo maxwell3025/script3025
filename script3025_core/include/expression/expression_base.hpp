@@ -20,22 +20,22 @@ class Expression {
 
   virtual ~Expression() = 0;
 
-  std::unique_ptr<Expression> clone(
+  [[nodiscard]] std::unique_ptr<Expression> clone(
       std::unordered_map<const Expression *, Expression *> initial_map = {});
 
   // @brief
   // Returns true iff the 2 expressions are syntactically equal.
   // 2 expressions might reduce to the same normal form but not be equal in this
   // sense.
-  bool operator==(const Expression &other) const;
+  [[nodiscard]] bool operator==(const Expression &other) const;
 
   // @brief
   // Returns the negation of `operator==`.
-  bool operator!=(const Expression &other) const;
+  [[nodiscard]] bool operator!=(const Expression &other) const;
 
   // @brief
   // Converts the current expression into a string
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 

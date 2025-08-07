@@ -12,7 +12,7 @@ class CloningVisitor : public ConstExpressionVisitor {
   void visit_scope(const ScopeExpression &e) override;
   void visit_nat_literal(const NatLiteralExpression &e) override;
   void visit_type_keyword(const TypeKeywordExpression &e) override;
-  std::unique_ptr<Expression> get();
+  [[nodiscard]] std::unique_ptr<Expression> get();
 
  protected:
   void visit_expression(const Expression &e) override;

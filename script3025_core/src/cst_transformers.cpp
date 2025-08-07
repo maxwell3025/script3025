@@ -18,7 +18,7 @@ void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {
   }
 }
 
-bool is_expr(const Token &t) {
+[[nodiscard]] static bool is_expr(const Token &t) {
   switch (t) {
     case Token::EXPR_EQ:
     case Token::EXPR_ABS:

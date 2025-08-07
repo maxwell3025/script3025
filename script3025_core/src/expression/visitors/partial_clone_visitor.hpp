@@ -46,7 +46,7 @@ class PartialCloneVisitor : public ConstExpressionVisitor {
   void visit_type_keyword(const TypeKeywordExpression &e) override {
     make_default_like<TypeKeywordExpression>();
   }
-  std::unique_ptr<Expression> get() { return std::move(value_); };
+  [[nodiscard]] std::unique_ptr<Expression> get() { return std::move(value_); };
 
  private:
   template <typename ExpressionSubtype>
@@ -57,7 +57,7 @@ class PartialCloneVisitor : public ConstExpressionVisitor {
   std::unique_ptr<Expression> value_;
 };
 
-inline std::unique_ptr<Expression> make_default_like(const Expression &e) {
+[[nodiscard]] inline std::unique_ptr<Expression> make_default_like(const Expression &e) {
   PartialCloneVisitor visitor;
   visitor.visit(e);
   return visitor.get();

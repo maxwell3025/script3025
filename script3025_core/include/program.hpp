@@ -25,17 +25,17 @@ class Program {
     return global_ids_;
   }
 
-  inline const Expression &global(std::string id) const {
+  [[nodiscard]] inline const Expression &global(std::string id) const {
     return *global_definitions_.at(id);
   }
 
-  inline bool comes_before(std::string a, std::string b) const {
+  [[nodiscard]] inline bool comes_before(std::string a, std::string b) const {
     if (id_ordering_.find(a) == id_ordering_.end()) return false;
     if (id_ordering_.find(b) == id_ordering_.end()) return false;
     return id_ordering_.at(a) < id_ordering_.at(b);
   }
 
-  inline bool has_id(std::string id) const {
+  [[nodiscard]] inline bool has_id(std::string id) const {
     return global_definitions_.find(id) != global_definitions_.end();
   }
 
@@ -53,13 +53,13 @@ class Program {
     global_ids_.pop_back();
   }
 
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
-  std::unique_ptr<Expression> type(const std::string &id);
+  [[nodiscard]] std::unique_ptr<Expression> type(const std::string &id);
 
-  std::unique_ptr<Expression> reduce(const std::string &id);
+  [[nodiscard]] std::unique_ptr<Expression> reduce(const std::string &id);
 
-  std::unique_ptr<Expression> reduce(const Expression &expr);
+  [[nodiscard]] std::unique_ptr<Expression> reduce(const Expression &expr);
 
   bool check_types();
 

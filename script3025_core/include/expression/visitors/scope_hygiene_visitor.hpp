@@ -17,13 +17,13 @@ class ScopeHygieneVisitor : public ScopeWalkingVisitor<true> {
     is_sanitary = false;
   }
 
-  bool get() { return is_sanitary; }
+  [[nodiscard]] bool get() { return is_sanitary; }
 
  protected:
   bool is_sanitary = true;
 };
 
-bool is_hygenic(const Expression &e) {
+[[nodiscard]] bool is_hygenic(const Expression &e) {
   ScopeHygieneVisitor visitor;
   return visitor.get();
 }

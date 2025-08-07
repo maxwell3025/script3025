@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-std::shared_ptr<spdlog::logger> get_logger() {
+[[nodiscard]] std::shared_ptr<spdlog::logger> get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025_core_test.cpp",

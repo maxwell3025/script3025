@@ -6,7 +6,7 @@
 namespace script3025 {
 
 template <typename Iterator>
-std::unique_ptr<Expression> create_expression(
+[[nodiscard]] std::unique_ptr<Expression> create_expression(
     const parser::ConcreteSyntaxTree<Token> &source,
     Iterator &string_iterator) {
   static std::shared_ptr<spdlog::logger> logger =
