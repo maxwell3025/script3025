@@ -53,7 +53,7 @@ void CloningVisitor::visit_expression(const Expression &e) {
       visit(*e.children[i]);
     else
       value_ = nullptr;
-    new_expression->children[i] = std::move(get());
+    new_expression->children[i] = get();
   }
 
   value_ = std::move(new_expression);

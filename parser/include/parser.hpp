@@ -717,7 +717,6 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
         (node.children)
             .emplace_back(std::move(
                 stack[stack.size() - reduce_action.pop_qty + i].symbol));
-        stack[stack.size() - reduce_action.pop_qty + i].symbol;
       }
 
       for (size_t i = 0; i < reduce_action.pop_qty; i++) {

@@ -16,13 +16,13 @@ struct IdHash {
 
 class WHNFVisitor : public MutatingExpressionVisitor {
  public:
-  void visit_application(ApplicationExpression &e) {
+  void visit_application(ApplicationExpression &e) override {
     arguments.push_back(std::move(e.argument()));
     head = std::move(e.function());
     visit(*head);
   }
 
-  void visit_equality(PiExpression &) {
+  void visit_equality(EqualityExpression &) override {
     if (arguments.size() != 0) {
       SPDLOG_LOGGER_WARN(
           get_logger(),
@@ -34,7 +34,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     }
   }
 
-  void visit_id(IdExpression &e) {
+  void visit_id(IdExpression &e) override {
     auto replacement_it = delta_table.find(std::make_pair(e.id, e.source));
     if (replacement_it != delta_table.end()) {
       Expression &replacement = *(replacement_it->second);
@@ -45,22 +45,22 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     }
   }
 
-  void visit_lambda(LambdaExpression &e) {
+  void visit_lambda(LambdaExpression &e) override {
     ReplacingVisitor visitor(&e, e.argument_id, arguments.back().get());
     visitor.visit(*e.definition());
     arguments.pop_back();
-    head = std::move(visitor.get());
+    head = visitor.get();
     visit(*head);
   }
 
-  void visit_let(LetExpression &e) {
+  void visit_let(LetExpression &e) override {
     ReplacingVisitor visitor(&e, e.argument_id, e.argument_value().get());
     visitor.visit(*e.definition());
-    head = std::move(visitor.get());
+    head = visitor.get();
     visit(*head);
   }
 
-  void visit_pi(PiExpression &) {
+  void visit_pi(PiExpression &) override {
     if (arguments.size() != 0) {
       SPDLOG_LOGGER_WARN(
           get_logger(),

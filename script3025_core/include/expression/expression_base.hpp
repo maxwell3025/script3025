@@ -21,7 +21,8 @@ class Expression {
   virtual ~Expression() = 0;
 
   [[nodiscard]] std::unique_ptr<Expression> clone(
-      const std::unordered_map<const Expression *, Expression *> &initial_map) const;
+      const std::unordered_map<const Expression *, Expression *> &initial_map)
+      const;
 
   // @brief
   // Returns true iff the 2 expressions are syntactically equal.
