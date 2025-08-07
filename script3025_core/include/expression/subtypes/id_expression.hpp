@@ -17,7 +17,7 @@ class IdExpression : public Expression {
   Expression *source;
 
  private:
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 }  // namespace script3025

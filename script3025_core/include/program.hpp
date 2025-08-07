@@ -119,7 +119,7 @@ class Program {
     push_definition(id, std::move(definition));
   }
 
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 
   std::unordered_map<std::string, size_t> id_ordering_;
   std::unordered_map<std::string, std::unique_ptr<Expression>>

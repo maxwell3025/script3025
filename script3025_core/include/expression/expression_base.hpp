@@ -37,7 +37,7 @@ class Expression {
   // Converts the current expression into a string
   std::string to_string() const;
 
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 
   std::vector<std::unique_ptr<Expression>> children;
 

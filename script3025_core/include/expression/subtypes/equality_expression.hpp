@@ -19,7 +19,7 @@ class EqualityExpression : public Expression {
   inline const std::unique_ptr<Expression> &rhs() const { return children[1]; }
 
  private:
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 }  // namespace script3025

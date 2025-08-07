@@ -12,7 +12,7 @@ class ReplaceKeywordExpression : public KeywordExpression {
   void accept(ExpressionVisitor<false> &visitor) override {visitor.visit_replace_keyword(*this); }
 
  private:
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 }  // namespace script3025

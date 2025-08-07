@@ -22,7 +22,7 @@ class LambdaExpression : public ScopeExpression {
   std::string argument_id;
 
  private:
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 }  // namespace script3025

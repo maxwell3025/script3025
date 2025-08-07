@@ -18,7 +18,7 @@ class TypeKeywordExpression : public KeywordExpression {
   mpz_class level_;
 
  private:
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
 
 }  // namespace script3025
