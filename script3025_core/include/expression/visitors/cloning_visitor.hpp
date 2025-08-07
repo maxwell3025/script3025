@@ -21,6 +21,6 @@ class CloningVisitor : public ConstExpressionVisitor {
   std::unordered_map<const Expression *, Expression *> pointer_map_;
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

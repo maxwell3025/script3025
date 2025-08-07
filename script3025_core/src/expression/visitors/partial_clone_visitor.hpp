@@ -57,7 +57,8 @@ class PartialCloneVisitor : public ConstExpressionVisitor {
   std::unique_ptr<Expression> value_;
 };
 
-[[nodiscard]] inline std::unique_ptr<Expression> make_default_like(const Expression &e) {
+[[nodiscard]] inline std::unique_ptr<Expression> make_default_like(
+    const Expression &e) {
   PartialCloneVisitor visitor;
   visitor.visit(e);
   return visitor.get();

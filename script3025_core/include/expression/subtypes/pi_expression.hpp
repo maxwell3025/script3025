@@ -12,8 +12,12 @@ class PiExpression : public ScopeExpression {
                std::unique_ptr<Expression>&& argument_type,
                std::unique_ptr<Expression>&& definition);
   PiExpression();
-  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_pi(*this); }
-  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_pi(*this); }
+  void accept(ExpressionVisitor<true>& visitor) const override {
+    visitor.visit_pi(*this);
+  }
+  void accept(ExpressionVisitor<false>& visitor) override {
+    visitor.visit_pi(*this);
+  }
   std::unique_ptr<Expression>& argument_type() override { return children[0]; }
   std::unique_ptr<Expression>& definition() override { return children[1]; }
   const std::unique_ptr<Expression>& argument_type() const override {

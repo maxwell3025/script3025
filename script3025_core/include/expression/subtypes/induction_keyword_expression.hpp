@@ -8,8 +8,12 @@ namespace script3025 {
 
 class InductionKeywordExpression : public KeywordExpression {
  public:
-  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_induction_keyword(*this); }
-  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_induction_keyword(*this); }
+  void accept(ExpressionVisitor<true> &visitor) const override {
+    visitor.visit_induction_keyword(*this);
+  }
+  void accept(ExpressionVisitor<false> &visitor) override {
+    visitor.visit_induction_keyword(*this);
+  }
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();

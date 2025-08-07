@@ -10,8 +10,12 @@ class IdExpression : public Expression {
  public:
   IdExpression(std::string id, Expression *source);
   IdExpression();
-  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_id(*this); }
-  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_id(*this); }
+  void accept(ExpressionVisitor<true> &visitor) const override {
+    visitor.visit_id(*this);
+  }
+  void accept(ExpressionVisitor<false> &visitor) override {
+    visitor.visit_id(*this);
+  }
 
   std::string id;
   Expression *source;

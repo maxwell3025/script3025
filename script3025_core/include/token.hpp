@@ -25,13 +25,15 @@ enum class Token {
   L_PAREN,
   R_PAREN,
   // non-terminals
-  // This is an actual abstraction, as opposed to an abstraction-level expression.
+  // This is an actual abstraction, as opposed to an abstraction-level
+  // expression.
   ABS,
   EXPR_PAREN,
   EXPR_APP,
   EXPR_ABS,
   EXPR_EQ,
-  // This is the lowest-precedence expression. Use this when you just need a generic expression.
+  // This is the lowest-precedence expression. Use this when you just need a
+  // generic expression.
   EXPR = EXPR_EQ,
   DEFN,
   PROG,
@@ -41,16 +43,13 @@ enum class Token {
 
 std::ostream &operator<<(std::ostream &os, const script3025::Token &token);
 
-} // namespace script30225
+}  // namespace script3025
 
 template <>
-struct fmt::formatter<script3025::Token>
-{
-  constexpr auto parse(format_parse_context &ctx) {
-    return ctx.begin();
-  }
+struct fmt::formatter<script3025::Token> {
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
 
-  auto format(script3025::Token const& token, format_context& ctx) const {
+  auto format(script3025::Token const &token, format_context &ctx) const {
     std::stringstream output;
     output << token;
     return fmt::format_to(ctx.out(), "{0}", output.str());

@@ -3,9 +3,8 @@
 
 #include <unordered_set>
 
-#include "token.hpp"
 #include "parser.hpp"
-
+#include "token.hpp"
 
 namespace script3025 {
 
@@ -22,6 +21,6 @@ struct ParsedCode {
 [[nodiscard]] std::vector<AnnotatedToken> tokenize(std::string text);
 [[nodiscard]] ParsedCode parse(std::string text);
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

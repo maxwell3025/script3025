@@ -13,8 +13,12 @@ class LetExpression : public ScopeExpression {
                 std::unique_ptr<Expression>&& argument_value,
                 std::unique_ptr<Expression>&& definition);
   LetExpression();
-  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_let(*this); }
-  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_let(*this); }
+  void accept(ExpressionVisitor<true>& visitor) const override {
+    visitor.visit_let(*this);
+  }
+  void accept(ExpressionVisitor<false>& visitor) override {
+    visitor.visit_let(*this);
+  }
   std::unique_ptr<Expression>& argument_type() override { return children[0]; }
   std::unique_ptr<Expression>& argument_value() { return children[1]; }
   std::unique_ptr<Expression>& definition() override { return children[2]; }

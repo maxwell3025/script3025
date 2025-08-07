@@ -10,7 +10,7 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
  public:
   void visit_application(ApplicationExpression &e) override;
   void visit_id(IdExpression &e) override;
-  
+
   std::unique_ptr<Expression> reduced_expression;
 
  protected:
@@ -20,6 +20,6 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

@@ -11,8 +11,12 @@ class EqualityExpression : public Expression {
   EqualityExpression(std::unique_ptr<Expression> &&lhs,
                      std::unique_ptr<Expression> &&rhs);
   EqualityExpression();
-  void accept(ExpressionVisitor<true> &visitor) const override { visitor.visit_equality(*this); }
-  void accept(ExpressionVisitor<false> &visitor) override { visitor.visit_equality(*this); }
+  void accept(ExpressionVisitor<true> &visitor) const override {
+    visitor.visit_equality(*this);
+  }
+  void accept(ExpressionVisitor<false> &visitor) override {
+    visitor.visit_equality(*this);
+  }
   inline std::unique_ptr<Expression> &lhs() { return children[0]; }
   inline std::unique_ptr<Expression> &rhs() { return children[1]; }
   inline const std::unique_ptr<Expression> &lhs() const { return children[0]; }
