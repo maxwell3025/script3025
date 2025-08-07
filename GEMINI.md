@@ -10,6 +10,10 @@ When adding files, make sure to update `CMakeLists.txt`
 When testing, always configure first, since CMake might need up update the
 makefile.
 
+When making changes, subdivide them into smaller, testable changes, and test in between.
+For instance, if you are changing a function signature, just change that function signature and its
+usages, and test to make sure your change is stable.
+
 ## Code Style
 - Add const whenever possible.
 - Use `[[nodiscard]]` whenever it makes sense to.
@@ -55,5 +59,11 @@ ctest -VV --test-dir build
 Make sure to frequently format the code with 
 ```bash
 ./format
+```
+
+# Linting
+Run `clang-tidy` checks with:
+```bash
+./check-clang-tidy
 ```
 
