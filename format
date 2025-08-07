@@ -1,0 +1,5 @@
+#!/bin/bash
+
+find . \( -name '*.cpp' -o -name '*.hpp' \) -a -not -path './build/*' > .source_index
+clang-format -i --files=.source_index
+
