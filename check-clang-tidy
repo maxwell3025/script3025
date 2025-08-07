@@ -11,8 +11,6 @@ if [ ! -f "build/compile_commands.json" ]; then
 fi
 
 # Find all .cpp and .hpp files, excluding the build directory, and run clang-tidy on them
-find . \( -name '*.cpp' -o -name '*.hpp' \) -a -not -path './build/*' -print0 | while IFS= read -r -d $'\0' file; do
-    clang-tidy "$file" -p build
-done
+find . \( -name '*.cpp' -o -name '*.hpp' \) -a -not -path './build/*' -print0 | xargs -0 -P $(nproc) -n 1 clang-tidy -p build
 
 echo "Clang-tidy check complete."
