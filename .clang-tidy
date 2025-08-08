@@ -7,7 +7,8 @@ Checks: 'clang-diagnostic-*,
          misc-use-anonymous-namespace,
          misc-definitions-in-headers,
          misc-use-internal-linkage,
-         misc-include-cleaner'
+         misc-include-cleaner,
+         modernize-use-nodiscard'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''

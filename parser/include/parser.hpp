@@ -204,7 +204,7 @@ struct ConcreteSyntaxTree {
     return sentence;
   }
 
-  std::string to_string() const {
+  [[nodiscard]] std::string to_string() const {
     std::stringstream output;
     std::vector<std::string> stack;
     stringify_internal(output, stack, true);

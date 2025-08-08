@@ -22,12 +22,17 @@ class PiExpression : public ScopeExpression {
   void accept(ExpressionVisitor<false>& visitor) override {
     visitor.visit_pi(*this);
   }
-  std::unique_ptr<Expression>& argument_type() override { return children[0]; }
-  std::unique_ptr<Expression>& definition() override { return children[1]; }
-  const std::unique_ptr<Expression>& argument_type() const override {
+  [[nodiscard]] std::unique_ptr<Expression>& argument_type() override {
     return children[0];
   }
-  const std::unique_ptr<Expression>& definition() const override {
+  [[nodiscard]] std::unique_ptr<Expression>& definition() override {
+    return children[1];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression>& argument_type()
+      const override {
+    return children[0];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression>& definition() const override {
     return children[1];
   }
 

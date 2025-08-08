@@ -20,10 +20,14 @@ class ApplicationExpression : public Expression {
   void accept(ExpressionVisitor<false> &visitor) override {
     visitor.visit_application(*this);
   }
-  std::unique_ptr<Expression> &function() { return children[0]; }
-  std::unique_ptr<Expression> &argument() { return children[1]; }
-  const std::unique_ptr<Expression> &function() const { return children[0]; }
-  const std::unique_ptr<Expression> &argument() const { return children[1]; }
+  [[nodiscard]] std::unique_ptr<Expression> &function() { return children[0]; }
+  [[nodiscard]] std::unique_ptr<Expression> &argument() { return children[1]; }
+  [[nodiscard]] const std::unique_ptr<Expression> &function() const {
+    return children[0];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression> &argument() const {
+    return children[1];
+  }
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();

@@ -20,10 +20,14 @@ class EqualityExpression : public Expression {
   void accept(ExpressionVisitor<false> &visitor) override {
     visitor.visit_equality(*this);
   }
-  std::unique_ptr<Expression> &lhs() { return children[0]; }
-  std::unique_ptr<Expression> &rhs() { return children[1]; }
-  const std::unique_ptr<Expression> &lhs() const { return children[0]; }
-  const std::unique_ptr<Expression> &rhs() const { return children[1]; }
+  [[nodiscard]] std::unique_ptr<Expression> &lhs() { return children[0]; }
+  [[nodiscard]] std::unique_ptr<Expression> &rhs() { return children[1]; }
+  [[nodiscard]] const std::unique_ptr<Expression> &lhs() const {
+    return children[0];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression> &rhs() const {
+    return children[1];
+  }
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();

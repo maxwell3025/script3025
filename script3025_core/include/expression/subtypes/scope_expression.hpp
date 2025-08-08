@@ -12,10 +12,12 @@ namespace script3025 {
 
 class ScopeExpression : public Expression {
  public:
-  virtual std::unique_ptr<Expression>& argument_type() = 0;
-  virtual std::unique_ptr<Expression>& definition() = 0;
-  virtual const std::unique_ptr<Expression>& argument_type() const = 0;
-  virtual const std::unique_ptr<Expression>& definition() const = 0;
+  [[nodiscard]] virtual std::unique_ptr<Expression>& argument_type() = 0;
+  [[nodiscard]] virtual std::unique_ptr<Expression>& definition() = 0;
+  [[nodiscard]] virtual const std::unique_ptr<Expression>& argument_type()
+      const = 0;
+  [[nodiscard]] virtual const std::unique_ptr<Expression>& definition()
+      const = 0;
 
   std::string argument_id;
 

@@ -23,16 +23,23 @@ class LetExpression : public ScopeExpression {
   void accept(ExpressionVisitor<false>& visitor) override {
     visitor.visit_let(*this);
   }
-  std::unique_ptr<Expression>& argument_type() override { return children[0]; }
-  std::unique_ptr<Expression>& argument_value() { return children[1]; }
-  std::unique_ptr<Expression>& definition() override { return children[2]; }
-  const std::unique_ptr<Expression>& argument_type() const override {
+  [[nodiscard]] std::unique_ptr<Expression>& argument_type() override {
     return children[0];
   }
-  const std::unique_ptr<Expression>& argument_value() const {
+  [[nodiscard]] std::unique_ptr<Expression>& argument_value() {
     return children[1];
   }
-  const std::unique_ptr<Expression>& definition() const override {
+  [[nodiscard]] std::unique_ptr<Expression>& definition() override {
+    return children[2];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression>& argument_type()
+      const override {
+    return children[0];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression>& argument_value() const {
+    return children[1];
+  }
+  [[nodiscard]] const std::unique_ptr<Expression>& definition() const override {
     return children[2];
   }
 
