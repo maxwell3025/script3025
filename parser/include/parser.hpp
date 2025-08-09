@@ -266,15 +266,15 @@ class Parser {
          T goal, T end);
   static std::shared_ptr<spdlog::logger> get_logger();
 
-  T goal_symbol;
-  T terminal_symbol;
-  std::vector<std::unordered_map<T, Action<T>>> action_table;
+  T goal_symbol_;
+  T terminal_symbol_;
+  std::vector<std::unordered_map<T, Action<T>>> action_table_;
 };
 
 template <typename T>
 class ParserBuilder {
  public:
-  ParserBuilder(T goal, T end) : goal_symbol(goal), terminal_symbol(end) {}
+  ParserBuilder(T goal, T end) : goal_symbol_(goal), terminal_symbol_(end) {}
 
   // @brief
   // Adds a rule to the grammar stored by the builder.
@@ -336,43 +336,43 @@ class ParserBuilder {
 
   static std::shared_ptr<spdlog::logger> get_logger();
 
-  T goal_symbol;
-  T terminal_symbol;
-  TotalRuleset<T> ruleset;
-  std::unordered_set<T> terminals;
-  std::unordered_set<T> nonterminals;
-  std::unordered_set<T> possibly_empty;
-  std::unordered_map<T, std::unordered_set<T>> first_set;
+  T goal_symbol_;
+  T terminal_symbol_;
+  TotalRuleset<T> ruleset_;
+  std::unordered_set<T> terminals_;
+  std::unordered_set<T> nonterminals_;
+  std::unordered_set<T> possibly_empty_;
+  std::unordered_map<T, std::unordered_set<T>> first_set_;
 };
 
 template <typename T>
 template <typename... Args>
 ParserBuilder<T> &ParserBuilder<T>::rule(T nonterminal, Args... sentence) {
   std::vector<T> sentence_vector = vectorize<T>(sentence...);
-  ruleset[nonterminal].insert(sentence_vector);
+  ruleset_[nonterminal].insert(sentence_vector);
   return *this;
 }
 
 template <typename T>
 void ParserBuilder<T>::infer_types() {
-  for (std::pair<T, PartialRuleset<T>> symbol_ruleset : ruleset) {
+  for (std::pair<T, PartialRuleset<T>> symbol_ruleset : ruleset_) {
     for (std::vector<T> sentence : symbol_ruleset.second) {
       std::copy(sentence.begin(), sentence.end(),
-                std::inserter(terminals, terminals.end()));
+                std::inserter(terminals_, terminals_.end()));
     }
   }
 
-  for (auto it = ruleset.begin(); it != ruleset.end(); ++it) {
+  for (auto it = ruleset_.begin(); it != ruleset_.end(); ++it) {
     const T &nonterminal = it->first;
-    nonterminals.insert(nonterminal);
-    terminals.erase(nonterminal);
+    nonterminals_.insert(nonterminal);
+    terminals_.erase(nonterminal);
   }
 }
 
 template <typename T>
 bool ParserBuilder<T>::is_sentence_empty(const std::vector<T> &sentence) {
   for (const T &character : sentence) {
-    if (possibly_empty.find(character) == possibly_empty.end()) {
+    if (possibly_empty_.find(character) == possibly_empty_.end()) {
       return false;
     }
   }
@@ -381,9 +381,9 @@ bool ParserBuilder<T>::is_sentence_empty(const std::vector<T> &sentence) {
 
 template <typename T>
 bool ParserBuilder<T>::definitely_nonempty(const T &symbol) {
-  bool symbol_has_rule = ruleset.find(symbol) == ruleset.end();
+  bool symbol_has_rule = ruleset_.find(symbol) == ruleset_.end();
   const PartialRuleset<T> &productions =
-      symbol_has_rule ? PartialRuleset<T>() : ruleset.at(symbol);
+      symbol_has_rule ? PartialRuleset<T>() : ruleset_.at(symbol);
 
   for (const std::vector<T> &sentence : productions) {
     if (is_sentence_empty(sentence)) {
@@ -396,22 +396,22 @@ bool ParserBuilder<T>::definitely_nonempty(const T &symbol) {
 
 template <typename T>
 std::unordered_set<T> ParserBuilder<T>::generate_empty_set() {
-  possibly_empty = nonterminals;
+  possibly_empty_ = nonterminals_;
   bool changed = true;
   while (changed) {
     changed = false;
     std::unordered_set<T> nonempty;
-    for (const T &symbol : possibly_empty) {
+    for (const T &symbol : possibly_empty_) {
       if (definitely_nonempty(symbol)) {
         changed = true;
         nonempty.insert(symbol);
       }
     }
     for (auto it = nonempty.begin(); it != nonempty.end(); it++) {
-      possibly_empty.erase(*it);
+      possibly_empty_.erase(*it);
     }
   }
-  return possibly_empty;
+  return possibly_empty_;
 }
 
 template <typename T>
@@ -420,46 +420,46 @@ ParserBuilder<T>::generate_first_set() {
   bool changed = true;
   while (changed) {
     changed = false;
-    for (const T &symbol : nonterminals) {
-      const PartialRuleset<T> &symbol_ruleset = ruleset.at(symbol);
-      size_t original_size = first_set[symbol].size();
+    for (const T &symbol : nonterminals_) {
+      const PartialRuleset<T> &symbol_ruleset = ruleset_.at(symbol);
+      size_t original_size = first_set_[symbol].size();
       for (const std::vector<T> &sentence : symbol_ruleset) {
         if (sentence.size() == 0) {
           continue;
-        } else if (nonterminals.find(sentence[0]) == nonterminals.end()) {
-          first_set[symbol].insert(sentence[0]);
+        } else if (nonterminals_.find(sentence[0]) == nonterminals_.end()) {
+          first_set_[symbol].insert(sentence[0]);
         } else {
           for (const T &prefix_symbol : sentence) {
-            first_set[symbol].merge(
-                std::unordered_set<T>(first_set[prefix_symbol]));
-            if (possibly_empty.find(prefix_symbol) == possibly_empty.end()) {
+            first_set_[symbol].merge(
+                std::unordered_set<T>(first_set_[prefix_symbol]));
+            if (possibly_empty_.find(prefix_symbol) == possibly_empty_.end()) {
               break;
             }
           }
         }
       }
-      if (first_set[symbol].size() != original_size) {
+      if (first_set_[symbol].size() != original_size) {
         changed = true;
       }
     }
   }
-  return first_set;
+  return first_set_;
 }
 
 template <typename T>
 Parser<T> ParserBuilder<T>::build() {
-  nonterminals.clear();
-  terminals.clear();
-  possibly_empty.clear();
-  first_set.clear();
+  nonterminals_.clear();
+  terminals_.clear();
+  possibly_empty_.clear();
+  first_set_.clear();
 
   infer_types();
   generate_empty_set();
   generate_first_set();
 
-  std::unordered_set<T> symbols = {terminal_symbol};
-  symbols.merge(std::unordered_set<T>(terminals));
-  symbols.merge(std::unordered_set<T>(nonterminals));
+  std::unordered_set<T> symbols = {terminal_symbol_};
+  symbols.merge(std::unordered_set<T>(terminals_));
+  symbols.merge(std::unordered_set<T>(nonterminals_));
 
   CanonicalCollection canonical_collection;
 
@@ -472,7 +472,7 @@ Parser<T> ParserBuilder<T>::build() {
 
   CanonicalSet initial_set;
   initial_set.insert(CanonicalSetEntry<T>(
-      goal_symbol, std::vector<T>{goal_symbol}, terminal_symbol));
+      goal_symbol_, std::vector<T>{goal_symbol_}, terminal_symbol_));
 
   std::vector<CanonicalSet> numbering;
 
@@ -552,7 +552,7 @@ Parser<T> ParserBuilder<T>::build() {
     action_table_vector.push_back(action_table[canonical_set]);
   }
 
-  return Parser<T>(action_table_vector, goal_symbol, terminal_symbol);
+  return Parser<T>(action_table_vector, goal_symbol_, terminal_symbol_);
 }
 
 template <typename T>
@@ -568,7 +568,7 @@ void ParserBuilder<T>::extend(CanonicalSet &canonical_set) const {
 
       T current_symbol = entry.sentential_form[entry.index];
       // We can't expand terminals
-      if (nonterminals.find(current_symbol) == nonterminals.end()) continue;
+      if (nonterminals_.find(current_symbol) == nonterminals_.end()) continue;
 
       // Go through the following symbol and merge in first symbols until
       // we hit a nonempty.
@@ -580,14 +580,14 @@ void ParserBuilder<T>::extend(CanonicalSet &canonical_set) const {
 
         // We merge all of the first symbols for the current following symbol
         // into the possible follows.
-        if (nonterminals.find(following_symbol) == nonterminals.end()) {
+        if (nonterminals_.find(following_symbol) == nonterminals_.end()) {
           possible_follows.insert(following_symbol);
         } else {
           possible_follows.merge(
-              std::unordered_set<T>(first_set.at(following_symbol)));
+              std::unordered_set<T>(first_set_.at(following_symbol)));
         }
 
-        if (possibly_empty.find(following_symbol) == possibly_empty.end()) {
+        if (possibly_empty_.find(following_symbol) == possibly_empty_.end()) {
           break;
         }
       }
@@ -598,7 +598,7 @@ void ParserBuilder<T>::extend(CanonicalSet &canonical_set) const {
 
       for (T follow_symbol : possible_follows) {
         for (const std::vector<T> &sentential_form :
-             ruleset.at(current_symbol)) {
+             ruleset_.at(current_symbol)) {
           new_entries.insert(CanonicalSetEntry<T>(
               current_symbol, sentential_form, follow_symbol));
         }
@@ -679,7 +679,7 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
 
     T current_lookahead;
     if (begin == end) {
-      current_lookahead = terminal_symbol;
+      current_lookahead = terminal_symbol_;
     } else {
       current_lookahead = *begin;
     }
@@ -689,15 +689,15 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
       current_state = stack[stack.size() - 1].annotation;
     }
 
-    if (action_table[current_state].find(current_lookahead) ==
-        action_table[current_state].end()) {
+    if (action_table_[current_state].find(current_lookahead) ==
+        action_table_[current_state].end()) {
       SPDLOG_LOGGER_ERROR(get_logger(),
                           "Error: no action for state {} on lookahead {}",
                           current_state, current_lookahead);
     }
 
     Action<T> current_action =
-        action_table[current_state].at(current_lookahead);
+        action_table_[current_state].at(current_lookahead);
 
     if (std::holds_alternative<ShiftAction<T>>(current_action)) {
       ShiftAction<T> shift_action = std::get<ShiftAction<T>>(current_action);
@@ -735,14 +735,14 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
         pre_reduce_state = stack.back().annotation;
       }
 
-      if (action_table[pre_reduce_state].find(reduce_action.result) ==
-          action_table[pre_reduce_state].end()) {
+      if (action_table_[pre_reduce_state].find(reduce_action.result) ==
+          action_table_[pre_reduce_state].end()) {
         SPDLOG_LOGGER_ERROR(get_logger(),
                             "Error: no action on state {} with symbol {}",
                             pre_reduce_state, reduce_action.result);
       }
       Action<T> action =
-          action_table[pre_reduce_state].at(reduce_action.result);
+          action_table_[pre_reduce_state].at(reduce_action.result);
 
       if (!std::holds_alternative<ShiftAction<T>>(action)) {
         SPDLOG_LOGGER_ERROR(
@@ -761,7 +761,7 @@ template <typename T>
 Parser<T>::Parser(
     const std::vector<std::unordered_map<T, Action<T>>> &action_table, T goal,
     T end)
-    : goal_symbol(goal), terminal_symbol(end), action_table(action_table) {}
+    : goal_symbol_(goal), terminal_symbol_(end), action_table_(action_table) {}
 
 template <typename T>
 std::shared_ptr<spdlog::logger> Parser<T>::get_logger() {

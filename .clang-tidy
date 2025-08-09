@@ -8,7 +8,8 @@ Checks: 'clang-diagnostic-*,
          misc-definitions-in-headers,
          misc-use-internal-linkage,
          misc-include-cleaner,
-         modernize-use-nodiscard'
+         modernize-use-nodiscard,
+         readability-identifier-naming'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''
@@ -38,6 +39,8 @@ CheckOptions:
   llvm-else-after-return.WarnOnConditionVariables: 'false'
   llvm-else-after-return.WarnOnUnfixable: 'false'
   llvm-qualified-auto.AddConstToQualified: 'false'
+  readability-identifier-naming.MemberSuffix: '_'
+  readability-identifier-naming.PublicMemberSuffix: ''
 SystemHeaders:   false
 ...
 

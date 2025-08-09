@@ -9,9 +9,9 @@
 
 namespace script3025 {
 
-NatLiteralExpression::NatLiteralExpression(mpz_class value) : value_(value) {}
+NatLiteralExpression::NatLiteralExpression(mpz_class value) : value(value) {}
 
-NatLiteralExpression::NatLiteralExpression() : value_(0) {}
+NatLiteralExpression::NatLiteralExpression() : value(0) {}
 
 std::shared_ptr<spdlog::logger> NatLiteralExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

@@ -20,8 +20,8 @@ class EqualityVisitor : public ConstExpressionVisitor {
   void visit_expression(const Expression &e) override;
 
  private:
-  bool unequal;
-  const Expression *lhs;
+  bool unequal_;
+  const Expression *lhs_;
   std::unordered_map<const Expression *, const Expression *> pointer_map_;
 };
 

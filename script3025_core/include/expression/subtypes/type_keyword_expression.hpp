@@ -22,7 +22,7 @@ class TypeKeywordExpression : public KeywordExpression {
     visitor.visit_type_keyword(*this);
   }
 
-  mpz_class level_;
+  mpz_class level;
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();

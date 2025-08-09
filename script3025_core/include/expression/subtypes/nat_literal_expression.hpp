@@ -22,7 +22,7 @@ class NatLiteralExpression : public Expression {
     visitor.visit_nat_literal(*this);
   }
 
-  mpz_class value_;
+  mpz_class value;
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();

@@ -11,14 +11,14 @@ namespace script3025 {
 ReplacingVisitor::ReplacingVisitor(Expression *search_source,
                                    std::string search_id,
                                    Expression *replacement)
-    : search_source(search_source),
-      search_id(std::move(search_id)),
-      replacement(replacement) {}
+    : search_source_(search_source),
+      search_id_(std::move(search_id)),
+      replacement_(replacement) {}
 
 void ReplacingVisitor::visit_id(const IdExpression &e) {
-  if (e.source == search_source && e.id == search_id) {
+  if (e.source == search_source_ && e.id == search_id_) {
     CloningVisitor visitor;
-    visitor.visit(*replacement);
+    visitor.visit(*replacement_);
     value_ = visitor.get();
     pointer_map_[&e] = value_.get();
   } else {

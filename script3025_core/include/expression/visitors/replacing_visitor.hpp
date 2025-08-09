@@ -16,9 +16,9 @@ class ReplacingVisitor : public CloningVisitor {
   void visit_id(const IdExpression &e) override;
 
  private:
-  Expression *search_source;
-  std::string search_id;
-  Expression *replacement;
+  Expression *search_source_;
+  std::string search_id_;
+  Expression *replacement_;
 };
 
 }  // namespace script3025

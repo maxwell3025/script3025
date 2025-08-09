@@ -16,13 +16,13 @@ class ScopeHygieneVisitor : public ScopeWalkingVisitor<true> {
     for (size_t i = lexical_scope_[e.id].size(); i-- != 0;) {
       if (lexical_scope_[e.id][i] == e.source) return;
     }
-    is_sanitary = false;
+    is_sanitary_ = false;
   }
 
-  [[nodiscard]] bool get() const { return is_sanitary; }
+  [[nodiscard]] bool get() const { return is_sanitary_; }
 
  protected:
-  bool is_sanitary = true;
+  bool is_sanitary_ = true;
 };
 
 [[nodiscard]] inline bool is_hygenic(const Expression &e) {

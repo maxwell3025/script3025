@@ -35,14 +35,14 @@ void CloningVisitor::visit_nat_literal(const NatLiteralExpression &e) {
   visit_expression(e);
   NatLiteralExpression &casted_expression =
       static_cast<NatLiteralExpression &>(*value_);
-  casted_expression.value_ = e.value_;
+  casted_expression.value = e.value;
 }
 
 void CloningVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
   visit_expression(e);
   TypeKeywordExpression &casted_expression =
       static_cast<TypeKeywordExpression &>(*value_);
-  casted_expression.level_ = e.level_;
+  casted_expression.level = e.level;
 }
 
 std::unique_ptr<Expression> CloningVisitor::get() { return std::move(value_); }

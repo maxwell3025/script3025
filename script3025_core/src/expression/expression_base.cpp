@@ -263,7 +263,7 @@ class StringifyVisitor : public ConstExpressionVisitor {
   void visit_nat_keyword(const NatKeywordExpression &) { output << "Nat"; }
 
   void visit_nat_literal(const NatLiteralExpression &e) {
-    output << e.value_.get_str();
+    output << e.value.get_str();
   }
 
   void visit_pi(const PiExpression &e) {
@@ -306,16 +306,17 @@ class StringifyVisitor : public ConstExpressionVisitor {
     // const size_t left_binding_power = min_binding_power_left_;
 
     if (wrap) output << "(";
-    output << "Type " << e.level_.get_str();
+    output << "Type " << e.level.get_str();
     if (wrap) output << ")";
   }
 
   std::unordered_map<const Expression *, std::string> special_names;
   std::unordered_map<const Expression *, std::string> id_map;
   std::unordered_set<const Expression *> failed_lookups;
+  std::stringstream output;
+ private:
   size_t min_binding_power_left_ = 0;
   size_t min_binding_power_right_ = 0;
-  std::stringstream output;
 };
 
 std::string Expression::to_string() const {

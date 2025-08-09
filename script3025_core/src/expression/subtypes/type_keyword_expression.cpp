@@ -9,9 +9,9 @@
 
 namespace script3025 {
 
-TypeKeywordExpression::TypeKeywordExpression(mpz_class level) : level_(level) {}
+TypeKeywordExpression::TypeKeywordExpression(mpz_class level) : level(level) {}
 
-TypeKeywordExpression::TypeKeywordExpression() : level_(0) {}
+TypeKeywordExpression::TypeKeywordExpression() : level(0) {}
 
 std::shared_ptr<spdlog::logger> TypeKeywordExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

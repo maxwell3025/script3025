@@ -36,8 +36,6 @@ class LambdaExpression : public ScopeExpression {
     return children[1];
   }
 
-  std::string argument_id;
-
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 };
