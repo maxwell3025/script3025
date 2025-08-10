@@ -8,6 +8,7 @@ Checks: 'clang-diagnostic-*,
          misc-definitions-in-headers,
          misc-use-internal-linkage,
          misc-include-cleaner,
+         misc-const-correctness,
          modernize-use-nodiscard,
          readability-identifier-naming,
          cppcoreguidelines-special-member-functions'

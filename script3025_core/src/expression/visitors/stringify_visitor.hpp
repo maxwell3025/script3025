@@ -11,7 +11,13 @@
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/equality_expression.hpp"
+#include "expression/subtypes/keyword_expression.hpp"
 #include "expression/subtypes/scope_expression.hpp"
+#include "expression/subtypes/type_keyword_expression.hpp"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 namespace script3025 {
 
@@ -19,9 +25,9 @@ namespace {
 
 class IdRenamer : ConstExpressionVisitor {
  public:
-  [[nodiscard]] static std::unique_ptr<IdRenamer> create(const Expression &e) {
-    std::unique_ptr<IdRenamer> output(new IdRenamer());
-    e.accept(*output);
+  [[nodiscard]] static IdRenamer create(const Expression &e) {
+    IdRenamer output;
+    e.accept(output);
     return output;
   }
 
@@ -110,13 +116,104 @@ struct OperatorBindingPower {
   size_t right;
 };
 
+constexpr size_t BP_NONE = 0;
+
 struct BindingPower {
   OperatorBindingPower application{5, 6};
-  OperatorBindingPower scope{0, 3};
+  OperatorBindingPower scope{BP_NONE, 3};
+  // Setting these equal forces the formatter to disambiguate
   OperatorBindingPower equality{1, 1};
 };
 
 constexpr BindingPower binding_power;
+
+class BindingPowerData : ConstExpressionVisitor {
+ private:
+  BindingPowerData() = default;
+
+  void visit_expression(const Expression &e) {
+    SPDLOG_LOGGER_ERROR(get_logger(), "Unimplemented for {}", typeid(e).name());
+  }
+
+  void visit_keyword(const KeywordExpression &e) {
+    needs_parentheses_[&e] = false;
+  }
+
+  void visit_nat_literal(const NatLiteralExpression &e) {
+    needs_parentheses_[&e] = false;
+  }
+
+  void visit_scope(const ScopeExpression &e) {
+    needs_parentheses_[&e] = binding_power.scope.right >= min_bp_right_;
+    if (needs_parentheses_[&e]) {
+      min_bp_left_ = 0;
+      min_bp_right_ = 0;
+    }
+    for (const std::unique_ptr<Expression> &child : e.children) {
+      if (child == e.definition())
+        visit(*child, binding_power.scope.right + 1, min_bp_right_);
+      else
+        visit(*child, 0, 0);
+    }
+  }
+
+  void visit_application(const ApplicationExpression &e) {
+    needs_parentheses_[&e] = binding_power.application.left >= min_bp_left_ &&
+                             binding_power.application.right >= min_bp_right_;
+    if (needs_parentheses_[&e]) {
+      min_bp_left_ = 0;
+      min_bp_right_ = 0;
+    }
+    visit(*e.argument(), min_bp_left_, binding_power.application.left + 1);
+    visit(*e.function(), binding_power.application.right + 1, min_bp_right_);
+  }
+
+  void visit_type_keyword(const TypeKeywordExpression &e) {
+    needs_parentheses_[&e] = binding_power.application.left >= min_bp_left_ &&
+                             binding_power.application.right >= min_bp_right_;
+    if (needs_parentheses_[&e]) {
+      min_bp_left_ = 0;
+      min_bp_right_ = 0;
+    }
+  }
+
+  void visit_equality(const EqualityExpression &e) {
+    needs_parentheses_[&e] = binding_power.equality.left >= min_bp_left_ &&
+                             binding_power.equality.right >= min_bp_right_;
+    if (needs_parentheses_[&e]) {
+      min_bp_left_ = 0;
+      min_bp_right_ = 0;
+    }
+    visit(*e.lhs(), min_bp_left_, binding_power.equality.left + 1);
+    visit(*e.rhs(), binding_power.equality.right + 1, min_bp_right_);
+  }
+
+  void visit(const Expression &e, size_t min_bp_left, size_t min_bp_right) {
+    const size_t prev_min_bp_left = 0;
+    const size_t prev_min_bp_right = 0;
+    min_bp_left_ = min_bp_left;
+    min_bp_right_ = min_bp_right;
+    ConstExpressionVisitor::visit(e);
+    min_bp_left_ = prev_min_bp_left;
+    min_bp_right_ = prev_min_bp_right;
+  }
+
+  std::shared_ptr<spdlog::logger> get_logger() {
+    static std::shared_ptr<spdlog::logger> logger =
+        ([&]() -> std::shared_ptr<spdlog::logger> {
+          logger = spdlog::stderr_color_mt("script3025::BindingPowerData",
+                                           spdlog::color_mode::always);
+          logger->set_level(spdlog::level::warn);
+          logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+          return logger;
+        })();
+    return logger;
+  }
+
+  size_t min_bp_left_ = 0;
+  size_t min_bp_right_ = 0;
+  std::unordered_map<const Expression *, bool> needs_parentheses_;
+};
 
 /**
   Converts an Expression into a string using the minimum number of parentheses.
@@ -148,8 +245,7 @@ constexpr BindingPower binding_power;
  */
 class ExpressionStringifier : ConstExpressionVisitor {
  public:
-  ExpressionStringifier(std::unique_ptr<IdRenamer> renamer)
-      : renamer_(std::move(renamer)) {}
+  ExpressionStringifier(IdRenamer renamer) : renamer_(std::move(renamer)) {}
 
   [[nodiscard]] std::string stringify(const Expression &e) {
     visit(e);
@@ -158,7 +254,7 @@ class ExpressionStringifier : ConstExpressionVisitor {
 
  private:
   void visit_id(const IdExpression &e) {
-    output_ << renamer_->get_description(e);
+    output_ << renamer_.get_description(e);
   }
 
   void visit_application(const ApplicationExpression &e) {
@@ -308,7 +404,7 @@ class ExpressionStringifier : ConstExpressionVisitor {
     if (wrap) output_ << ")";
   }
 
-  std::unique_ptr<IdRenamer> renamer_;
+  IdRenamer renamer_;
   std::stringstream output_;
   size_t min_binding_power_left_ = 0;
   size_t min_binding_power_right_ = 0;
@@ -317,8 +413,8 @@ class ExpressionStringifier : ConstExpressionVisitor {
 }  // namespace
 
 inline std::string stringify_expression(const Expression &e) {
-  std::unique_ptr<IdRenamer> id_renamer = IdRenamer::create(e);
-  ExpressionStringifier stringifier(std::move(id_renamer));
+  IdRenamer id_renamer = IdRenamer::create(e);
+  ExpressionStringifier stringifier(id_renamer);
   return stringifier.stringify(e);
 }
 
