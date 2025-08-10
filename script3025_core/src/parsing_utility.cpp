@@ -163,7 +163,7 @@ std::vector<AnnotatedToken> tokenize(const std::string& text) {
   }
 
   std::stringstream message;
-  for (AnnotatedToken annotated_token : annotated_tokens) {
+  for (const AnnotatedToken& annotated_token : annotated_tokens) {
     message << annotated_token.token;
   }
   SPDLOG_LOGGER_TRACE(logger, "{}", message.str());

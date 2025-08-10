@@ -17,6 +17,8 @@
 #include "expression/subtypes/keyword_expression.hpp"
 #include "expression/subtypes/scope_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
@@ -34,7 +36,7 @@ class IdRenamer : ConstExpressionVisitor {
 
   [[nodiscard]] std::string get_description(const IdExpression &e) const {
     std::stringstream output;
-    bool is_global = e.source == nullptr;
+    const bool is_global = e.source == nullptr;
     if (is_global) {
       if (shadowed_globals_.find(&e) != inaccessible_references_.end()) {
         output << e.id << "[global]";
@@ -44,7 +46,7 @@ class IdRenamer : ConstExpressionVisitor {
       return output.str();
     }
 
-    bool is_inaccessible =
+    const bool is_inaccessible =
         inaccessible_references_.find(&e) != inaccessible_references_.end();
     if (is_inaccessible) {
       output << e.id << "[" << "0x" << std::setfill('0')
@@ -61,7 +63,7 @@ class IdRenamer : ConstExpressionVisitor {
     }
     output << variable_name;
 
-    bool is_misnamed = e.source->argument_id != e.id;
+    const bool is_misnamed = e.source->argument_id != e.id;
     if (is_misnamed) {
       output << "!labeled as \"" << e.id << "\"!";
     }
@@ -94,7 +96,7 @@ class IdRenamer : ConstExpressionVisitor {
         is_shadowed = true;
     }
 
-    bool is_global = e.source == nullptr;
+    const bool is_global = e.source == nullptr;
     if (is_shadowed && is_global) shadowed_globals_.insert(&e);
     if (!is_global) inaccessible_references_.insert(&e);
   }
@@ -154,9 +156,7 @@ class BindingPowerData : ConstExpressionVisitor {
     needs_parentheses_[&e] = false;
   }
 
-  void visit_id(const IdExpression &e) {
-    needs_parentheses_[&e] = false;
-  }
+  void visit_id(const IdExpression &e) { needs_parentheses_[&e] = false; }
 
   void visit_scope(const ScopeExpression &e) {
     needs_parentheses_[&e] = binding_power.scope.right < min_bp_right_;
@@ -282,20 +282,23 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_space =
         !parentheses_data_.needs_parentheses(*e.function()) &&
         !parentheses_data_.needs_parentheses(*e.argument());
+    const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
-    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
+    if (needs_parentheses) output_ << "(";
     visit(*e.function());
     if (needs_space) output_ << " ";
     visit(*e.argument());
-    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+    if (needs_parentheses) output_ << ")";
   }
 
   void visit_equality(const EqualityExpression &e) {
-    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
+    const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
+
+    if (needs_parentheses) output_ << "(";
     visit(*e.lhs());
     output_ << "=";
     visit(*e.rhs());
-    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+    if (needs_parentheses) output_ << ")";
   }
 
   void visit_induction_keyword(const InductionKeywordExpression &) {
@@ -303,23 +306,27 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_lambda(const LambdaExpression &e) {
-    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
+    const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
+
+    if (needs_parentheses) output_ << "(";
     output_ << "λ (" << e.argument_id << ":";
     visit(*e.argument_type());
     output_ << "). ";
     visit(*e.definition());
-    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+    if (needs_parentheses) output_ << ")";
   }
 
   void visit_let(const LetExpression &e) {
-    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
+    const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
+
+    if (needs_parentheses) output_ << "(";
     output_ << "let (" << e.argument_id << ":";
     visit(*e.argument_type());
     output_ << ":=";
     visit(*e.argument_value());
     output_ << " in ";
     visit(*e.definition());
-    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+    if (needs_parentheses) output_ << ")";
   }
 
   void visit_nat_keyword(const NatKeywordExpression &) { output_ << "Nat"; }
@@ -329,12 +336,14 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_pi(const PiExpression &e) {
-    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
+    const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
+
+    if (needs_parentheses) output_ << "(";
     output_ << "Π (" << e.argument_id << ":";
     visit(*e.argument_type());
     output_ << "). ";
     visit(*e.definition());
-    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+    if (needs_parentheses) output_ << ")";
   }
 
   void visit_replace_keyword(const ReplaceKeywordExpression &) {
@@ -348,9 +357,11 @@ class ExpressionStringifier : ConstExpressionVisitor {
   void visit_succ_keyword(const SuccKeywordExpression &) { output_ << "succ"; }
 
   void visit_type_keyword(const TypeKeywordExpression &e) {
-    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
+    const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
+
+    if (needs_parentheses) output_ << "(";
     output_ << "Type " << e.level.get_str();
-    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+    if (needs_parentheses) output_ << ")";
   }
 
   std::shared_ptr<spdlog::logger> get_logger() {
@@ -375,7 +386,8 @@ class ExpressionStringifier : ConstExpressionVisitor {
 inline std::string stringify_expression(const Expression &e) {
   IdRenamer id_renamer = IdRenamer::create(e);
   BindingPowerData parentheses_data = BindingPowerData::create(e);
-  ExpressionStringifier stringifier(id_renamer, parentheses_data);
+  ExpressionStringifier stringifier(std::move(id_renamer),
+                                    std::move(parentheses_data));
   return stringifier.stringify(e);
 }
 

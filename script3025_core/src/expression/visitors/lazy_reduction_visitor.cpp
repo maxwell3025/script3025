@@ -51,7 +51,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   void visit_id(IdExpression &e) override {
     auto replacement_it = delta_table.find(std::make_pair(e.id, e.source));
     if (replacement_it != delta_table.end()) {
-      Expression &replacement = *(replacement_it->second);
+      const Expression &replacement = *(replacement_it->second);
       CloningVisitor visitor;
       visitor.visit(replacement);
       head = visitor.get();

@@ -134,9 +134,9 @@ struct CanonicalSetEntry {
 template <typename T>
 struct CanonicalSetEntryHash {
   size_t operator()(const CanonicalSetEntry<T> &entry) const {
-    std::hash<T> t_hasher;
-    std::hash<size_t> size_t_hasher;
-    VectorHash<T> vec_hasher;
+    const std::hash<T> t_hasher;
+    const std::hash<size_t> size_t_hasher;
+    const VectorHash<T> vec_hasher;
 
     size_t seed = 0;
     seed ^= t_hasher(entry.following_symbol) + 0x9e3779b9 + (seed << 6) +
