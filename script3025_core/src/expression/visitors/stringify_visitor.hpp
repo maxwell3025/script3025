@@ -13,6 +13,7 @@
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/application_expression.hpp"
 #include "expression/subtypes/equality_expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
 #include "expression/subtypes/keyword_expression.hpp"
 #include "expression/subtypes/scope_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
@@ -128,6 +129,16 @@ struct BindingPower {
 constexpr BindingPower binding_power;
 
 class BindingPowerData : ConstExpressionVisitor {
+ public:
+  [[nodiscard]] static BindingPowerData create(const Expression &e) {
+    BindingPowerData output;
+    e.accept(output);
+    return output;
+  }
+  [[nodiscard]] bool needs_parentheses(const Expression &e) const {
+    return needs_parentheses_.at(&e);
+  }
+
  private:
   BindingPowerData() = default;
 
@@ -143,8 +154,12 @@ class BindingPowerData : ConstExpressionVisitor {
     needs_parentheses_[&e] = false;
   }
 
+  void visit_id(const IdExpression &e) {
+    needs_parentheses_[&e] = false;
+  }
+
   void visit_scope(const ScopeExpression &e) {
-    needs_parentheses_[&e] = binding_power.scope.right >= min_bp_right_;
+    needs_parentheses_[&e] = binding_power.scope.right < min_bp_right_;
     if (needs_parentheses_[&e]) {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
@@ -158,8 +173,8 @@ class BindingPowerData : ConstExpressionVisitor {
   }
 
   void visit_application(const ApplicationExpression &e) {
-    needs_parentheses_[&e] = binding_power.application.left >= min_bp_left_ &&
-                             binding_power.application.right >= min_bp_right_;
+    needs_parentheses_[&e] = binding_power.application.left < min_bp_left_ ||
+                             binding_power.application.right < min_bp_right_;
     if (needs_parentheses_[&e]) {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
@@ -169,8 +184,8 @@ class BindingPowerData : ConstExpressionVisitor {
   }
 
   void visit_type_keyword(const TypeKeywordExpression &e) {
-    needs_parentheses_[&e] = binding_power.application.left >= min_bp_left_ &&
-                             binding_power.application.right >= min_bp_right_;
+    needs_parentheses_[&e] = binding_power.application.left < min_bp_left_ ||
+                             binding_power.application.right < min_bp_right_;
     if (needs_parentheses_[&e]) {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
@@ -178,8 +193,8 @@ class BindingPowerData : ConstExpressionVisitor {
   }
 
   void visit_equality(const EqualityExpression &e) {
-    needs_parentheses_[&e] = binding_power.equality.left >= min_bp_left_ &&
-                             binding_power.equality.right >= min_bp_right_;
+    needs_parentheses_[&e] = binding_power.equality.left < min_bp_left_ ||
+                             binding_power.equality.right < min_bp_right_;
     if (needs_parentheses_[&e]) {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
@@ -245,7 +260,9 @@ class BindingPowerData : ConstExpressionVisitor {
  */
 class ExpressionStringifier : ConstExpressionVisitor {
  public:
-  ExpressionStringifier(IdRenamer renamer) : renamer_(std::move(renamer)) {}
+  ExpressionStringifier(IdRenamer renamer, BindingPowerData parentheses_data)
+      : renamer_(std::move(renamer)),
+        parentheses_data_(std::move(parentheses_data)) {}
 
   [[nodiscard]] std::string stringify(const Expression &e) {
     visit(e);
@@ -253,51 +270,32 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
  private:
+  void visit_expression(const Expression &e) {
+    SPDLOG_LOGGER_ERROR(get_logger(), "Unimplemented for {}", typeid(e).name());
+  }
+
   void visit_id(const IdExpression &e) {
     output_ << renamer_.get_description(e);
   }
 
   void visit_application(const ApplicationExpression &e) {
-    const bool wrap =
-        binding_power.application.left < min_binding_power_left_ ||
-        binding_power.application.right < min_binding_power_right_;
-    const size_t right_binding_power = min_binding_power_right_;
-    const size_t left_binding_power = min_binding_power_left_;
+    const bool needs_space =
+        !parentheses_data_.needs_parentheses(*e.function()) &&
+        !parentheses_data_.needs_parentheses(*e.argument());
 
-    if (wrap) output_ << "(";
-
-    min_binding_power_left_ = wrap ? 0 : left_binding_power;
-    min_binding_power_right_ = binding_power.application.left + 1;
+    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
     visit(*e.function());
-
-    output_ << " ";
-
-    min_binding_power_left_ = binding_power.application.right + 1;
-    min_binding_power_right_ = wrap ? 0 : right_binding_power;
+    if (needs_space) output_ << " ";
     visit(*e.argument());
-
-    if (wrap) output_ << ")";
+    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
   }
 
   void visit_equality(const EqualityExpression &e) {
-    const bool wrap = binding_power.equality.left < min_binding_power_left_ ||
-                      binding_power.equality.right < min_binding_power_right_;
-    const size_t right_binding_power = min_binding_power_right_;
-    const size_t left_binding_power = min_binding_power_left_;
-
-    if (wrap) output_ << "(";
-
-    min_binding_power_left_ = wrap ? 0 : left_binding_power;
-    min_binding_power_right_ = binding_power.equality.left + 1;
+    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
     visit(*e.lhs());
-
     output_ << "=";
-
-    min_binding_power_left_ = binding_power.equality.right + 1;
-    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.rhs());
-
-    if (wrap) output_ << ")";
+    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
   }
 
   void visit_induction_keyword(const InductionKeywordExpression &) {
@@ -305,53 +303,23 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_lambda(const LambdaExpression &e) {
-    const bool wrap = binding_power.equality.right < min_binding_power_right_;
-    const size_t right_binding_power = min_binding_power_right_;
-    // const size_t left_binding_power = min_binding_power_left_;
-
-    if (wrap) output_ << "(";
-
+    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
     output_ << "λ (" << e.argument_id << ":";
-
-    min_binding_power_left_ = 0;
-    min_binding_power_right_ = 0;
     visit(*e.argument_type());
-
     output_ << "). ";
-
-    min_binding_power_left_ = binding_power.scope.right + 1;
-    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.definition());
-
-    if (wrap) output_ << ")";
+    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
   }
 
   void visit_let(const LetExpression &e) {
-    const bool wrap = binding_power.equality.right < min_binding_power_right_;
-    const size_t right_binding_power = min_binding_power_right_;
-    // const size_t left_binding_power = min_binding_power_left_;
-
-    if (wrap) output_ << "(";
-
+    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
     output_ << "let (" << e.argument_id << ":";
-
-    min_binding_power_left_ = 0;
-    min_binding_power_right_ = 0;
     visit(*e.argument_type());
-
     output_ << ":=";
-
-    min_binding_power_left_ = 0;
-    min_binding_power_right_ = 0;
     visit(*e.argument_value());
-
     output_ << " in ";
-
-    min_binding_power_left_ = binding_power.scope.right + 1;
-    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.definition());
-
-    if (wrap) output_ << ")";
+    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
   }
 
   void visit_nat_keyword(const NatKeywordExpression &) { output_ << "Nat"; }
@@ -361,25 +329,12 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_pi(const PiExpression &e) {
-    const bool wrap = binding_power.equality.right < min_binding_power_right_;
-    const size_t right_binding_power = min_binding_power_right_;
-    // const size_t left_binding_power = min_binding_power_left_;
-
-    if (wrap) output_ << "(";
-
+    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
     output_ << "Π (" << e.argument_id << ":";
-
-    min_binding_power_left_ = 0;
-    min_binding_power_right_ = 0;
     visit(*e.argument_type());
-
     output_ << "). ";
-
-    min_binding_power_left_ = binding_power.scope.right + 1;
-    min_binding_power_right_ = wrap ? 0 : right_binding_power;
     visit(*e.definition());
-
-    if (wrap) output_ << ")";
+    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
   }
 
   void visit_replace_keyword(const ReplaceKeywordExpression &) {
@@ -393,28 +348,34 @@ class ExpressionStringifier : ConstExpressionVisitor {
   void visit_succ_keyword(const SuccKeywordExpression &) { output_ << "succ"; }
 
   void visit_type_keyword(const TypeKeywordExpression &e) {
-    const bool wrap =
-        binding_power.application.left < min_binding_power_left_ ||
-        binding_power.application.right < min_binding_power_right_;
-    // const size_t right_binding_power = min_binding_power_right_;
-    // const size_t left_binding_power = min_binding_power_left_;
-
-    if (wrap) output_ << "(";
+    if (parentheses_data_.needs_parentheses(e)) output_ << "(";
     output_ << "Type " << e.level.get_str();
-    if (wrap) output_ << ")";
+    if (parentheses_data_.needs_parentheses(e)) output_ << ")";
+  }
+
+  std::shared_ptr<spdlog::logger> get_logger() {
+    static std::shared_ptr<spdlog::logger> logger =
+        ([&]() -> std::shared_ptr<spdlog::logger> {
+          logger = spdlog::stderr_color_mt("script3025::ExpressionStringifier",
+                                           spdlog::color_mode::always);
+          logger->set_level(spdlog::level::warn);
+          logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+          return logger;
+        })();
+    return logger;
   }
 
   IdRenamer renamer_;
+  BindingPowerData parentheses_data_;
   std::stringstream output_;
-  size_t min_binding_power_left_ = 0;
-  size_t min_binding_power_right_ = 0;
 };
 
 }  // namespace
 
 inline std::string stringify_expression(const Expression &e) {
   IdRenamer id_renamer = IdRenamer::create(e);
-  ExpressionStringifier stringifier(id_renamer);
+  BindingPowerData parentheses_data = BindingPowerData::create(e);
+  ExpressionStringifier stringifier(id_renamer, parentheses_data);
   return stringifier.stringify(e);
 }
 
