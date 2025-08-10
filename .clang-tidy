@@ -9,7 +9,8 @@ Checks: 'clang-diagnostic-*,
          misc-use-internal-linkage,
          misc-include-cleaner,
          modernize-use-nodiscard,
-         readability-identifier-naming'
+         readability-identifier-naming,
+         cppcoreguidelines-special-member-functions'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''
@@ -41,6 +42,7 @@ CheckOptions:
   llvm-qualified-auto.AddConstToQualified: 'false'
   readability-identifier-naming.MemberSuffix: '_'
   readability-identifier-naming.PublicMemberSuffix: ''
+  cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: 'true'
 SystemHeaders:   false
 ...
 

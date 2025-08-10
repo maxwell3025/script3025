@@ -21,7 +21,7 @@ class Expression {
 
   virtual void accept(ExpressionVisitor<false> &visitor) = 0;
 
-  virtual ~Expression() = 0;
+  virtual ~Expression() = default;
 
   [[nodiscard]] std::unique_ptr<Expression> clone(
       const std::unordered_map<const Expression *, Expression *> &initial_map)

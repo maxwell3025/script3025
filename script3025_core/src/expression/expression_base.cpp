@@ -25,8 +25,6 @@ bool Expression::operator!=(const Expression &rhs) const {
   return !(*this == rhs);
 }
 
-Expression::~Expression() {}
-
 std::shared_ptr<spdlog::logger> Expression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {

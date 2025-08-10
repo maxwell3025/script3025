@@ -173,9 +173,6 @@ struct AnnotatedNode {
   // TODO also try doing this with a non-reference type ans see if it breaks.
   AnnotatedNode(ConcreteSyntaxTree<T> &&symbol, size_t annotation)
       : symbol(std::move(symbol)), annotation(annotation) {}
-
-  AnnotatedNode(AnnotatedNode &&other)
-      : symbol(std::move(other.symbol)), annotation(other.annotation) {}
 };
 
 }  // namespace
@@ -191,9 +188,6 @@ struct ConcreteSyntaxTree {
   std::vector<ConcreteSyntaxTree<T>> children;
 
   ConcreteSyntaxTree(T symbol) : symbol(symbol) {}
-
-  ConcreteSyntaxTree(ConcreteSyntaxTree<T> &&other)
-      : symbol(other.symbol), children(std::move(other.children)) {}
 
   [[nodiscard]] std::vector<T> sentence() const {
     std::vector<T> sentence;

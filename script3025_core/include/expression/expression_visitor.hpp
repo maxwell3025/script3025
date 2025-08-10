@@ -28,6 +28,8 @@ class ExpressionVisitor {
   template <typename T>
   using ref = std::conditional_t<is_const, const T&, T&>;
 
+  virtual ~ExpressionVisitor() = default;
+
 #pragma region ScopeExpression
   virtual void visit_lambda(ref<LambdaExpression> e) { visit_scope(e); }
   virtual void visit_let(ref<LetExpression> e) { visit_scope(e); }
