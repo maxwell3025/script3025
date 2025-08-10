@@ -12,7 +12,7 @@
 
 namespace script3025 {
 
-IdExpression::IdExpression(std::string id, Expression *source)
+IdExpression::IdExpression(std::string id, ScopeExpression *source)
     : id(std::move(id)), source(source) {}
 
 IdExpression::IdExpression() {}

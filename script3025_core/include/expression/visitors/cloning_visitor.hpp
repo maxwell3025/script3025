@@ -6,6 +6,7 @@
 
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/scope_expression.hpp"
 
 namespace script3025 {
 
@@ -21,7 +22,8 @@ class CloningVisitor : public ConstExpressionVisitor {
   void visit_expression(const Expression &e) override;
 
   std::unique_ptr<Expression> value_;
-  std::unordered_map<const Expression *, Expression *> pointer_map_;
+  std::unordered_map<const ScopeExpression *, ScopeExpression *>
+      scope_expression_map_;
 };
 
 }  // namespace script3025

@@ -6,13 +6,14 @@
 
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/scope_expression.hpp"
 #include "spdlog/logger.h"
 
 namespace script3025 {
 
 class IdExpression : public Expression {
  public:
-  IdExpression(std::string id, Expression *source);
+  IdExpression(std::string id, ScopeExpression *source);
   IdExpression();
   void accept(ExpressionVisitor<true> &visitor) const override {
     visitor.visit_id(*this);
@@ -22,7 +23,7 @@ class IdExpression : public Expression {
   }
 
   std::string id;
-  Expression *source;
+  ScopeExpression *source;
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();

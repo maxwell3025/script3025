@@ -20,7 +20,6 @@ void ReplacingVisitor::visit_id(const IdExpression &e) {
     CloningVisitor visitor;
     visitor.visit(*replacement_);
     value_ = visitor.get();
-    pointer_map_[&e] = value_.get();
   } else {
     CloningVisitor::visit_id(e);
   }

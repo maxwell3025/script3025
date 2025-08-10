@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "expression/expression.hpp"
+#include "expression/subtypes/scope_expression.hpp"
 #include "expression/visitors/partial_clone_visitor.hpp"
 
 namespace script3025 {
@@ -12,12 +13,11 @@ namespace script3025 {
 void CloningVisitor::visit_id(const IdExpression &e) {
   std::unique_ptr<IdExpression> new_expression =
       std::make_unique<IdExpression>();
-  pointer_map_[&e] = new_expression.get();
 
   new_expression->id = e.id;
 
-  if (pointer_map_.find(e.source) != pointer_map_.end()) {
-    new_expression->source = pointer_map_[e.source];
+  if (scope_expression_map_.find(e.source) != scope_expression_map_.end()) {
+    new_expression->source = scope_expression_map_[e.source];
   } else {
     new_expression->source = e.source;
   }
@@ -26,7 +26,20 @@ void CloningVisitor::visit_id(const IdExpression &e) {
 }
 
 void CloningVisitor::visit_scope(const ScopeExpression &e) {
-  visit_expression(e);
+  std::unique_ptr<Expression> new_expression = make_default_like(e);
+
+  scope_expression_map_[&e] =
+      static_cast<ScopeExpression *>(new_expression.get());
+
+  for (size_t i = 0; i < e.children.size(); ++i) {
+    if (e.children[i])
+      visit(*e.children[i]);
+    else
+      value_ = nullptr;
+    new_expression->children[i] = get();
+  }
+
+  value_ = std::move(new_expression);
   ScopeExpression &casted_expression = static_cast<ScopeExpression &>(*value_);
   casted_expression.argument_id = e.argument_id;
 }
@@ -45,12 +58,8 @@ void CloningVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
   casted_expression.level = e.level;
 }
 
-std::unique_ptr<Expression> CloningVisitor::get() { return std::move(value_); }
-
 void CloningVisitor::visit_expression(const Expression &e) {
   std::unique_ptr<Expression> new_expression = make_default_like(e);
-
-  pointer_map_[&e] = new_expression.get();
 
   for (size_t i = 0; i < e.children.size(); ++i) {
     if (e.children[i])
@@ -62,5 +71,7 @@ void CloningVisitor::visit_expression(const Expression &e) {
 
   value_ = std::move(new_expression);
 }
+
+std::unique_ptr<Expression> CloningVisitor::get() { return std::move(value_); }
 
 }  // namespace script3025

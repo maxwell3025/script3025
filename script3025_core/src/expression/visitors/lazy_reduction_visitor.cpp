@@ -113,7 +113,8 @@ void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
       std::move(visitor.arguments);
 
   visit(*visitor.head);
-  std::unique_ptr<Expression> merged_expression = std::move(reduced_expression);
+  std::unique_ptr<Expression> merged_expression =
+      std::move(reduced_expression_);
 
   // Combine everything back into the head.
   while (!orphan_arguments.empty()) {
@@ -123,18 +124,18 @@ void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
     new_head->function() = std::move(merged_expression);
 
     visit(*orphan_arguments.back());
-    new_head->argument() = std::move(reduced_expression);
+    new_head->argument() = std::move(reduced_expression_);
 
     merged_expression = std::move(new_head);
   }
 
-  reduced_expression = std::move(merged_expression);
+  reduced_expression_ = std::move(merged_expression);
 }
 
 void LazyReductionVisitor::visit_id(IdExpression &e) {
   visit_expression(e);
   IdExpression &reduced_expression_casted =
-      static_cast<IdExpression &>(*reduced_expression);
+      static_cast<IdExpression &>(*reduced_expression_);
   reduced_expression_casted.id = std::move(e.id);
   reduced_expression_casted.source = e.source;
 }
@@ -144,10 +145,10 @@ void LazyReductionVisitor::visit_expression(Expression &e) {
 
   for (size_t i = 0; i < e.children.size(); ++i) {
     visit(*e.children[i]);
-    reduced->children[i] = std::move(reduced_expression);
+    reduced->children[i] = std::move(reduced_expression_);
   }
 
-  reduced_expression = std::move(reduced);
+  reduced_expression_ = std::move(reduced);
 }
 
 std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {

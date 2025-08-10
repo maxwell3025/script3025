@@ -14,13 +14,13 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
   void visit_application(ApplicationExpression &e) override;
   void visit_id(IdExpression &e) override;
 
-  std::unique_ptr<Expression> reduced_expression;
-
  protected:
   void visit_expression(Expression &e) override;
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
+
+  std::unique_ptr<Expression> reduced_expression_;
 };
 
 }  // namespace script3025

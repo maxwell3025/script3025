@@ -9,6 +9,7 @@
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/scope_expression.hpp"
 
 namespace script3025 {
 
@@ -19,7 +20,7 @@ class ScopeWalkingVisitor : public ExpressionVisitor<is_const> {
   using ref = std::conditional_t<is_const, const T &, T &>;
 
   using expression_ptr =
-      std::conditional_t<is_const, const Expression *, Expression *>;
+      std::conditional_t<is_const, const ScopeExpression *, ScopeExpression *>;
 
   void visit_lambda(ref<LambdaExpression> e) override {
     this->visit(*e.argument_type());
