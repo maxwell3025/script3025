@@ -1,14 +1,22 @@
 #include "program.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "cst_transformers.hpp"
 #include "expression/visitors/scope_hygiene_visitor.hpp"
 #include "parsing_utility.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace script3025 {
 
-Program::Program(std::string source) {
+Program::Program(const std::string &source) {
   ParsedCode code = parse(source);
 
   script3025::collect_lists(*code.cst);
@@ -33,7 +41,7 @@ std::string Program::to_string() const {
   return output.str();
 }
 
-bool Program::check_types() {
+bool Program::check_types() const {
   for (const auto &definition_pair : global_definitions())
     if (!is_hygenic(*definition_pair.second)) return false;
   return true;

@@ -2,7 +2,14 @@
 
 #include <gtest/gtest.h>
 
-std::shared_ptr<spdlog::logger> get_logger() {
+#include <memory>
+
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
+
+[[nodiscard]] std::shared_ptr<spdlog::logger> get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025_core_test.cpp",
@@ -21,9 +28,10 @@ TEST(Program, simple) {
 }
 
 TEST(Program, multi) {
-  script3025::Program program(
+  const script3025::Program program(
       "def foo := lambda (x : Type). x \n"
       "def bar := lambda (x : Type). foo x");
+
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
 }
 

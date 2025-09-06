@@ -1,5 +1,10 @@
 #include "cst_transformers.hpp"
 
+#include <utility>
+
+#include "parser.hpp"
+#include "token.hpp"
+
 namespace script3025 {
 
 void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {
@@ -18,7 +23,9 @@ void collect_lists(parser::ConcreteSyntaxTree<Token> &tree) {
   }
 }
 
-bool is_expr(const Token &t) {
+namespace {
+
+[[nodiscard]] bool is_expr(const Token &t) {
   switch (t) {
     case Token::EXPR_EQ:
     case Token::EXPR_ABS:
@@ -30,6 +37,8 @@ bool is_expr(const Token &t) {
       return false;
   }
 }
+
+}  // namespace
 
 void collapse_oop(parser::ConcreteSyntaxTree<Token> &tree) {
   for (parser::ConcreteSyntaxTree<Token> &child : tree.children) {

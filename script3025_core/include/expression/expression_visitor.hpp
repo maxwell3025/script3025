@@ -28,13 +28,15 @@ class ExpressionVisitor {
   template <typename T>
   using ref = std::conditional_t<is_const, const T&, T&>;
 
-  #pragma region ScopeExpression
+  virtual ~ExpressionVisitor() = default;
+
+#pragma region ScopeExpression
   virtual void visit_lambda(ref<LambdaExpression> e) { visit_scope(e); }
   virtual void visit_let(ref<LetExpression> e) { visit_scope(e); }
   virtual void visit_pi(ref<PiExpression> e) { visit_scope(e); }
-  #pragma endregion
+#pragma endregion
 
-  #pragma region KeywordExpression
+#pragma region KeywordExpression
   virtual void visit_induction_keyword(ref<InductionKeywordExpression> e) {
     visit_keyword(e);
   }
@@ -53,7 +55,7 @@ class ExpressionVisitor {
   virtual void visit_type_keyword(ref<TypeKeywordExpression> e) {
     visit_keyword(e);
   }
-  #pragma endregion
+#pragma endregion
 
   virtual void visit_application(ref<ApplicationExpression> e) {
     visit_expression(e);
@@ -69,7 +71,7 @@ class ExpressionVisitor {
   void visit(ref<Expression> e) { e.accept(*this); }
 
  protected:
-  virtual void visit_expression(ref<Expression> e) {}
+  virtual void visit_expression(ref<Expression>) {}
   virtual void visit_keyword(ref<KeywordExpression> e) { visit_expression(e); }
   virtual void visit_scope(ref<ScopeExpression> e) { visit_expression(e); }
 };

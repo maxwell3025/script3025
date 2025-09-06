@@ -1,11 +1,12 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_PARSING_UTILITY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_PARSING_UTILITY_HPP
 
-#include <unordered_set>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "token.hpp"
 #include "parser.hpp"
-
+#include "token.hpp"
 
 namespace script3025 {
 
@@ -19,9 +20,9 @@ struct ParsedCode {
   std::vector<AnnotatedToken> annotated_tokens;
 };
 
-std::vector<AnnotatedToken> tokenize(std::string text);
-ParsedCode parse(std::string text);
+[[nodiscard]] std::vector<AnnotatedToken> tokenize(const std::string& text);
+[[nodiscard]] ParsedCode parse(const std::string& text);
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

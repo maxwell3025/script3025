@@ -1,8 +1,12 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_CLONING_VISITOR_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_CLONING_VISITOR_HPP
 
+#include <memory>
+#include <unordered_map>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/scope_expression.hpp"
 
 namespace script3025 {
 
@@ -12,15 +16,16 @@ class CloningVisitor : public ConstExpressionVisitor {
   void visit_scope(const ScopeExpression &e) override;
   void visit_nat_literal(const NatLiteralExpression &e) override;
   void visit_type_keyword(const TypeKeywordExpression &e) override;
-  std::unique_ptr<Expression> get();
+  [[nodiscard]] std::unique_ptr<Expression> get();
 
  protected:
   void visit_expression(const Expression &e) override;
 
   std::unique_ptr<Expression> value_;
-  std::unordered_map<const Expression *, Expression *> pointer_map_;
+  std::unordered_map<const ScopeExpression *, ScopeExpression *>
+      scope_expression_map_;
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

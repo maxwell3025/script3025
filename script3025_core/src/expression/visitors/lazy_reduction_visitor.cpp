@@ -1,6 +1,20 @@
 #include "expression/visitors/lazy_reduction_visitor.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include "expression/expression.hpp"
+#include "expression/expression_visitor.hpp"
 #include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "partial_clone_visitor.hpp"
@@ -16,13 +30,13 @@ struct IdHash {
 
 class WHNFVisitor : public MutatingExpressionVisitor {
  public:
-  void visit_application(ApplicationExpression &e) {
+  void visit_application(ApplicationExpression &e) override {
     arguments.push_back(std::move(e.argument()));
     head = std::move(e.function());
     visit(*head);
   }
 
-  void visit_equality(PiExpression &e) {
+  void visit_equality(EqualityExpression &) override {
     if (arguments.size() != 0) {
       SPDLOG_LOGGER_WARN(
           get_logger(),
@@ -34,10 +48,10 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     }
   }
 
-  void visit_id(IdExpression &e) {
+  void visit_id(IdExpression &e) override {
     auto replacement_it = delta_table.find(std::make_pair(e.id, e.source));
     if (replacement_it != delta_table.end()) {
-      Expression &replacement = *(replacement_it->second);
+      const Expression &replacement = *(replacement_it->second);
       CloningVisitor visitor;
       visitor.visit(replacement);
       head = visitor.get();
@@ -45,22 +59,22 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     }
   }
 
-  void visit_lambda(LambdaExpression &e) {
+  void visit_lambda(LambdaExpression &e) override {
     ReplacingVisitor visitor(&e, e.argument_id, arguments.back().get());
     visitor.visit(*e.definition());
     arguments.pop_back();
-    head = std::move(visitor.get());
+    head = visitor.get();
     visit(*head);
   }
 
-  void visit_let(LetExpression &e) {
+  void visit_let(LetExpression &e) override {
     ReplacingVisitor visitor(&e, e.argument_id, e.argument_value().get());
     visitor.visit(*e.definition());
-    head = std::move(visitor.get());
+    head = visitor.get();
     visit(*head);
   }
 
-  void visit_pi(PiExpression &e) {
+  void visit_pi(PiExpression &) override {
     if (arguments.size() != 0) {
       SPDLOG_LOGGER_WARN(
           get_logger(),
@@ -99,7 +113,8 @@ void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
       std::move(visitor.arguments);
 
   visit(*visitor.head);
-  std::unique_ptr<Expression> merged_expression = std::move(reduced_expression);
+  std::unique_ptr<Expression> merged_expression =
+      std::move(reduced_expression_);
 
   // Combine everything back into the head.
   while (!orphan_arguments.empty()) {
@@ -109,18 +124,18 @@ void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
     new_head->function() = std::move(merged_expression);
 
     visit(*orphan_arguments.back());
-    new_head->argument() = std::move(reduced_expression);
+    new_head->argument() = std::move(reduced_expression_);
 
     merged_expression = std::move(new_head);
   }
 
-  reduced_expression = std::move(merged_expression);
+  reduced_expression_ = std::move(merged_expression);
 }
 
 void LazyReductionVisitor::visit_id(IdExpression &e) {
   visit_expression(e);
   IdExpression &reduced_expression_casted =
-      static_cast<IdExpression &>(*reduced_expression);
+      static_cast<IdExpression &>(*reduced_expression_);
   reduced_expression_casted.id = std::move(e.id);
   reduced_expression_casted.source = e.source;
 }
@@ -130,10 +145,10 @@ void LazyReductionVisitor::visit_expression(Expression &e) {
 
   for (size_t i = 0; i < e.children.size(); ++i) {
     visit(*e.children[i]);
-    reduced->children[i] = std::move(reduced_expression);
+    reduced->children[i] = std::move(reduced_expression_);
   }
 
-  reduced_expression = std::move(reduced);
+  reduced_expression_ = std::move(reduced);
 }
 
 std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {

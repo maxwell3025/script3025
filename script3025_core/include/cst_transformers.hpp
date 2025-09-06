@@ -35,6 +35,6 @@ void collect_lists(parser::ConcreteSyntaxTree<Token> &tree);
 // Collapse the order-of-operations rules in the CST.
 void collapse_oop(parser::ConcreteSyntaxTree<Token> &tree);
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

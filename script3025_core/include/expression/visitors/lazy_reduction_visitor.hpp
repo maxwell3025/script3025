@@ -1,8 +1,11 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_LAZY_REDUCTION_VISITOR
 #define SCRIPT3025_SCRIPT3025_CORE_LAZY_REDUCTION_VISITOR
 
+#include <memory>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 
@@ -10,16 +13,16 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
  public:
   void visit_application(ApplicationExpression &e) override;
   void visit_id(IdExpression &e) override;
-  
-  std::unique_ptr<Expression> reduced_expression;
 
  protected:
-  void visit_expression(Expression &e);
+  void visit_expression(Expression &e) override;
 
  private:
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
+
+  std::unique_ptr<Expression> reduced_expression_;
 };
 
-} // namespace script3025
+}  // namespace script3025
 
 #endif

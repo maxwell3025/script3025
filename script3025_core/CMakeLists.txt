@@ -44,6 +44,7 @@ add_library(script3025_core
   src/expression/visitors/lazy_reduction_visitor.cpp
   src/expression/visitors/partial_clone_visitor.hpp
   src/expression/visitors/replacing_visitor.cpp
+  src/expression/visitors/stringify_visitor.hpp
   src/expression/expression_base.cpp
   src/cst_transformers.cpp
   src/parsing_utility.cpp

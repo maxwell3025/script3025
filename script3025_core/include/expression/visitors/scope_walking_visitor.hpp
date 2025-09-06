@@ -2,10 +2,14 @@
 #define SCRIPT3025_CORE_EXPRESSION_VISITORS_SCOPE_WALKING_VISITOR_HPP
 
 #include <memory>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
-#include "spdlog/spdlog.h"
+#include "expression/subtypes/scope_expression.hpp"
 
 namespace script3025 {
 
@@ -16,7 +20,7 @@ class ScopeWalkingVisitor : public ExpressionVisitor<is_const> {
   using ref = std::conditional_t<is_const, const T &, T &>;
 
   using expression_ptr =
-      std::conditional_t<is_const, const Expression *, Expression *>;
+      std::conditional_t<is_const, const ScopeExpression *, ScopeExpression *>;
 
   void visit_lambda(ref<LambdaExpression> e) override {
     this->visit(*e.argument_type());
@@ -47,7 +51,7 @@ class ScopeWalkingVisitor : public ExpressionVisitor<is_const> {
     }
   }
 
-  expression_ptr get_source(std::string name) {
+  [[nodiscard]] expression_ptr get_source(std::string name) {
     if (lexical_scope_[name].size() == 0) return nullptr;
     return lexical_scope_[name].back();
   }

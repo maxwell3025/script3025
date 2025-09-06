@@ -1,6 +1,8 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EQUALITY_VISITOR_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EQUALITY_VISITOR_HPP
 
+#include <unordered_map>
+
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
 
@@ -12,14 +14,14 @@ class EqualityVisitor : public ConstExpressionVisitor {
   void visit_id(const IdExpression &rhs) override;
   void visit_nat_literal(const NatLiteralExpression &rhs) override;
   void visit_type_keyword(const TypeKeywordExpression &rhs) override;
-  bool get() const;
+  [[nodiscard]] bool get() const;
 
  protected:
   void visit_expression(const Expression &e) override;
 
  private:
-  bool unequal;
-  const Expression *lhs;
+  bool unequal_;
+  const Expression *lhs_;
   std::unordered_map<const Expression *, const Expression *> pointer_map_;
 };
 

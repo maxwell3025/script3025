@@ -1,5 +1,16 @@
 #include "expression/subtypes/lambda_expression.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "expression/expression.hpp"
+#include "expression/subtypes/scope_expression.hpp"
+
 namespace script3025 {
 
 LambdaExpression::LambdaExpression(std::string argument_id,

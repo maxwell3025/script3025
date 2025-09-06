@@ -1,20 +1,30 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_PROGRAM_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_PROGRAM_HPP
 
+#include <cstddef>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "expression/expression.hpp"
 #include "expression/visitors/normalizing_visitor.hpp"
 #include "expression_factory.hpp"
 #include "parser.hpp"
-#include "spdlog/fmt/fmt.h"
-#include "spdlog/fmt/ranges.h"
+#include "spdlog/fmt/bundled/base.h"
+#include "spdlog/fmt/ranges.h"  // IWYU pragma: keep due to template weirdness
+#include "spdlog/logger.h"
+#include "spdlog/spdlog.h"
+#include "token.hpp"
 
 namespace script3025 {
 
 class Program {
  public:
-  Program(std::string source);
+  Program(const std::string &source);
 
   constexpr const std::unordered_map<std::string, std::unique_ptr<Expression>> &
   global_definitions() const {
@@ -25,43 +35,43 @@ class Program {
     return global_ids_;
   }
 
-  inline const Expression &global(std::string id) const {
+  [[nodiscard]] const Expression &global(const std::string &id) const {
     return *global_definitions_.at(id);
   }
 
-  inline bool comes_before(std::string a, std::string b) const {
+  [[nodiscard]] bool comes_before(const std::string &a,
+                                  const std::string &b) const {
     if (id_ordering_.find(a) == id_ordering_.end()) return false;
     if (id_ordering_.find(b) == id_ordering_.end()) return false;
     return id_ordering_.at(a) < id_ordering_.at(b);
   }
 
-  inline bool has_id(std::string id) const {
+  [[nodiscard]] bool has_id(const std::string &id) const {
     return global_definitions_.find(id) != global_definitions_.end();
   }
 
-  inline void push_definition(std::string id,
-                              std::unique_ptr<Expression> definition) {
+  void push_definition(std::string id, std::unique_ptr<Expression> definition) {
     if (has_id(id)) return;
     global_definitions_.emplace(id, std::move(definition));
     id_ordering_.emplace(id, global_ids_.size());
     global_ids_.push_back(id);
   }
 
-  inline void pop_definition() {
+  void pop_definition() {
     global_definitions_.erase(global_ids_.back());
     id_ordering_.erase(global_ids_.back());
     global_ids_.pop_back();
   }
 
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
-  std::unique_ptr<Expression> type(const std::string &id);
+  [[nodiscard]] std::unique_ptr<Expression> type(const std::string &id);
 
-  std::unique_ptr<Expression> reduce(const std::string &id);
+  [[nodiscard]] std::unique_ptr<Expression> reduce(const std::string &id);
 
-  std::unique_ptr<Expression> reduce(const Expression &expr);
+  [[nodiscard]] std::unique_ptr<Expression> reduce(const Expression &expr);
 
-  bool check_types();
+  bool check_types() const;
 
  private:
   template <typename Iterator>
@@ -119,7 +129,7 @@ class Program {
     push_definition(id, std::move(definition));
   }
 
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 
   std::unordered_map<std::string, size_t> id_ordering_;
   std::unordered_map<std::string, std::unique_ptr<Expression>>

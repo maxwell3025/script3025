@@ -1,11 +1,14 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_BASE_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_BASE_HPP
 
+#include <memory>
+#include <ostream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
-#include "parser.hpp"
-#include "spdlog/fmt/fmt.h"
-#include "token.hpp"
+#include "spdlog/fmt/bundled/base.h"
+#include "spdlog/logger.h"
 
 namespace script3025 {
 
@@ -18,26 +21,27 @@ class Expression {
 
   virtual void accept(ExpressionVisitor<false> &visitor) = 0;
 
-  virtual ~Expression() = 0;
+  virtual ~Expression() = default;
 
-  std::unique_ptr<Expression> clone(
-      std::unordered_map<const Expression *, Expression *> initial_map = {});
+  [[nodiscard]] std::unique_ptr<Expression> clone(
+      const std::unordered_map<const Expression *, Expression *> &initial_map)
+      const;
 
   // @brief
   // Returns true iff the 2 expressions are syntactically equal.
   // 2 expressions might reduce to the same normal form but not be equal in this
   // sense.
-  bool operator==(const Expression &other) const;
+  [[nodiscard]] bool operator==(const Expression &other) const;
 
   // @brief
   // Returns the negation of `operator==`.
-  bool operator!=(const Expression &other) const;
+  [[nodiscard]] bool operator!=(const Expression &other) const;
 
   // @brief
   // Converts the current expression into a string
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
-  static std::shared_ptr<spdlog::logger> get_logger();
+  [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
 
   std::vector<std::unique_ptr<Expression>> children;
 

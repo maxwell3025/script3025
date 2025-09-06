@@ -1,6 +1,8 @@
 #ifndef SCRIPT3025_CORE_INCLUDE_EXPRESSION_VISITORS_SCOPE_HYGIENE_VISITOR_HPP
 #define SCRIPT3025_CORE_INCLUDE_EXPRESSION_VISITORS_SCOPE_HYGIENE_VISITOR_HPP
 
+#include <cstddef>
+
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/visitors/scope_walking_visitor.hpp"
@@ -14,17 +16,18 @@ class ScopeHygieneVisitor : public ScopeWalkingVisitor<true> {
     for (size_t i = lexical_scope_[e.id].size(); i-- != 0;) {
       if (lexical_scope_[e.id][i] == e.source) return;
     }
-    is_sanitary = false;
+    is_sanitary_ = false;
   }
 
-  bool get() { return is_sanitary; }
+  [[nodiscard]] bool get() const { return is_sanitary_; }
 
  protected:
-  bool is_sanitary = true;
+  bool is_sanitary_ = true;
 };
 
-bool is_hygenic(const Expression &e) {
+[[nodiscard]] inline bool is_hygenic(const Expression &e) {
   ScopeHygieneVisitor visitor;
+  e.accept(visitor);
   return visitor.get();
 }
 

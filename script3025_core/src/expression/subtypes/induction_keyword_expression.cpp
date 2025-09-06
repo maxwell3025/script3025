@@ -1,5 +1,11 @@
 #include "expression/subtypes/induction_keyword_expression.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include <memory>
+
 namespace script3025 {
 
 std::shared_ptr<spdlog::logger> InductionKeywordExpression::get_logger() {

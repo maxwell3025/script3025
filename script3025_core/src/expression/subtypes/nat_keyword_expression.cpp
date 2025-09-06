@@ -1,5 +1,11 @@
 #include "expression/subtypes/nat_keyword_expression.hpp"
 
+#include <memory>
+
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+
 namespace script3025 {
 
 std::shared_ptr<spdlog::logger> NatKeywordExpression::get_logger() {

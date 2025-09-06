@@ -13,3 +13,5 @@ CMakeUserPresets.json
 build
 
 .vscode
+.source_index
+.cache
