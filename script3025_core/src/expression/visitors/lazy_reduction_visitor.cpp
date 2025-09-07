@@ -15,6 +15,9 @@
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/reflexive_keyword_expression.hpp"
+#include "expression/subtypes/replace_keyword_expression.hpp"
 #include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "partial_clone_visitor.hpp"
@@ -84,6 +87,26 @@ class WHNFVisitor : public MutatingExpressionVisitor {
           "Expression:\n"
           "{}\n");
     }
+  }
+
+  void visit_replace_keyword(ReplaceKeywordExpression &) override {
+    // Subject reduction is only conserved if the equality proof is a direct
+    // reflexive proof.
+    // Another perspective is that this prevents substitution using equality
+    // proofs constructed by inducting through opaque symbols.
+    if (arguments.size() < 6) return;
+    const Expression &equality_proof_uncasted =
+        *arguments[arguments.size() - 5];
+    if (typeid(equality_proof_uncasted) != typeid(ApplicationExpression))
+      return;
+    const ApplicationExpression &equality_proof =
+        static_cast<const ApplicationExpression &>(equality_proof_uncasted);
+    if (typeid(equality_proof.argument()) != typeid(ReflexiveKeywordExpression))
+      return;
+
+    head = std::move(arguments[arguments.size() - 6]);
+    for (int i = 0; i < 6; ++i) arguments.pop_back();
+    visit(*head);
   }
 
   std::vector<std::unique_ptr<Expression>> arguments;
