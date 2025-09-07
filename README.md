@@ -1,5 +1,22 @@
 # script3025
 
+# Language Details
+*Note that this is incomplete; I am assuming that you are looking at the tests and can infer based
+on typical typed lambda calculus notation*
+
+`replace` keyword
+```
+(replace T P a b e l): P b
+```
+where
+`T: Type`
+`P: Pi (t: T).Type`
+`a: T`
+`b: T`
+`e: a = b`
+`l: P a`
+
+
 # Dependencies
 To build this repository, [CMake](https://cmake.org/) is required.
 

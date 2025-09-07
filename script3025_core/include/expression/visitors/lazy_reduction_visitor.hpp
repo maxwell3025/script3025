@@ -9,6 +9,11 @@
 
 namespace script3025 {
 
+// @brief
+// This is just a naive reducer.
+// This just rips away at alpha/beta reductions without looking at type labels.
+// To implement safe reduction, first type check, reduce those type labels, and
+// verify syntactic equality (possibly modulo eta expansions).
 class LazyReductionVisitor : public MutatingExpressionVisitor {
  public:
   void visit_application(ApplicationExpression &e) override;
