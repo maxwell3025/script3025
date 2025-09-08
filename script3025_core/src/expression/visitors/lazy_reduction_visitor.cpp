@@ -16,8 +16,11 @@
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/application_expression.hpp"
+#include "expression/subtypes/induction_keyword_expression.hpp"
+#include "expression/subtypes/nat_literal_expression.hpp"
 #include "expression/subtypes/reflexive_keyword_expression.hpp"
 #include "expression/subtypes/replace_keyword_expression.hpp"
+#include "expression/subtypes/succ_keyword_expression.hpp"
 #include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "partial_clone_visitor.hpp"
@@ -95,18 +98,69 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     // Another perspective is that this prevents substitution using equality
     // proofs constructed by inducting through opaque symbols.
     if (arguments.size() < 6) return;
+    arguments[arguments.size() - 5] = reduce(*arguments[arguments.size() - 5]);
+
     const Expression &equality_proof_uncasted =
         *arguments[arguments.size() - 5];
     if (typeid(equality_proof_uncasted) != typeid(ApplicationExpression))
       return;
     const ApplicationExpression &equality_proof =
         static_cast<const ApplicationExpression &>(equality_proof_uncasted);
-    if (typeid(equality_proof.argument()) != typeid(ReflexiveKeywordExpression))
+    if (typeid(equality_proof.function()) != typeid(ReflexiveKeywordExpression))
       return;
 
     head = std::move(arguments[arguments.size() - 6]);
     for (int i = 0; i < 6; ++i) arguments.pop_back();
     visit(*head);
+  }
+
+  void visit_induction_keyword(InductionKeywordExpression &) override {
+    if (arguments.size() < 4) return;
+    arguments[arguments.size() - 4] = reduce(*arguments[arguments.size() - 4]);
+
+    Expression &target_uncasted = *arguments[arguments.size() - 4];
+    if (typeid(target_uncasted) == typeid(NatLiteralExpression)) {
+      NatLiteralExpression &target_as_natural =
+          static_cast<NatLiteralExpression &>(target_uncasted);
+
+      if (target_as_natural.value == 0) {
+        head = std::move(arguments[arguments.size() - 3]);
+        for (int i = 0; i < 4; ++i) arguments.pop_back();
+        visit(*head);
+        return;
+      }
+
+      // Expand the target
+      --target_as_natural.value;
+      arguments[arguments.size() - 4] = std::make_unique<ApplicationExpression>(
+          std::make_unique<SuccKeywordExpression>(),
+          std::move(arguments[arguments.size() - 4]));
+    }
+    Expression &target_uncasted_new = *arguments[arguments.size() - 4];
+    if (typeid(target_uncasted_new) == typeid(ApplicationExpression)) {
+      ApplicationExpression &target =
+          static_cast<ApplicationExpression &>(target_uncasted_new);
+      if (typeid(target.function()) != typeid(SuccKeywordExpression)) return;
+
+      std::unique_ptr<Expression> target_predecessor =
+          std::move(target.argument());
+
+      std::unique_ptr<Expression> expanded =
+          std::make_unique<ApplicationExpression>(
+              std::make_unique<ApplicationExpression>(
+                  std::make_unique<ApplicationExpression>(
+                      std::make_unique<ApplicationExpression>(
+                          std::move(head),
+                          std::move(arguments[arguments.size() - 1])),
+                      arguments[arguments.size() - 2]->clone()),
+                  std::move(arguments[arguments.size() - 3])),
+              std::move(target_predecessor));
+
+      head = std::move(arguments[arguments.size() - 2]);
+      for (int i = 0; i < 4; ++i) arguments.pop_back();
+      arguments.push_back(std::move(expanded));
+      visit(*head);
+    }
   }
 
   std::vector<std::unique_ptr<Expression>> arguments;
@@ -128,28 +182,20 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 };
 
-// TODO none of this is pointer-correct. this needs to be fixed
 void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
   WHNFVisitor visitor;
   e.accept(visitor);
-  std::vector<std::unique_ptr<Expression>> orphan_arguments =
+  std::vector<std::unique_ptr<Expression>> unapplied_arguments =
       std::move(visitor.arguments);
 
-  visit(*visitor.head);
-  std::unique_ptr<Expression> merged_expression =
-      std::move(reduced_expression_);
+  std::unique_ptr<Expression> merged_expression = reduce(*visitor.head);
 
   // Combine everything back into the head.
-  while (!orphan_arguments.empty()) {
-    std::unique_ptr<ApplicationExpression> new_head =
-        std::make_unique<ApplicationExpression>();
-
-    new_head->function() = std::move(merged_expression);
-
-    visit(*orphan_arguments.back());
-    new_head->argument() = std::move(reduced_expression_);
-
-    merged_expression = std::move(new_head);
+  while (!unapplied_arguments.empty()) {
+    std::unique_ptr reduced_argument = reduce(*unapplied_arguments.back());
+    unapplied_arguments.pop_back();
+    merged_expression = std::make_unique<ApplicationExpression>(
+        std::move(merged_expression), std::move(reduced_argument));
   }
 
   reduced_expression_ = std::move(merged_expression);
@@ -167,8 +213,7 @@ void LazyReductionVisitor::visit_expression(Expression &e) {
   std::unique_ptr<Expression> reduced = make_default_like(e);
 
   for (size_t i = 0; i < e.children.size(); ++i) {
-    visit(*e.children[i]);
-    reduced->children[i] = std::move(reduced_expression_);
+    reduced->children[i] = reduce(*e.children[i]);
   }
 
   reduced_expression_ = std::move(reduced);
