@@ -208,8 +208,7 @@ template <typename Iterator>
     std::string value = std::move(*string_iterator);
     ++string_iterator;
     // TODO
-    // return std::make_unique<NatLiteralExpression>(std::move(id), nullptr);
-    throw std::runtime_error(__FILE__ ": Unimplemented.");
+    return std::make_unique<NatLiteralExpression>(mpz_class(value));
   } else {
     std::stringstream sentential_form_string;
     for (const Token &token : sentential_form) {
