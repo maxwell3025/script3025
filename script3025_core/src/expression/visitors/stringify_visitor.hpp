@@ -122,7 +122,7 @@ struct OperatorBindingPower {
 constexpr size_t BP_NONE = 0;
 
 struct BindingPower {
-  OperatorBindingPower application{5, 6};
+  OperatorBindingPower application{6, 5};
   OperatorBindingPower scope{BP_NONE, 3};
   // Setting these equal forces the formatter to disambiguate
   OperatorBindingPower equality{1, 1};
@@ -279,14 +279,11 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_application(const ApplicationExpression &e) {
-    const bool needs_space =
-        !parentheses_data_.needs_parentheses(*e.function()) &&
-        !parentheses_data_.needs_parentheses(*e.argument());
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
     visit(*e.function());
-    if (needs_space) output_ << " ";
+    output_ << " ";
     visit(*e.argument());
     if (needs_parentheses) output_ << ")";
   }

@@ -47,6 +47,17 @@ TEST(Program, interpreter) {
   SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
 }
 
+TEST(Program, interpreter_hard) {
+  script3025::Program program(
+      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) succ a b\n"
+      "def bar := add 1 1");
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  std::unique_ptr<script3025::Expression> result = program.reduce("bar");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
+}
+
 /*
   // induction is forall prop: prop(0) and prop(n) => prop(n + 1) implies
   prop(n)

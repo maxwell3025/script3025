@@ -132,7 +132,11 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     if (typeid(target_uncasted_new) == typeid(ApplicationExpression)) {
       ApplicationExpression &target =
           static_cast<ApplicationExpression &>(target_uncasted_new);
-      if (typeid(target.function()) != typeid(SuccKeywordExpression)) return;
+      // Clang warns here to tell the user that typeid is a runtime function and
+      // not a compile time macro, as many would expect.
+      // I already know this.
+      // NOLINTNEXTLINE
+      if (typeid(*target.function()) != typeid(SuccKeywordExpression)) return;
 
       std::unique_ptr<Expression> target_predecessor =
           std::move(target.argument());
@@ -157,8 +161,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   std::vector<std::unique_ptr<Expression>> arguments;
   std::unique_ptr<Expression> head;
-  const std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
-                           IdHash> *delta_table;
+  const std::unordered_map<std::pair<std::string, Expression *>,
+                           const Expression *, IdHash> *delta_table;
 
  private:
   std::shared_ptr<spdlog::logger> get_logger() {
@@ -209,7 +213,6 @@ void LazyReductionVisitor::visit_nat_literal(NatLiteralExpression &e) {
   NatLiteralExpression &reduced_expression_casted =
       static_cast<NatLiteralExpression &>(*reduced_expression_);
   reduced_expression_casted.value = e.value;
-
 }
 
 void LazyReductionVisitor::visit_expression(Expression &e) {
