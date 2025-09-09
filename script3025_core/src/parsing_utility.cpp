@@ -218,6 +218,7 @@ ParsedCode parse(const std::string& text) {
               .rule(Token::EXPR_APP, Token::EXPR_PAREN)
 
               .rule(Token::EXPR_PAREN, Token::ID)
+              .rule(Token::EXPR_PAREN, Token::NUMBER)
               .rule(Token::EXPR_PAREN, Token::L_PAREN, Token::EXPR_ABS,
                     Token::R_PAREN)
 
