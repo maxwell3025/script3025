@@ -21,7 +21,6 @@
 #include "expression/subtypes/reflexive_keyword_expression.hpp"
 #include "expression/subtypes/replace_keyword_expression.hpp"
 #include "expression/subtypes/succ_keyword_expression.hpp"
-#include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "partial_clone_visitor.hpp"
 
@@ -51,9 +50,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     auto replacement_it = delta_table->find(std::make_pair(e.id, e.source));
     if (replacement_it != delta_table->end()) {
       const Expression &replacement = *(replacement_it->second);
-      CloningVisitor visitor;
-      visitor.visit(replacement);
-      head = visitor.get();
+      head = replacement.clone();
       visit(*head);
     }
   }
@@ -169,7 +166,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
         ([&]() -> std::shared_ptr<spdlog::logger> {
           logger = spdlog::stderr_color_mt("script3025::WHNFVisitor",
                                            spdlog::color_mode::always);
-          logger->set_level(spdlog::level::warn);
+          logger->set_level(spdlog::level::trace);
           logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
           return logger;
         })();
@@ -207,6 +204,14 @@ void LazyReductionVisitor::visit_id(IdExpression &e) {
   reduced_expression_casted.source = e.source;
 }
 
+void LazyReductionVisitor::visit_nat_literal(NatLiteralExpression &e) {
+  visit_expression(e);
+  NatLiteralExpression &reduced_expression_casted =
+      static_cast<NatLiteralExpression &>(*reduced_expression_);
+  reduced_expression_casted.value = e.value;
+
+}
+
 void LazyReductionVisitor::visit_expression(Expression &e) {
   std::unique_ptr<Expression> reduced = make_default_like(e);
 
@@ -222,7 +227,7 @@ std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::LazyReductionVisitor",
                                          spdlog::color_mode::always);
-        logger->set_level(spdlog::level::warn);
+        logger->set_level(spdlog::level::trace);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();

@@ -64,10 +64,7 @@ bool Program::check_types() const {
         &global(name));
   }
   std::unique_ptr<Expression> copy = global_definitions_[id]->clone();
-  LazyReductionVisitor visitor;
-  visitor.delta_table = &delta_table;
-  copy->accept(visitor);
-  return visitor.get();
+  return script3025::reduce(*copy, &delta_table);
 }
 
 std::shared_ptr<spdlog::logger> Program::get_logger() {
