@@ -21,7 +21,10 @@ LambdaExpression::LambdaExpression(std::string argument_id,
   children.emplace_back(std::move(definition));
 }
 
-LambdaExpression::LambdaExpression() {}
+LambdaExpression::LambdaExpression() {
+  children.emplace_back(nullptr);
+  children.emplace_back(nullptr);
+}
 
 std::shared_ptr<spdlog::logger> LambdaExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

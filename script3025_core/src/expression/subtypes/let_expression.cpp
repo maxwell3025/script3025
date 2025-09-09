@@ -19,6 +19,10 @@ LetExpression::LetExpression(std::string argument_id,
   children.emplace_back(std::move(definition));
 }
 
-LetExpression::LetExpression() {}
+LetExpression::LetExpression() {
+  children.emplace_back(nullptr);
+  children.emplace_back(nullptr);
+  children.emplace_back(nullptr);
+}
 
 }  // namespace script3025
