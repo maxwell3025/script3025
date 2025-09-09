@@ -158,6 +158,23 @@ class WHNFVisitor : public MutatingExpressionVisitor {
       visit(*head);
     }
   }
+  
+  void visit_succ_keyword(SuccKeywordExpression &) override {
+    if (arguments.size() < 1) return;
+    arguments[arguments.size() - 1] =
+        reduce(*arguments[arguments.size() - 1], delta_table);
+
+    Expression &target_uncasted = *arguments[arguments.size() - 1];
+    if (typeid(target_uncasted) == typeid(NatLiteralExpression)) {
+      NatLiteralExpression &target_as_natural =
+          static_cast<NatLiteralExpression &>(target_uncasted);
+
+      ++target_as_natural.value;
+
+      head = std::move(arguments.back());
+      arguments.pop_back();
+    }
+  }
 
   std::vector<std::unique_ptr<Expression>> arguments;
   std::unique_ptr<Expression> head;
