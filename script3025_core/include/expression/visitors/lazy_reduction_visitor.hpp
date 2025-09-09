@@ -10,6 +10,13 @@
 
 namespace script3025 {
 
+struct IdHash {
+  size_t operator()(std::pair<std::string, Expression *> id) const {
+    return ((std::hash<std::string>{}(id.first)) << 1) ^
+           ((std::hash<Expression *>{}(id.second)));
+  }
+};
+
 // @brief
 // This is just a naive reducer.
 // This just rips away at alpha/beta reductions without looking at type labels.
@@ -24,6 +31,9 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
     return std::move(reduced_expression_);
   }
 
+  const std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
+                           IdHash> *delta_table;
+
  protected:
   void visit_expression(Expression &e) override;
 
@@ -33,8 +43,12 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
   std::unique_ptr<Expression> reduced_expression_;
 };
 
-inline std::unique_ptr<Expression> reduce(Expression &e) {
+inline std::unique_ptr<Expression> reduce(
+    Expression &e,
+    const std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
+                             IdHash> *delta_table) {
   LazyReductionVisitor visitor;
+  visitor.delta_table = delta_table;
   e.accept(visitor);
   return visitor.get();
 }

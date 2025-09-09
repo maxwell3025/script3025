@@ -27,13 +27,6 @@
 
 namespace script3025 {
 
-struct IdHash {
-  size_t operator()(std::pair<std::string, Expression *> id) const {
-    return ((std::hash<std::string>{}(id.first)) << 1) ^
-           ((std::hash<Expression *>{}(id.second)));
-  }
-};
-
 class WHNFVisitor : public MutatingExpressionVisitor {
  public:
   void visit_application(ApplicationExpression &e) override {
@@ -55,8 +48,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 
   void visit_id(IdExpression &e) override {
-    auto replacement_it = delta_table.find(std::make_pair(e.id, e.source));
-    if (replacement_it != delta_table.end()) {
+    auto replacement_it = delta_table->find(std::make_pair(e.id, e.source));
+    if (replacement_it != delta_table->end()) {
       const Expression &replacement = *(replacement_it->second);
       CloningVisitor visitor;
       visitor.visit(replacement);
@@ -98,7 +91,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     // Another perspective is that this prevents substitution using equality
     // proofs constructed by inducting through opaque symbols.
     if (arguments.size() < 6) return;
-    arguments[arguments.size() - 5] = reduce(*arguments[arguments.size() - 5]);
+    arguments[arguments.size() - 5] =
+        reduce(*arguments[arguments.size() - 5], delta_table);
 
     const Expression &equality_proof_uncasted =
         *arguments[arguments.size() - 5];
@@ -116,7 +110,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   void visit_induction_keyword(InductionKeywordExpression &) override {
     if (arguments.size() < 4) return;
-    arguments[arguments.size() - 4] = reduce(*arguments[arguments.size() - 4]);
+    arguments[arguments.size() - 4] =
+        reduce(*arguments[arguments.size() - 4], delta_table);
 
     Expression &target_uncasted = *arguments[arguments.size() - 4];
     if (typeid(target_uncasted) == typeid(NatLiteralExpression)) {
@@ -165,8 +160,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   std::vector<std::unique_ptr<Expression>> arguments;
   std::unique_ptr<Expression> head;
-  std::unordered_map<std::pair<std::string, Expression *>, Expression *, IdHash>
-      delta_table;
+  const std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
+                           IdHash> *delta_table;
 
  private:
   std::shared_ptr<spdlog::logger> get_logger() {
@@ -184,15 +179,18 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
 void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
   WHNFVisitor visitor;
+  visitor.delta_table = delta_table;
   e.accept(visitor);
   std::vector<std::unique_ptr<Expression>> unapplied_arguments =
       std::move(visitor.arguments);
 
-  std::unique_ptr<Expression> merged_expression = reduce(*visitor.head);
+  std::unique_ptr<Expression> merged_expression =
+      reduce(*visitor.head, delta_table);
 
   // Combine everything back into the head.
   while (!unapplied_arguments.empty()) {
-    std::unique_ptr reduced_argument = reduce(*unapplied_arguments.back());
+    std::unique_ptr reduced_argument =
+        reduce(*unapplied_arguments.back(), delta_table);
     unapplied_arguments.pop_back();
     merged_expression = std::make_unique<ApplicationExpression>(
         std::move(merged_expression), std::move(reduced_argument));
@@ -213,7 +211,7 @@ void LazyReductionVisitor::visit_expression(Expression &e) {
   std::unique_ptr<Expression> reduced = make_default_like(e);
 
   for (size_t i = 0; i < e.children.size(); ++i) {
-    reduced->children[i] = reduce(*e.children[i]);
+    reduced->children[i] = reduce(*e.children[i], delta_table);
   }
 
   reduced_expression_ = std::move(reduced);
