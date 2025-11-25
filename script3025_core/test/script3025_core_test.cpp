@@ -50,7 +50,8 @@ TEST(Program, interpreter) {
 TEST(Program, interpreter_hard) {
   script3025::Program program(
       "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) succ a b\n"
-      "def bar := add 1 1");
+      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
+      "def bar := mul 12 4");
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
 
