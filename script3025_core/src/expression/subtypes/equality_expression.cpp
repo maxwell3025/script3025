@@ -17,7 +17,10 @@ EqualityExpression::EqualityExpression(std::unique_ptr<Expression> &&lhs,
   children.emplace_back(std::move(rhs));
 }
 
-EqualityExpression::EqualityExpression() {}
+EqualityExpression::EqualityExpression() {
+  children.emplace_back(nullptr);
+  children.emplace_back(nullptr);
+}
 
 std::shared_ptr<spdlog::logger> EqualityExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

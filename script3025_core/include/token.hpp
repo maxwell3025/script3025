@@ -20,7 +20,6 @@ enum class Token {
   LET,
   IN,
   DEF,
-  INDUCTIVE,
   ASSIGN,
   L_PAREN,
   R_PAREN,

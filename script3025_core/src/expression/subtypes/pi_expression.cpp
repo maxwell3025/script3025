@@ -21,7 +21,10 @@ PiExpression::PiExpression(std::string argument_id,
   children.emplace_back(std::move(definition));
 }
 
-PiExpression::PiExpression() {}
+PiExpression::PiExpression() {
+  children.emplace_back(nullptr);
+  children.emplace_back(nullptr);
+}
 
 std::shared_ptr<spdlog::logger> PiExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =

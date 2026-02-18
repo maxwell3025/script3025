@@ -10,6 +10,7 @@
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
+#include "expression/visitors/cloning_visitor.hpp"
 #include "expression/visitors/equality_visitor.hpp"
 #include "expression/visitors/stringify_visitor.hpp"
 
@@ -23,6 +24,15 @@ bool Expression::operator==(const Expression &rhs) const {
 
 bool Expression::operator!=(const Expression &rhs) const {
   return !(*this == rhs);
+}
+
+[[nodiscard]] std::unique_ptr<Expression> Expression::clone(
+    const std::unordered_map<const Expression *, Expression *> &initial_map)
+    const {
+  // TODO: Add the initial map to cloning visitor
+  CloningVisitor visitor;
+  accept(visitor);
+  return visitor.get();
 }
 
 std::shared_ptr<spdlog::logger> Expression::get_logger() {

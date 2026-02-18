@@ -27,6 +27,11 @@ class Expression {
       const std::unordered_map<const Expression *, Expression *> &initial_map)
       const;
 
+  [[nodiscard]] std::unique_ptr<Expression> clone() const {
+    const std::unordered_map<const Expression *, Expression *> initial_map;
+    return clone(initial_map);
+  }
+
   // @brief
   // Returns true iff the 2 expressions are syntactically equal.
   // 2 expressions might reduce to the same normal form but not be equal in this

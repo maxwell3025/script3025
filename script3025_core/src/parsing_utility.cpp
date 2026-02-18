@@ -52,15 +52,6 @@ std::vector<AnnotatedToken> tokenize(const std::string& text) {
     }
 
     // Recognize keywords
-    if (text.substr(i, 9) == "inductive" &&
-        !(text.length() > i + 9 && is_alphanumeric(text[i + 9]))) {
-      i += 9;
-      new_token.text = text.substr(start, i - start);
-      new_token.token = Token::INDUCTIVE;
-      annotated_tokens.push_back(new_token);
-      continue;
-    }
-
     if (text.substr(i, 6) == "lambda" &&
         !(text.length() > i + 6 && is_alphanumeric(text[i + 6]))) {
       i += 6;
@@ -218,6 +209,7 @@ ParsedCode parse(const std::string& text) {
               .rule(Token::EXPR_APP, Token::EXPR_PAREN)
 
               .rule(Token::EXPR_PAREN, Token::ID)
+              .rule(Token::EXPR_PAREN, Token::NUMBER)
               .rule(Token::EXPR_PAREN, Token::L_PAREN, Token::EXPR_ABS,
                     Token::R_PAREN)
 

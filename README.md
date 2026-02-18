@@ -1,5 +1,31 @@
 # script3025
 
+# Language Details
+*Note that this is incomplete; I am assuming that you are looking at the tests and can infer based
+on typical typed lambda calculus notation*
+
+`replace` keyword
+```
+(replace T P a b e l): P b
+```
+where
+`T: Type`
+`P: Pi (t: T).Type`
+`a: T`
+`b: T`
+`e: a = b`
+`l: P a`
+
+`induction` keyword
+```
+(induction P i b k): P k
+```
+where
+`P: Pi (t: Nat).Type`
+`i: Pi (k: Nat). Pi (h: P k). P (succ k)`
+`b: P 0`
+`k: Nat`
+
 # Dependencies
 To build this repository, [CMake](https://cmake.org/) is required.
 

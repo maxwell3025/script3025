@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "expression/expression.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -33,6 +34,29 @@ TEST(Program, multi) {
       "def bar := lambda (x : Type). foo x");
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+}
+
+TEST(Program, interpreter) {
+  script3025::Program program(
+      "def foo := lambda (x : Nat). x \n"
+      "def bar := foo 1");
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  std::unique_ptr<script3025::Expression> result = program.reduce("bar");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
+}
+
+TEST(Program, interpreter_hard) {
+  script3025::Program program(
+      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) succ a b\n"
+      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
+      "def bar := mul 12 4");
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  std::unique_ptr<script3025::Expression> result = program.reduce("bar");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
 }
 
 /*

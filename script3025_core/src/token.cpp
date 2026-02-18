@@ -23,9 +23,6 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     case Token::ASSIGN:
       os << ":=";
       break;
-    case Token::INDUCTIVE:
-      os << "inductive";
-      break;
     case Token::ID:
       os << "i";
       break;

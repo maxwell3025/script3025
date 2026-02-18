@@ -18,7 +18,10 @@ ApplicationExpression::ApplicationExpression(
   children.emplace_back(std::move(argument));
 }
 
-ApplicationExpression::ApplicationExpression() {}
+ApplicationExpression::ApplicationExpression() {
+  children.emplace_back(nullptr);
+  children.emplace_back(nullptr);
+}
 
 std::shared_ptr<spdlog::logger> ApplicationExpression::get_logger() {
   static std::shared_ptr<spdlog::logger> logger =
