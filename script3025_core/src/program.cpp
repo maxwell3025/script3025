@@ -10,6 +10,7 @@
 
 #include "cst_transformers.hpp"
 #include "expression/expression.hpp"
+#include "expression/variable_reference.hpp"
 #include "expression/visitors/lazy_reduction_visitor.hpp"
 #include "expression/visitors/scope_hygiene_visitor.hpp"
 #include "parsing_utility.hpp"
@@ -52,15 +53,13 @@ bool Program::check_types() const {
 
 [[nodiscard]] std::unique_ptr<Expression> Program::reduce(
     const std::string &id) {
-  std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
-                     IdHash>
-      delta_table;
+  std::unordered_map<VariableReference, const Expression *> delta_table;
 
   size_t n_globals = id_ordering_[id];
   for (size_t i = 0; i < n_globals; ++i) {
     std::string name = global_ids_[i];
     delta_table.emplace(
-        std::make_pair(name, static_cast<Expression *>(nullptr)),
+        VariableReference{name, nullptr},
         &global(name));
   }
   std::unique_ptr<Expression> copy = global_definitions_[id]->clone();

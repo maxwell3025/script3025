@@ -21,6 +21,7 @@
 #include "expression/subtypes/reflexive_keyword_expression.hpp"
 #include "expression/subtypes/replace_keyword_expression.hpp"
 #include "expression/subtypes/succ_keyword_expression.hpp"
+#include "expression/variable_reference.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "partial_clone_visitor.hpp"
 
@@ -47,7 +48,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 
   void visit_id(IdExpression &e) override {
-    auto replacement_it = delta_table->find(std::make_pair(e.id, e.source));
+    auto replacement_it = delta_table->find(VariableReference{e.id, e.source});
     if (replacement_it != delta_table->end()) {
       const Expression &replacement = *(replacement_it->second);
       head = replacement.clone();
@@ -158,7 +159,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
       visit(*head);
     }
   }
-  
+
   void visit_succ_keyword(SuccKeywordExpression &) override {
     if (arguments.size() < 1) return;
     arguments[arguments.size() - 1] =
@@ -178,8 +179,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   std::vector<std::unique_ptr<Expression>> arguments;
   std::unique_ptr<Expression> head;
-  const std::unordered_map<std::pair<std::string, Expression *>,
-                           const Expression *, IdHash> *delta_table;
+  const std::unordered_map<VariableReference, const Expression *> *delta_table;
 
  private:
   std::shared_ptr<spdlog::logger> get_logger() {
