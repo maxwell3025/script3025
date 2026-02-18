@@ -7,19 +7,13 @@
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/nat_literal_expression.hpp"
+#include "expression/variable_reference.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
 namespace script3025 {
-
-struct IdHash {
-  size_t operator()(std::pair<std::string, Expression *> id) const {
-    return ((std::hash<std::string>{}(id.first)) << 1) ^
-           ((std::hash<Expression *>{}(id.second)));
-  }
-};
 
 // @brief
 // This is just a naive reducer.
@@ -36,8 +30,7 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
     return std::move(reduced_expression_);
   }
 
-  const std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
-                           IdHash> *delta_table;
+  const std::unordered_map<VariableReference, const Expression *> *delta_table;
 
  protected:
   void visit_expression(Expression &e) override;
@@ -50,8 +43,7 @@ class LazyReductionVisitor : public MutatingExpressionVisitor {
 
 inline std::unique_ptr<Expression> reduce(
     Expression &e,
-    const std::unordered_map<std::pair<std::string, Expression *>, const Expression *,
-                             IdHash> *delta_table) {
+    const std::unordered_map<VariableReference, const Expression *> *delta_table) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::reduce",

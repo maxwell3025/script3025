@@ -75,6 +75,7 @@ add_library(script3025_core
   include/expression/expression_base.hpp
   include/expression/expression_visitor.hpp
   include/expression/expression.hpp
+  include/expression/variable_reference.hpp
   include/cst_transformers.hpp
   include/expression_factory.hpp
   include/parsing_utility.hpp
