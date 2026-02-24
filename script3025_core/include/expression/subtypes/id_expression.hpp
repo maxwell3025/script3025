@@ -7,6 +7,7 @@
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/scope_expression.hpp"
+#include "expression/variable_reference.hpp"
 #include "spdlog/logger.h"
 
 namespace script3025 {
@@ -24,6 +25,10 @@ class IdExpression : public Expression {
 
   std::string id;
   ScopeExpression *source;
+
+  [[nodiscard]] VariableReference get_variable_reference() const {
+    return VariableReference{id, source};
+  }
 
  private:
   [[nodiscard]] static std::shared_ptr<spdlog::logger> get_logger();
