@@ -13,6 +13,7 @@
 #include "expression/variable_reference.hpp"
 #include "expression/visitors/lazy_reduction_visitor.hpp"
 #include "expression/visitors/scope_hygiene_visitor.hpp"
+#include "expression/visitors/type_gen_visitor.hpp"
 #include "parsing_utility.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -46,8 +47,13 @@ std::string Program::to_string() const {
 }
 
 bool Program::check_types() const {
-  for (const auto &definition_pair : global_definitions())
+  for (const auto &definition_pair : global_definitions()) {
     if (!is_hygenic(*definition_pair.second)) return false;
+    TypeGenVisitor(
+        std::unordered_map<const Expression *, std::unique_ptr<Expression>>(),
+        std::unordered_map<VariableReference, std::unique_ptr<Expression>>())
+        .visit(*definition_pair.second);
+  }
   return true;
 }
 
@@ -58,9 +64,7 @@ bool Program::check_types() const {
   size_t n_globals = id_ordering_[id];
   for (size_t i = 0; i < n_globals; ++i) {
     std::string name = global_ids_[i];
-    delta_table.emplace(
-        VariableReference{name, nullptr},
-        &global(name));
+    delta_table.emplace(VariableReference{name, nullptr}, &global(name));
   }
   std::unique_ptr<Expression> copy = global_definitions_[id]->clone();
   return script3025::reduce(*copy, &delta_table);

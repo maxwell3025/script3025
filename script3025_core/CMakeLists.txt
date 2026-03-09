@@ -45,6 +45,7 @@ add_library(script3025_core
   src/expression/visitors/partial_clone_visitor.hpp
   src/expression/visitors/replacing_visitor.cpp
   src/expression/visitors/stringify_visitor.hpp
+  src/expression/visitors/type_gen_visitor.cpp
   src/expression/expression_base.cpp
   src/cst_transformers.cpp
   src/parsing_utility.cpp
@@ -72,6 +73,7 @@ add_library(script3025_core
   include/expression/visitors/replacing_visitor.hpp
   include/expression/visitors/scope_hygiene_visitor.hpp
   include/expression/visitors/scope_walking_visitor.hpp
+  include/expression/visitors/type_gen_visitor.hpp
   include/expression/expression_base.hpp
   include/expression/expression_visitor.hpp
   include/expression/expression.hpp
