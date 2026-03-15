@@ -665,7 +665,7 @@ ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) const {
     }
     SPDLOG_LOGGER_TRACE(get_logger(), "{}", stack_trace.str());
 
-    if (begin == end && stack.size() == 1) {
+    if (begin == end && stack.size() == 1 && stack[0].symbol.symbol == goal_symbol_) {
       ConcreteSyntaxTree<T> return_value = std::move(stack[0].symbol);
       stack.pop_back();
       return return_value;
