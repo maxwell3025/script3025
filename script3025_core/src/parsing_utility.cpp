@@ -172,10 +172,10 @@ parser::ParserBuilder<Token>& with_script3025_grammar(
     parser::ParserBuilder<Token>& input) {
   return input.rule(Token::PROG)
       .rule(Token::PROG, Token::PROG, Token::DEFN)
-      .rule(Token::DEFN, Token::DEF, Token::ID, Token::ASSIGN, Token::EXPR_ABS)
-      // This is a horrifying bag of worms I don't want to touch!
-      // .rule(Token::IDEFN, Token::INDUCTIVE, Token::ID, Token::ASSIGN,
-      //       Token::EXPR_ABS)
+      .rule(Token::DEFN, Token::DEF, Token::ID, Token::ASSIGN, Token::EXPR_EQ)
+
+      .rule(Token::EXPR_EQ, Token::EXPR_ABS, Token::EQ, Token::EXPR_ABS)
+      .rule(Token::EXPR_EQ, Token::EXPR_ABS)
 
       .rule(Token::ABS, Token::LAMBDA, Token::L_PAREN, Token::ID, Token::COLON,
             Token::EXPR_ABS, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
@@ -190,8 +190,6 @@ parser::ParserBuilder<Token>& with_script3025_grammar(
             Token::IN, Token::EXPR_ABS)
       .rule(Token::ABS, Token::LET, Token::ID, Token::COLON, Token::EXPR_ABS,
             Token::ASSIGN, Token::EXPR_ABS, Token::IN, Token::EXPR_ABS)
-
-      .rule(Token::EXPR_EQ, Token::EXPR_ABS, Token::EQ, Token::EXPR_ABS)
 
       .rule(Token::EXPR_ABS, Token::ABS)
       .rule(Token::EXPR_ABS, Token::EXPR_APP, Token::ABS)
@@ -219,7 +217,7 @@ parser::Parser<Token> make_expression_parser() {
 ParsedCode text_to_program_cst(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("script3025::parse",
+        logger = spdlog::stderr_color_mt("script3025::text_to_program_cst",
                                          spdlog::color_mode::always);
         logger->set_level(spdlog::level::warn);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
@@ -245,7 +243,7 @@ ParsedCode text_to_program_cst(const std::string& text) {
 ParsedCode text_to_expression_cst(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("script3025::parse",
+        logger = spdlog::stderr_color_mt("script3025::text_to_expression_cst",
                                          spdlog::color_mode::always);
         logger->set_level(spdlog::level::warn);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
