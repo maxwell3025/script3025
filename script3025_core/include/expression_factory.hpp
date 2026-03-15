@@ -18,6 +18,12 @@
 
 namespace script3025 {
 
+// @brief Parse a string of text into an `Expression`
+// @param `str` - The string of text to parse.
+[[nodiscard]] std::unique_ptr<Expression> text_to_expression(const std::string str);
+
+// @brief Construct a `Expression` object based on a concrete syntax tree and a string iterator providing the text segments for each leaf.
+// Note that this requires that the cst is normalized using the utilities in `cst_transformers.hpp`.
 template <typename Iterator>
 [[nodiscard]] std::unique_ptr<Expression> create_expression(
     const parser::ConcreteSyntaxTree<Token> &source,

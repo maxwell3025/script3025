@@ -253,7 +253,7 @@ class Parser {
   // @brief
   // Parse a token iterator into a `ConcreteSyntaxTree`.
   template <typename Iterator>
-  ConcreteSyntaxTree<T> parse(Iterator begin, Iterator end);
+  ConcreteSyntaxTree<T> parse(Iterator begin, Iterator end) const;
 
  private:
   Parser(const std::vector<std::unordered_map<T, Action<T>>> &action_table,
@@ -650,7 +650,7 @@ std::shared_ptr<spdlog::logger> ParserBuilder<T>::get_logger() {
 
 template <typename T>
 template <typename Iterator>
-ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) {
+ConcreteSyntaxTree<T> Parser<T>::parse(Iterator begin, Iterator end) const {
   std::vector<AnnotatedNode<T>> stack;
   while (true) {
     // Log current derivation

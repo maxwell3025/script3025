@@ -22,7 +22,7 @@
 namespace script3025 {
 
 Program::Program(const std::string &source) {
-  ParsedCode code = parse(source);
+  ParsedCode code = text_to_program_cst(source);
 
   script3025::collect_lists(*code.cst);
   script3025::collapse_oop(*code.cst);

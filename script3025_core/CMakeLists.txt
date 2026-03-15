@@ -48,6 +48,7 @@ add_library(script3025_core
   src/expression/visitors/type_gen_visitor.cpp
   src/expression/expression_base.cpp
   src/cst_transformers.cpp
+  src/expression_factory.cpp
   src/parsing_utility.cpp
   src/program.cpp
   src/token.cpp
