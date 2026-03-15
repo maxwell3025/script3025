@@ -27,6 +27,8 @@ void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
   expression_type_map_[&e] = std::make_unique<PiExpression>(
       e.argument_id, e.argument_type()->clone(),
       expression_type_map_[e.definition().get()]->clone());
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_let(const LetExpression &e) {}
@@ -37,28 +39,44 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
   expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>(
       /* TODO decide universe level rules */
   );
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_induction_keyword(
     const InductionKeywordExpression &e) {
-  // The type of the motive is Pi (input : Nat). Type
-  // TODO add universe polymorphism here
+  // TODO: implement proper constructors for all expressions here.
+
+  // The type of the motive is `Pi (input : Nat). Type`.
+  // TODO add universe polymorphism here.
   std::unique_ptr<Expression> motive_type = std::make_unique<PiExpression>(
       "input", std::make_unique<NatLiteralExpression>(),
       std::make_unique<TypeKeywordExpression>());
 
-  // Destructors take the destruction results of n and produce the destruction
-  // result of succ n. The type is Pi (n: Nat). Pi (prev: motive n). motive
-  // (succ n)
-  std::unique_ptr<Expression> destructor_type =
-      std::make_unique<PiExpression>();
+  // This is the destructor for `succ n`.
+  // It takes the destruction results of `n` and produces the destruction result
+  // of `succ n`.
+  // The type is `Pi (n: Nat). Pi (prev: motive n). motive (succ n)`.
+  // TODO fill in application expressions
+  std::unique_ptr<Expression> destructor_type = std::make_unique<PiExpression>(
+      "n", std::make_unique<NatLiteralExpression>(),
+      std::make_unique<PiExpression>(
+          "prev", std::make_unique<ApplicationExpression>(),
+          std::make_unique<ApplicationExpression>()));
 
+  // This is another destructor, but for zero. Since zero is constructed with no
+  // arguments, the destructor also takes no arguments.
+  // The type here is just `motive 0`.
   std::unique_ptr<Expression> base_type =
       std::make_unique<ApplicationExpression>();
 
+  // The input to the inductive predicate is just a natural number, so the type
+  // is `Nat`.
   std::unique_ptr<Expression> input_type =
       std::make_unique<NatLiteralExpression>();
 
+  // The output of the inductive predicate is a type, so the type is
+  // `motive input`.
   std::unique_ptr<Expression> output_type =
       std::make_unique<ApplicationExpression>();
 
@@ -74,10 +92,14 @@ void TypeGenVisitor::visit_induction_keyword(
                                      std::move(destructor_scope));
 
   expression_type_map_[&e] = std::move(motive_scope);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_nat_keyword(const NatKeywordExpression &e) {
   expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>();
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e) {
@@ -93,18 +115,23 @@ void TypeGenVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
   expression_type_map_[&e] = std::make_unique<PiExpression>(
       "n", std::make_unique<NatLiteralExpression>(),
       std::make_unique<NatLiteralExpression>());
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
   expression_type_map_[&e] =
       std::make_unique<TypeKeywordExpression>(e.level + 1);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   // Assert that the type of the function is a Pi type.
   visit(*e.function());
   visit(*e.argument());
-  std::unique_ptr<Expression> function_type = expression_type_map_[e.function().get()]->clone();
+  std::unique_ptr<Expression> function_type =
+      expression_type_map_[e.function().get()]->clone();
   if (typeid(function_type.get()) != typeid(PiExpression)) {
     SPDLOG_LOGGER_ERROR(get_logger(),
                         "Error: expected Pi type in application, got {}",
@@ -112,14 +139,19 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
     return;
   }
 
-  PiExpression &casted_function_type = static_cast<PiExpression &>(*function_type);
+  PiExpression &casted_function_type =
+      static_cast<PiExpression &>(*function_type);
 
-  ReplacingVisitor replacer(&casted_function_type, casted_function_type.argument_id, e.argument().get());
+  ReplacingVisitor replacer(&casted_function_type,
+                            casted_function_type.argument_id,
+                            e.argument().get());
   replacer.visit(*casted_function_type.definition());
 
   std::unique_ptr<Expression> application_type = replacer.get();
 
   expression_type_map_[&e] = std::move(application_type);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_equality(const EqualityExpression &e) {
@@ -134,9 +166,13 @@ void TypeGenVisitor::visit_id(const IdExpression &e) {
   }
   expression_type_map_[&e] =
       variable_type_map_[e.get_variable_reference()]->clone();
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 void TypeGenVisitor::visit_nat_literal(const NatLiteralExpression &e) {
   expression_type_map_[&e] = std::make_unique<NatKeywordExpression>();
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
 }
 
 }  // namespace script3025

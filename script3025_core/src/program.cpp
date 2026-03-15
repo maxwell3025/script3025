@@ -47,12 +47,14 @@ std::string Program::to_string() const {
 }
 
 bool Program::check_types() const {
-  for (const auto &definition_pair : global_definitions()) {
-    if (!is_hygenic(*definition_pair.second)) return false;
+  for (const std::string &definition_name : global_ids()) {
+    const std::unique_ptr<Expression> &definition = global_definitions_.at(definition_name);
+
+    if (!is_hygenic(*definition)) return false;
     TypeGenVisitor(
         std::unordered_map<const Expression *, std::unique_ptr<Expression>>(),
         std::unordered_map<VariableReference, std::unique_ptr<Expression>>())
-        .visit(*definition_pair.second);
+        .visit(*definition);
   }
   return true;
 }
