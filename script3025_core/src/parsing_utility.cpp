@@ -92,7 +92,7 @@ std::vector<AnnotatedToken> text_to_tokens(const std::string& text) {
       continue;
     }
 
-    if (text.substr(i, 2) == "pi" &&
+    if (text.substr(i, 2) == "Pi" &&
         !(text.length() > i + 2 && is_alphanumeric(text[i + 2]))) {
       i += 2;
       new_token.text = text.substr(start, i - start);
