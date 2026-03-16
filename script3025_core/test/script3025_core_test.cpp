@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "expression/expression.hpp"
+#include "expression_factory.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -20,6 +21,26 @@
         return logger;
       })();
   return logger;
+}
+
+TEST(text_to_expression, identifier) {
+  auto expression = script3025::text_to_expression("anonymous_identifier");
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", expression->to_string());
+}
+
+TEST(text_to_expression, built_in) {
+  auto expression = script3025::text_to_expression("Nat");
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", expression->to_string());
+}
+
+TEST(text_to_expression, lambda) {
+  auto expression = script3025::text_to_expression("lambda (x: Nat). x");
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", expression->to_string());
+}
+
+TEST(text_to_expression, Pi) {
+  auto expression = script3025::text_to_expression("Pi (x: Nat). x");
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", expression->to_string());
 }
 
 TEST(Program, simple) {
@@ -49,8 +70,10 @@ TEST(Program, interpreter) {
 
 TEST(Program, interpreter_hard) {
   script3025::Program program(
-      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) succ a b\n"
-      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
+      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
+      "Nat).Nat) succ a b\n"
+      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
+      "Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
       "def bar := mul 12 4");
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
@@ -61,8 +84,10 @@ TEST(Program, interpreter_hard) {
 
 TEST(Program, interpreter_hard_typed) {
   script3025::Program program(
-      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) succ a b\n"
-      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
+      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
+      "Nat).Nat) succ a b\n"
+      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
+      "Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
       "def bar := mul 12 4");
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
