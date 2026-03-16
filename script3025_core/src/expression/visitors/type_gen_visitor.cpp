@@ -132,7 +132,10 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   visit(*e.argument());
   std::unique_ptr<Expression> function_type =
       expression_type_map_[e.function().get()]->clone();
-  if (typeid(function_type.get()) != typeid(PiExpression)) {
+  // Here, we are intentionally doing a RTTI lookup to get the runtime type of
+  // function_type. We want side-effects to be evaluated, hence the lint ignore.
+  // NOLINTNEXTLINE
+  if (typeid(*function_type) != typeid(PiExpression)) {
     SPDLOG_LOGGER_ERROR(get_logger(),
                         "Error: expected Pi type in application, got {}",
                         function_type->to_string());
