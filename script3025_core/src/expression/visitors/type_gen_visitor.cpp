@@ -8,6 +8,7 @@
 #include "expression/subtypes/pi_expression.hpp"
 #include "expression/variable_reference.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
+#include "expression_factory.hpp"
 #include "spdlog/spdlog.h"
 
 namespace script3025 {
@@ -45,53 +46,15 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
 
 void TypeGenVisitor::visit_induction_keyword(
     const InductionKeywordExpression &e) {
-  // TODO: implement proper constructors for all expressions here.
+  static const std::string inductive_type_str =
+      ("Pi (motive : Pi (input : Nat). Type)."
+       "Pi (destructor : Pi (n : Nat). Pi (prev : motive n). motive (succ n))."
+       "Pi (base : motive 0)."
+       "Pi (input : Nat)."
+       "motive input");
 
-  // The type of the motive is `Pi (input : Nat). Type`.
-  // TODO add universe polymorphism here.
-  std::unique_ptr<Expression> motive_type = std::make_unique<PiExpression>(
-      "input", std::make_unique<NatLiteralExpression>(),
-      std::make_unique<TypeKeywordExpression>());
-
-  // This is the destructor for `succ n`.
-  // It takes the destruction results of `n` and produces the destruction result
-  // of `succ n`.
-  // The type is `Pi (n: Nat). Pi (prev: motive n). motive (succ n)`.
-  // TODO fill in application expressions
-  std::unique_ptr<Expression> destructor_type = std::make_unique<PiExpression>(
-      "n", std::make_unique<NatLiteralExpression>(),
-      std::make_unique<PiExpression>(
-          "prev", std::make_unique<ApplicationExpression>(),
-          std::make_unique<ApplicationExpression>()));
-
-  // This is another destructor, but for zero. Since zero is constructed with no
-  // arguments, the destructor also takes no arguments.
-  // The type here is just `motive 0`.
-  std::unique_ptr<Expression> base_type =
-      std::make_unique<ApplicationExpression>();
-
-  // The input to the inductive predicate is just a natural number, so the type
-  // is `Nat`.
-  std::unique_ptr<Expression> input_type =
-      std::make_unique<NatLiteralExpression>();
-
-  // The output of the inductive predicate is a type, so the type is
-  // `motive input`.
-  std::unique_ptr<Expression> output_type =
-      std::make_unique<ApplicationExpression>();
-
-  std::unique_ptr<PiExpression> input_scope = std::make_unique<PiExpression>(
-      "input", std::move(input_type), std::move(output_type));
-  std::unique_ptr<ScopeExpression> base_scope = std::make_unique<PiExpression>(
-      "base", std::move(base_type), std::move(input_scope));
-  std::unique_ptr<ScopeExpression> destructor_scope =
-      std::make_unique<PiExpression>("destructor", std::move(destructor_type),
-                                     std::move(base_scope));
-  std::unique_ptr<ScopeExpression> motive_scope =
-      std::make_unique<PiExpression>("motive", std::move(motive_type),
-                                     std::move(destructor_scope));
-
-  expression_type_map_[&e] = std::move(motive_scope);
+  // TODO cache this and just copy for efficiency.
+  expression_type_map_[&e] = text_to_expression(inductive_type_str);
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
                       expression_type_map_[&e]->to_string());
 }
