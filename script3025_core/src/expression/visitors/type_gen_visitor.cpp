@@ -113,8 +113,8 @@ void TypeGenVisitor::visit_reflexive_keyword(
 
 void TypeGenVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
   expression_type_map_[&e] = std::make_unique<PiExpression>(
-      "n", std::make_unique<NatLiteralExpression>(),
-      std::make_unique<NatLiteralExpression>());
+      "n", std::make_unique<NatKeywordExpression>(),
+      std::make_unique<NatKeywordExpression>());
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
                       expression_type_map_[&e]->to_string());
 }
