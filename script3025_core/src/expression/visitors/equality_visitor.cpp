@@ -41,7 +41,7 @@ void EqualityVisitor::visit_type_keyword(const TypeKeywordExpression &rhs) {
 void EqualityVisitor::visit_expression(const Expression &rhs) {
   pointer_map_[lhs_] = &rhs;
 
-  if (typeid(lhs_) != typeid(rhs)) {
+  if (typeid(*lhs_) != typeid(rhs)) {
     unequal_ = true;
     return;
   }
