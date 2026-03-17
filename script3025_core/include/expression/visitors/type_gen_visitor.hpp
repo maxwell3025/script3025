@@ -38,7 +38,7 @@ class TypeGenVisitor : public ConstExpressionVisitor {
   std::unordered_map<VariableReference, std::unique_ptr<Expression>>
       variable_type_map_;
 
-  std::shared_ptr<spdlog::logger> get_logger() {
+  std::shared_ptr<spdlog::logger> get_logger() const {
     static std::shared_ptr<spdlog::logger> logger =
         ([&]() -> std::shared_ptr<spdlog::logger> {
           logger = spdlog::stderr_color_mt("script3025::TypeGenVisitor",
