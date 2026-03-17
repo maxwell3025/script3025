@@ -7,28 +7,45 @@
 #include "expression/expression_visitor.hpp"
 #include "expression/variable_reference.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
+
 namespace script3025 {
 // This visitor generates non-reduced types for expressions.
-// This visitor generates types in post-fix order, so each expression can assume all subexpressions are typed.
+// This visitor generates types in post-fix order, so each expression can assume
+// all subexpressions are typed.
 class TypeGenVisitor : public ConstExpressionVisitor {
  public:
   TypeGenVisitor(
-      std::unordered_map<const Expression *, std::unique_ptr<Expression>> expression_type_map,
-      std::unordered_map<VariableReference, std::unique_ptr<Expression>> variable_type_map);
+      std::unordered_map<const Expression *, std::unique_ptr<Expression>>
+          expression_type_map,
+      std::unordered_map<VariableReference, std::unique_ptr<Expression>>
+          variable_type_map);
 
   virtual void visit_lambda(const LambdaExpression &) override;
   virtual void visit_let(const LetExpression &) override;
   virtual void visit_pi(const PiExpression &) override;
-  virtual void visit_induction_keyword(const InductionKeywordExpression &) override;
+  virtual void visit_induction_keyword(
+      const InductionKeywordExpression &) override;
   virtual void visit_nat_keyword(const NatKeywordExpression &) override;
   virtual void visit_replace_keyword(const ReplaceKeywordExpression &) override;
-  virtual void visit_reflexive_keyword(const ReflexiveKeywordExpression &) override;
+  virtual void visit_reflexive_keyword(
+      const ReflexiveKeywordExpression &) override;
   virtual void visit_succ_keyword(const SuccKeywordExpression &) override;
   virtual void visit_type_keyword(const TypeKeywordExpression &) override;
   virtual void visit_application(const ApplicationExpression &) override;
   virtual void visit_equality(const EqualityExpression &) override;
   virtual void visit_id(const IdExpression &) override;
   virtual void visit_nat_literal(const NatLiteralExpression &) override;
+
+  // @brief get the type of an expression that was previously visited.
+  // Returns `nullptr` if the expression was not visited.
+  // @param `e` the expression to get the type of.
+  // @returns the type of the expression, or `nullptr` if the expression was not
+  // visited.
+  Expression *get_type(const Expression *e) const {
+    if (expression_type_map_.find(e) == expression_type_map_.end())
+      return nullptr;
+    return expression_type_map_.at(e).get();
+  }
 
  private:
   // Maps expressions to their corresponding types.

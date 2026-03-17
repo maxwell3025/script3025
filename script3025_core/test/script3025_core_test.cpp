@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "expression/expression.hpp"
+#include "expression/visitors/type_gen_visitor.hpp"
 #include "expression_factory.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -41,6 +42,14 @@ TEST(text_to_expression, lambda) {
 TEST(text_to_expression, Pi) {
   auto expression = script3025::text_to_expression("Pi (x: Nat). x");
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", expression->to_string());
+}
+
+TEST(type_gen_visitor, simple) {
+  auto expression = script3025::text_to_expression("Nat");
+  auto expected_type = script3025::text_to_expression("Type");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
 }
 
 TEST(Program, simple) {
