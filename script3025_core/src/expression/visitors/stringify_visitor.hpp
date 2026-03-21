@@ -337,7 +337,7 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    output_ << "λ (" << format_id(e.argument_id) << ":";
+    output_ << "λ(" << format_id(e.argument_id) << ": ";
     visit_safe(e.argument_type());
     output_ << "). ";
     visit_safe(e.definition());
@@ -367,7 +367,7 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    output_ << "Π (" << format_id(e.argument_id) << ":";
+    output_ << "Π(" << format_id(e.argument_id) << ": ";
     visit_safe(e.argument_type());
     output_ << "). ";
     visit_safe(e.definition());
