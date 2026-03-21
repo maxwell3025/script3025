@@ -46,9 +46,10 @@ void EqualityVisitor::visit_expression(const Expression &rhs) {
     return;
   }
 
+  const Expression *lhs_stored = lhs_;
   for (size_t i = 0; i < rhs.children.size(); ++i) {
     if (rhs.children[i]) {
-      lhs_ = lhs_->children[i].get();
+      lhs_ = lhs_stored->children[i].get();
       visit(*rhs.children[i]);
     } else {
       unequal_ |= static_cast<bool>(lhs_->children[i]);
