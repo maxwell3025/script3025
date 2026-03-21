@@ -132,7 +132,7 @@ struct OperatorBindingPower {
 constexpr size_t BP_NONE = 0;
 
 struct BindingPower {
-  OperatorBindingPower application{6, 5};
+  OperatorBindingPower application{5, 6};
   OperatorBindingPower scope{BP_NONE, 3};
   // Setting these equal forces the formatter to disambiguate
   OperatorBindingPower equality{1, 1};
@@ -189,8 +189,8 @@ class BindingPowerData : ConstExpressionVisitor {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
     }
-    visit_safe(e.argument(), min_bp_left_, binding_power.application.left + 1);
-    visit_safe(e.function(), binding_power.application.right + 1,
+    visit_safe(e.function(), min_bp_left_, binding_power.application.left + 1);
+    visit_safe(e.argument(), binding_power.application.right + 1,
                min_bp_right_);
   }
 
@@ -217,8 +217,8 @@ class BindingPowerData : ConstExpressionVisitor {
   void visit_safe(const std::unique_ptr<Expression> &e, size_t min_bp_left,
                   size_t min_bp_right) {
     if (e == nullptr) return;
-    const size_t prev_min_bp_left = 0;
-    const size_t prev_min_bp_right = 0;
+    const size_t prev_min_bp_left = min_bp_left_;
+    const size_t prev_min_bp_right = min_bp_right_;
     min_bp_left_ = min_bp_left;
     min_bp_right_ = min_bp_right;
     ConstExpressionVisitor::visit(*e);
