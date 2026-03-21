@@ -114,12 +114,20 @@ TEST(Program, interpreter_hard) {
 }
 
 TEST(Program, interpreter_hard_typed) {
-  script3025::Program program(
-      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
-      "Nat).Nat) succ a b\n"
-      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
-      "Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
-      "def bar := mul 12 4");
+  std::string program_source =
+      ("def add :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat) succ a b\n"
+       "\n"
+       "def mul :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat) (lambda (s: Nat). add s a) 0 b\n"
+       "\n"
+       "def bar :=\n"
+       "  mul 12 4\n");
+  script3025::Program program(program_source);
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
 
