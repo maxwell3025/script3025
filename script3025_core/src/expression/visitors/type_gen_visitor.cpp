@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "expression/expression.hpp"
+#include "expression/subtypes/id_expression.hpp"
 #include "expression/subtypes/lambda_expression.hpp"
 #include "expression/subtypes/nat_keyword_expression.hpp"
 #include "expression/subtypes/pi_expression.hpp"
@@ -22,12 +23,24 @@ TypeGenVisitor::TypeGenVisitor(
       variable_type_map_(std::move(variable_type_map)) {}
 
 void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
-  VariableReference arg_ref{e.argument_id, const_cast<LambdaExpression *>(&e)};
-  variable_type_map_[arg_ref] = e.argument_type()->clone();
+  visit(*e.argument_type());
+  variable_type_map_[{e.argument_id, const_cast<LambdaExpression *>(&e)}] =
+      e.argument_type()->clone();
   visit(*e.definition());
-  expression_type_map_[&e] = std::make_unique<PiExpression>(
-      e.argument_id, e.argument_type()->clone(),
-      expression_type_map_[e.definition().get()]->clone());
+  std::unique_ptr<PiExpression> expression_type =
+      std::make_unique<PiExpression>(e.argument_id, e.argument_type()->clone(),
+                                     nullptr);
+  variable_type_map_[{e.argument_id, expression_type.get()}] =
+      e.argument_type()->clone();
+
+  std::unique_ptr<Expression> replacement =
+      std::make_unique<IdExpression>(e.argument_id, expression_type.get());
+  ReplacingVisitor replacer(const_cast<LambdaExpression *>(&e), e.argument_id,
+                            replacement.get());
+  replacer.visit(*expression_type_map_[e.definition().get()]);
+  expression_type->definition() = replacer.get();
+
+  expression_type_map_[&e] = std::move(expression_type);
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
                       expression_type_map_[&e]->to_string());
 }
