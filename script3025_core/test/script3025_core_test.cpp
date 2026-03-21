@@ -8,6 +8,7 @@
 #include "expression/visitors/type_gen_visitor.hpp"
 #include "expression_factory.hpp"
 #include "spdlog/common.h"
+#include "spdlog/fmt/bundled/format.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -17,7 +18,7 @@
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025_core_test.cpp",
                                          spdlog::color_mode::always);
-        logger->set_level(spdlog::level::info);
+        logger->set_level(spdlog::level::trace);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
@@ -49,6 +50,27 @@ TEST(type_gen_visitor, simple) {
   auto expected_type = script3025::text_to_expression("Type");
   script3025::TypeGenVisitor type_gen_visitor{{}, {}};
   type_gen_visitor.visit(*expression);
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, application) {
+  auto expression = script3025::text_to_expression(
+      "("
+      "lambda (b: Nat)."
+      "lambda (a: Pi (x: Nat). Type)."
+      "a b"
+      ") 0");
+  auto expected_type =
+      script3025::text_to_expression("Pi (a: Pi (x: Nat). Type). Type");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
   EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
 }
 
