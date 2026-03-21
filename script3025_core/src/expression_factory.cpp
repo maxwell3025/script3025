@@ -1,6 +1,7 @@
 #include "expression_factory.hpp"
 
 #include "cst_transformers.hpp"
+#include "expression/visitors/normalizing_visitor.hpp"
 #include "parsing_utility.hpp"
 
 namespace script3025 {
@@ -19,7 +20,11 @@ namespace script3025 {
 
   auto iterator = token_text.begin();
 
-  return create_expression(*code.cst, iterator);
+  std::unique_ptr<Expression> expression =
+      create_expression(*code.cst, iterator);
+
+  NormalizingVisitor().visit(*expression);
+  return expression;
 }
 
 }  // namespace script3025
