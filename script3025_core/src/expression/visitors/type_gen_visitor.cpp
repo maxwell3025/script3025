@@ -1,5 +1,7 @@
 #include "expression/visitors/type_gen_visitor.hpp"
 
+#include <gmpxx.h>
+
 #include <memory>
 
 #include "expression/expression.hpp"
@@ -45,14 +47,74 @@ void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
                       expression_type_map_[&e]->to_string());
 }
 
-void TypeGenVisitor::visit_let(const LetExpression &e) {}
+void TypeGenVisitor::visit_let(const LetExpression &e) {
+  // TODO implement this
+}
 
 void TypeGenVisitor::visit_pi(const PiExpression &e) {
   visit(*e.argument_type());
+  variable_type_map_[{e.argument_id, const_cast<PiExpression *>(&e)}] =
+      e.argument_type()->clone();
   visit(*e.definition());
-  expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>(
-      /* TODO decide universe level rules */
-  );
+
+  // Here, we are intentionally doing a RTTI lookup to get the runtime type of
+  // `e.argument_type()`.
+  // We want side-effects to be evaluated, hence the lint ignore.
+  // NOLINTNEXTLINE
+  if (typeid(*expression_type_map_[e.argument_type().get()]) !=
+      typeid(TypeKeywordExpression)) {
+    SPDLOG_LOGGER_ERROR(
+        get_logger(),
+        "Error: The type of the argument type in a Pi expression did not "
+        "reduce to `Type n`.\n"
+        "Pi expression: {}\n"
+        "Argument type: {}\n"
+        "Type of argument type: {}\n",
+        e.to_string(), e.argument_type()->to_string(),
+        expression_type_map_[e.argument_type().get()]->to_string());
+    return;
+  }
+
+  // Here, we are intentionally doing a RTTI lookup to get the runtime type of
+  // `e.definition()`.
+  // We want side-effects to be evaluated, hence the lint ignore.
+  // NOLINTNEXTLINE
+  if (typeid(*expression_type_map_[e.definition().get()]) !=
+      typeid(TypeKeywordExpression)) {
+    SPDLOG_LOGGER_ERROR(
+        get_logger(),
+        "Error: The type of the definition in a Pi expression did not "
+        "reduce to `Type n`.\n"
+        "Pi expression: {}\n"
+        "Definition: {}\n"
+        "Type of definition type: {}\n",
+        e.to_string(), e.definition()->to_string(),
+        expression_type_map_[e.definition().get()]->to_string());
+    return;
+  }
+
+  mpz_class argument_level =
+      static_cast<TypeKeywordExpression *>(
+          expression_type_map_[e.argument_type().get()].get())
+          ->level;
+  mpz_class definition_level =
+      static_cast<TypeKeywordExpression *>(
+          expression_type_map_[e.definition().get()].get())
+          ->level;
+  if (argument_level > definition_level) {
+    SPDLOG_LOGGER_ERROR(
+        get_logger(),
+        "Error: Pi expression with higher-level argument than definition\n"
+        "Pi expression: {}\n"
+        "Type of Argument type: {}\n"
+        "Definition type: {}\n",
+        e.to_string(), e.argument_type()->to_string(),
+        e.definition()->to_string());
+    return;
+  }
+
+  expression_type_map_[&e] =
+      std::make_unique<TypeKeywordExpression>(definition_level);
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
                       expression_type_map_[&e]->to_string());
 }
@@ -136,6 +198,7 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
 void TypeGenVisitor::visit_equality(const EqualityExpression &e) {
   // TODO universe rules.
 }
+
 void TypeGenVisitor::visit_id(const IdExpression &e) {
   if (variable_type_map_.find(e.get_variable_reference()) ==
       variable_type_map_.end()) {
@@ -148,6 +211,7 @@ void TypeGenVisitor::visit_id(const IdExpression &e) {
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
                       expression_type_map_[&e]->to_string());
 }
+
 void TypeGenVisitor::visit_nat_literal(const NatLiteralExpression &e) {
   expression_type_map_[&e] = std::make_unique<NatKeywordExpression>();
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
