@@ -125,7 +125,6 @@ class Program {
     ++string_iterator;
     std::unique_ptr<Expression> definition =
         create_expression(source.children[3], string_iterator);
-    NormalizingVisitor().visit(*definition);
     push_definition(id, std::move(definition));
   }
 

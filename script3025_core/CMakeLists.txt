@@ -75,6 +75,7 @@ add_library(script3025_core
   include/expression/visitors/scope_hygiene_visitor.hpp
   include/expression/visitors/scope_walking_visitor.hpp
   include/expression/visitors/type_gen_visitor.hpp
+  include/expression/visitors/type_keyword_format_visitor.hpp
   include/expression/expression_base.hpp
   include/expression/expression_visitor.hpp
   include/expression/expression.hpp

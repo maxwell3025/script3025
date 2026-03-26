@@ -1,7 +1,6 @@
 #include "expression_factory.hpp"
 
 #include "cst_transformers.hpp"
-#include "expression/visitors/normalizing_visitor.hpp"
 #include "parsing_utility.hpp"
 
 namespace script3025 {
@@ -23,7 +22,6 @@ namespace script3025 {
   std::unique_ptr<Expression> expression =
       create_expression(*code.cst, iterator);
 
-  NormalizingVisitor().visit(*expression);
   return expression;
 }
 
