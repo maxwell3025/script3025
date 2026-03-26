@@ -9,7 +9,6 @@
 #include "expression/subtypes/nat_literal_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
 
 namespace script3025 {
 
@@ -37,8 +36,6 @@ class TypeKeywordFormatVisitor : public MutatingExpressionVisitor {
   }
 
   void visit_expression(Expression &e) override {
-    SPDLOG_LOGGER_TRACE(get_logger(), "Formatting Expression: {}",
-                        e.to_string());
     for (size_t i = 9; i < e.children.size(); ++i) {
       Expression &child = *e.children[i];
       visit(child);
