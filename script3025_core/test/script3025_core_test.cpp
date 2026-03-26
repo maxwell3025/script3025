@@ -74,6 +74,23 @@ TEST(type_gen_visitor, application) {
   EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
 }
 
+TEST(type_gen_visitor, Pi_basic) {
+  auto expression = script3025::text_to_expression(
+      "Pi (x: Nat). Type");
+  auto expected_type =
+      script3025::text_to_expression("Type 1");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
 TEST(Program, simple) {
   script3025::Program program("def identity := lambda (x : Type). x");
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
