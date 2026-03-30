@@ -19,10 +19,19 @@ namespace script3025 {
 namespace {
 
 // @brief
-// @param `c` - character which we test for alphanumericness.
+// @param `c` - character we are testing.
+// Returns true iff `c` is an alphabetical character (upper or lower case), an
+// underscore, or a digit.
+[[nodiscard]] bool is_alphanumeric(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+         (c >= '0' && c <= '9') || c == '_';
+}
+
+// @brief
+// @param `c` - character we are testing.
 // Returns true iff `c` is an alphabetical character (upper or lower case) or an
 // underscore.
-[[nodiscard]] bool is_alphanumeric(char c) {
+[[nodiscard]] bool is_alpha(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
@@ -110,10 +119,11 @@ std::vector<AnnotatedToken> text_to_tokens(const std::string& text) {
     }
 
     // Recognize identifiers
-    while (i < text.size() && is_alphanumeric(text[i])) {
+    if (i < text.size() && is_alpha(text[i])) {
       ++i;
-    }
-    if (i > start) {
+      while (i < text.size() && is_alphanumeric(text[i])) {
+        ++i;
+      }
       new_token.text = text.substr(start, i - start);
       new_token.token = Token::ID;
       annotated_tokens.push_back(new_token);
