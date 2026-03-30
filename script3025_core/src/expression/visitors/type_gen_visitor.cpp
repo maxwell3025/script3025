@@ -16,6 +16,7 @@
 
 namespace script3025 {
 
+// TODO cache all of the text_to_expresion calls and just copy for efficiency.
 TypeGenVisitor::TypeGenVisitor(
     std::unordered_map<const Expression *, std::unique_ptr<Expression>>
         expression_type_map,
@@ -119,44 +120,6 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
                       expression_type_map_[&e]->to_string());
 }
 
-void TypeGenVisitor::visit_induction_keyword(
-    const InductionKeywordExpression &e) {
-  static const std::string inductive_type_str =
-      ("Pi (motive : Pi (input : Nat). Type)."
-       "Pi (destructor : Pi (n : Nat). Pi (prev : motive n). motive (succ n))."
-       "Pi (base : motive 0)."
-       "Pi (input : Nat)."
-       "motive input");
-
-  // TODO cache this and just copy for efficiency.
-  expression_type_map_[&e] = text_to_expression(inductive_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
-}
-
-void TypeGenVisitor::visit_nat_keyword(const NatKeywordExpression &e) {
-  expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>();
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
-}
-
-void TypeGenVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e) {
-  // TODO big complex expression.
-}
-
-void TypeGenVisitor::visit_reflexive_keyword(
-    const ReflexiveKeywordExpression &e) {
-  // TODO big complex expression.
-}
-
-void TypeGenVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
-  expression_type_map_[&e] = std::make_unique<PiExpression>(
-      "n", std::make_unique<NatKeywordExpression>(),
-      std::make_unique<NatKeywordExpression>());
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
-}
-
 void TypeGenVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
   expression_type_map_[&e] =
       std::make_unique<TypeKeywordExpression>(e.level + 1);
@@ -195,10 +158,6 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
                       expression_type_map_[&e]->to_string());
 }
 
-void TypeGenVisitor::visit_equality(const EqualityExpression &e) {
-  // TODO universe rules.
-}
-
 void TypeGenVisitor::visit_id(const IdExpression &e) {
   if (variable_type_map_.find(e.get_variable_reference()) ==
       variable_type_map_.end()) {
@@ -212,8 +171,79 @@ void TypeGenVisitor::visit_id(const IdExpression &e) {
                       expression_type_map_[&e]->to_string());
 }
 
+// Hardcoded types below
+
+void TypeGenVisitor::visit_induction_keyword(
+    const InductionKeywordExpression &e) {
+  // This follows the recursor format described in
+  // https://lean-lang.org/doc/reference/latest/The-Type-System/Inductive-Types/#recursor-types.
+
+  static const std::string inductive_type_str =
+      ("Pi (motive: Pi (input: Nat). Type)."
+       "Pi (minor_premise_1: Pi (n: Nat). Pi (prev: motive n). motive (succ "
+       "n))."
+       "Pi (minor_premise_2: motive 0)."
+       "Pi (major_premise: Nat)."
+       "motive input");
+  expression_type_map_[&e] = text_to_expression(inductive_type_str);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
+}
+
+void TypeGenVisitor::visit_nat_keyword(const NatKeywordExpression &e) {
+  static const std::string nat_type_str = ("Type");
+  expression_type_map_[&e] = text_to_expression(nat_type_str);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
+}
+
 void TypeGenVisitor::visit_nat_literal(const NatLiteralExpression &e) {
-  expression_type_map_[&e] = std::make_unique<NatKeywordExpression>();
+  static const std::string nat_literal_type_str = ("Nat");
+  expression_type_map_[&e] = text_to_expression(nat_literal_type_str);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
+}
+
+void TypeGenVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e) {
+  // This follows the recursor format described in
+  // https://lean-lang.org/doc/reference/latest/The-Type-System/Inductive-Types/#recursor-types.
+  // This treats the equality type as an inductive with one parameter and one
+  // index.
+
+  static const std::string replace_type_str =
+      ("Pi (parameter: Nat)."
+       "Pi (motive: Pi (index: Nat). Pi (value: parameter = index). Type)."
+       "Pi (minor_premise: motive parameter (refl parameter))."
+       "Pi (major_premise_index: Nat)."
+       "Pi (major_premise: (parameter = major_premise_index))."
+       "motive major_premise_index major_premise");
+  expression_type_map_[&e] = text_to_expression(replace_type_str);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
+}
+
+void TypeGenVisitor::visit_reflexive_keyword(
+    const ReflexiveKeywordExpression &e) {
+  static const std::string refl_type_str =
+      ("Pi (a: Nat)."
+       "(a = a)");
+  expression_type_map_[&e] = text_to_expression(refl_type_str);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
+}
+
+void TypeGenVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
+  static const std::string succ_type_str =
+      ("Pi (n: Nat)."
+       "Nat");
+  expression_type_map_[&e] = text_to_expression(succ_type_str);
+  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                      expression_type_map_[&e]->to_string());
+}
+
+void TypeGenVisitor::visit_equality(const EqualityExpression &e) {
+  static const std::string equality_type_str = ("Type");
+  expression_type_map_[&e] = text_to_expression(equality_type_str);
   SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
                       expression_type_map_[&e]->to_string());
 }
