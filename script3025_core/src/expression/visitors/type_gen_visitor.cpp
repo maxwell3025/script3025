@@ -49,7 +49,36 @@ void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
 }
 
 void TypeGenVisitor::visit_let(const LetExpression &e) {
-  // TODO implement this
+  // This one requires some care to avoid ininite let var = term in Type k for
+  // all k loops. Notice that in
+  // https://rocq-prover.org/doc/V9.1.1/refman/language/cic.html#id4, the let
+  // rule forces substitutions.
+
+  visit(*e.argument_value());
+  variable_type_map_[{e.argument_id, const_cast<LetExpression *>(&e)}] =
+      e.argument_type()->clone();
+  visit(*e.definition());
+  if (*expression_type_map_[e.argument_value().get()] != *e.argument_type()) {
+    SPDLOG_LOGGER_ERROR(
+        get_logger(),
+        "Error: type of let argument value did not match declared type\n"
+        "Let expression: {}\n"
+        "Argument value: {}\n"
+        "Type of argument value: {}\n"
+        "Declared argument type: {}\n",
+        e.to_string(), e.argument_value()->to_string(),
+        expression_type_map_[e.argument_value().get()]->to_string(),
+        e.argument_type()->to_string());
+    return;
+  }
+  std::unique_ptr<Expression> type =
+      expression_type_map_[e.definition().get()]->clone();
+  ReplacingVisitor replacer(const_cast<LetExpression *>(&e), e.argument_id,
+                            e.argument_value().get());
+  replacer.visit(*type);
+  expression_type_map_[&e] = std::move(type);
+    SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
+                        expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_pi(const PiExpression &e) {
