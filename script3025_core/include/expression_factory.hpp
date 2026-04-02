@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "expression/expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
 #include "expression/visitors/normalizing_visitor.hpp"
 #include "expression/visitors/type_keyword_format_visitor.hpp"
 #include "parser.hpp"
@@ -106,6 +107,47 @@ template <typename Iterator>
 
     return std::make_unique<LambdaExpression>(
         std::move(identifier), std::move(argument_type), std::move(definition));
+  } else if (sentential_form ==
+             std::vector({Token::LET, Token::L_PAREN, Token::ID, Token::COLON,
+                          Token::EXPR, Token::R_PAREN, Token::ASSIGN,
+                          Token::EXPR, Token::IN, Token::EXPR})) {
+    // let
+    ++string_iterator;
+
+    // (
+    ++string_iterator;
+
+    // Identifier
+    std::string identifier = *string_iterator;
+    ++string_iterator;
+
+    // :
+    ++string_iterator;
+
+    // type bound
+    std::unique_ptr<Expression> argument_type =
+        create_expression_non_normalized(source.children[4], string_iterator);
+
+    // )
+    ++string_iterator;
+
+    // :=
+    ++string_iterator;
+
+    // Value
+    std::unique_ptr<Expression> value =
+        create_expression_non_normalized(source.children[7], string_iterator);
+
+    // in
+    ++string_iterator;
+
+    // definition
+    std::unique_ptr<Expression> definition =
+        create_expression_non_normalized(source.children[9], string_iterator);
+
+    return std::make_unique<LetExpression>(
+        std::move(identifier), std::move(argument_type), std::move(value),
+        std::move(definition));
   } else if (sentential_form ==
              std::vector({Token::LAMBDA, Token::ID, Token::COLON, Token::EXPR,
                           Token::PERIOD, Token::EXPR})) {
