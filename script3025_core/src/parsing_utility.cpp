@@ -188,18 +188,18 @@ parser::ParserBuilder<Token>& with_script3025_grammar(
       .rule(Token::EXPR_EQ, Token::EXPR_ABS)
 
       .rule(Token::ABS, Token::LAMBDA, Token::L_PAREN, Token::ID, Token::COLON,
-            Token::EXPR_ABS, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
-      .rule(Token::ABS, Token::LAMBDA, Token::ID, Token::COLON, Token::EXPR_ABS,
+            Token::EXPR, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
+      .rule(Token::ABS, Token::LAMBDA, Token::ID, Token::COLON, Token::EXPR,
             Token::PERIOD, Token::EXPR_ABS)
       .rule(Token::ABS, Token::PI, Token::L_PAREN, Token::ID, Token::COLON,
-            Token::EXPR_ABS, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
-      .rule(Token::ABS, Token::PI, Token::ID, Token::COLON, Token::EXPR_ABS,
+            Token::EXPR, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
+      .rule(Token::ABS, Token::PI, Token::ID, Token::COLON, Token::EXPR,
             Token::PERIOD, Token::EXPR_ABS)
       .rule(Token::ABS, Token::LET, Token::L_PAREN, Token::ID, Token::COLON,
-            Token::EXPR_ABS, Token::R_PAREN, Token::ASSIGN, Token::EXPR_ABS,
-            Token::IN, Token::EXPR_ABS)
-      .rule(Token::ABS, Token::LET, Token::ID, Token::COLON, Token::EXPR_ABS,
-            Token::ASSIGN, Token::EXPR_ABS, Token::IN, Token::EXPR_ABS)
+            Token::EXPR, Token::R_PAREN, Token::ASSIGN, Token::EXPR, Token::IN,
+            Token::EXPR_ABS)
+      .rule(Token::ABS, Token::LET, Token::ID, Token::COLON, Token::EXPR,
+            Token::ASSIGN, Token::EXPR, Token::IN, Token::EXPR_ABS)
 
       .rule(Token::EXPR_ABS, Token::ABS)
       .rule(Token::EXPR_ABS, Token::EXPR_APP, Token::ABS)
@@ -210,7 +210,7 @@ parser::ParserBuilder<Token>& with_script3025_grammar(
 
       .rule(Token::EXPR_PAREN, Token::ID)
       .rule(Token::EXPR_PAREN, Token::NUMBER)
-      .rule(Token::EXPR_PAREN, Token::L_PAREN, Token::EXPR_ABS, Token::R_PAREN);
+      .rule(Token::EXPR_PAREN, Token::L_PAREN, Token::EXPR, Token::R_PAREN);
 }
 
 parser::Parser<Token> make_program_parser() {
