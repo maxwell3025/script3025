@@ -37,6 +37,8 @@ class TypeGenVisitor : public ConstExpressionVisitor {
   virtual void visit_id(const IdExpression &) override;
   virtual void visit_nat_literal(const NatLiteralExpression &) override;
 
+  void generate_type(const Expression &e);
+
   // @brief get the type of an expression that was previously visited.
   // Returns `nullptr` if the expression was not visited.
   // @param `e` the expression to get the type of.

@@ -46,8 +46,8 @@ template <typename Iterator>
   std::unique_ptr<Expression> expression =
       create_expression_non_normalized(source, string_iterator);
   NormalizingVisitor().visit(*expression);
-  SPDLOG_LOGGER_TRACE(logger, "Building: {}", expression->to_string());
   expression = format_type_keywords(std::move(expression));
+  SPDLOG_LOGGER_TRACE(logger, "Parsed expression from string: {}", expression->to_string());
   return expression;
 }
 

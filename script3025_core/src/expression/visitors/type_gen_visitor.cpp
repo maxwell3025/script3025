@@ -9,6 +9,7 @@
 #include "expression/subtypes/lambda_expression.hpp"
 #include "expression/subtypes/nat_keyword_expression.hpp"
 #include "expression/subtypes/pi_expression.hpp"
+#include "expression/subtypes/type_keyword_expression.hpp"
 #include "expression/variable_reference.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "expression_factory.hpp"
@@ -26,10 +27,10 @@ TypeGenVisitor::TypeGenVisitor(
       variable_type_map_(std::move(variable_type_map)) {}
 
 void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
-  visit(*e.argument_type());
+  generate_type(*e.argument_type());
   variable_type_map_[{e.argument_id, const_cast<LambdaExpression *>(&e)}] =
       e.argument_type()->clone();
-  visit(*e.definition());
+  generate_type(*e.definition());
   std::unique_ptr<PiExpression> expression_type =
       std::make_unique<PiExpression>(e.argument_id, e.argument_type()->clone(),
                                      nullptr);
@@ -44,8 +45,6 @@ void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
   expression_type->definition() = replacer.get();
 
   expression_type_map_[&e] = std::move(expression_type);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_let(const LetExpression &e) {
@@ -54,10 +53,10 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
   // https://rocq-prover.org/doc/V9.1.1/refman/language/cic.html#id4, the let
   // rule forces substitutions.
 
-  visit(*e.argument_value());
+  generate_type(*e.argument_value());
   variable_type_map_[{e.argument_id, const_cast<LetExpression *>(&e)}] =
       e.argument_type()->clone();
-  visit(*e.definition());
+  generate_type(*e.definition());
   if (*expression_type_map_[e.argument_value().get()] != *e.argument_type()) {
     SPDLOG_LOGGER_ERROR(
         get_logger(),
@@ -77,15 +76,13 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
                             e.argument_value().get());
   replacer.visit(*type);
   expression_type_map_[&e] = std::move(type);
-    SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                        expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_pi(const PiExpression &e) {
-  visit(*e.argument_type());
+  generate_type(*e.argument_type());
   variable_type_map_[{e.argument_id, const_cast<PiExpression *>(&e)}] =
       e.argument_type()->clone();
-  visit(*e.definition());
+  generate_type(*e.definition());
 
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
   // `e.argument_type()`.
@@ -145,21 +142,17 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
 
   expression_type_map_[&e] =
       std::make_unique<TypeKeywordExpression>(definition_level);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
   expression_type_map_[&e] =
       std::make_unique<TypeKeywordExpression>(e.level + 1);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   // Assert that the type of the function is a Pi type.
-  visit(*e.function());
-  visit(*e.argument());
+  generate_type(*e.function());
+  generate_type(*e.argument());
   std::unique_ptr<Expression> function_type =
       expression_type_map_[e.function().get()]->clone();
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
@@ -183,24 +176,36 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   std::unique_ptr<Expression> application_type = replacer.get();
 
   expression_type_map_[&e] = std::move(application_type);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_id(const IdExpression &e) {
   if (variable_type_map_.find(e.get_variable_reference()) ==
       variable_type_map_.end()) {
     SPDLOG_LOGGER_ERROR(get_logger(),
-                        "Error: no type for variable {} in type generation",
-                        e.id);
+                        "Error: variable reference not found in variable type "
+                        "map:\nid={}\nsource={}",
+                        e.id, fmt::ptr(e.source));
   }
   expression_type_map_[&e] =
       variable_type_map_[e.get_variable_reference()]->clone();
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
-// Hardcoded types below
+void TypeGenVisitor::generate_type(const Expression &e) {
+  visit(e);
+  if (expression_type_map_.find(&e) == expression_type_map_.end()) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Error: no type generated for expression {}",
+                        e.to_string());
+    return;
+  }
+  if (typeid(e) != typeid(TypeKeywordExpression)) {
+    generate_type(*expression_type_map_[&e]);
+  }
+  SPDLOG_LOGGER_TRACE(
+      get_logger(),
+      "Type of expression generated successfully:\nexpr={}\ntype={}",
+      e.to_string(), expression_type_map_[&e]->to_string());
+}
 
 void TypeGenVisitor::visit_induction_keyword(
     const InductionKeywordExpression &e) {
@@ -213,24 +218,18 @@ void TypeGenVisitor::visit_induction_keyword(
        "n))."
        "Pi (minor_premise_2: motive 0)."
        "Pi (major_premise: Nat)."
-       "motive input");
+       "motive major_premise");
   expression_type_map_[&e] = text_to_expression(inductive_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_nat_keyword(const NatKeywordExpression &e) {
   static const std::string nat_type_str = ("Type");
   expression_type_map_[&e] = text_to_expression(nat_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_nat_literal(const NatLiteralExpression &e) {
   static const std::string nat_literal_type_str = ("Nat");
   expression_type_map_[&e] = text_to_expression(nat_literal_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e) {
@@ -247,8 +246,6 @@ void TypeGenVisitor::visit_replace_keyword(const ReplaceKeywordExpression &e) {
        "Pi (major_premise: (parameter = major_premise_index))."
        "motive major_premise_index major_premise");
   expression_type_map_[&e] = text_to_expression(replace_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_reflexive_keyword(
@@ -257,8 +254,6 @@ void TypeGenVisitor::visit_reflexive_keyword(
       ("Pi (a: Nat)."
        "(a = a)");
   expression_type_map_[&e] = text_to_expression(refl_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
@@ -266,15 +261,11 @@ void TypeGenVisitor::visit_succ_keyword(const SuccKeywordExpression &e) {
       ("Pi (n: Nat)."
        "Nat");
   expression_type_map_[&e] = text_to_expression(succ_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_equality(const EqualityExpression &e) {
   static const std::string equality_type_str = ("Type");
   expression_type_map_[&e] = text_to_expression(equality_type_str);
-  SPDLOG_LOGGER_TRACE(get_logger(), "The type of {}:\n{}", e.to_string(),
-                      expression_type_map_[&e]->to_string());
 }
 
 }  // namespace script3025
