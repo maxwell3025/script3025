@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "expression/expression.hpp"
-#include "expression/visitors/normalizing_visitor.hpp"
 #include "expression_factory.hpp"
 #include "parser.hpp"
 #include "spdlog/fmt/bundled/base.h"
@@ -125,7 +124,6 @@ class Program {
     ++string_iterator;
     std::unique_ptr<Expression> definition =
         create_expression(source.children[3], string_iterator);
-    NormalizingVisitor().visit(*definition);
     push_definition(id, std::move(definition));
   }
 

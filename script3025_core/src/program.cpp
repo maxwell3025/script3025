@@ -5,7 +5,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
 #include "cst_transformers.hpp"
@@ -13,6 +13,7 @@
 #include "expression/variable_reference.hpp"
 #include "expression/visitors/lazy_reduction_visitor.hpp"
 #include "expression/visitors/scope_hygiene_visitor.hpp"
+#include "expression/visitors/type_gen_visitor.hpp"
 #include "parsing_utility.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -21,7 +22,7 @@
 namespace script3025 {
 
 Program::Program(const std::string &source) {
-  ParsedCode code = parse(source);
+  ParsedCode code = text_to_program_cst(source);
 
   script3025::collect_lists(*code.cst);
   script3025::collapse_oop(*code.cst);
@@ -46,8 +47,20 @@ std::string Program::to_string() const {
 }
 
 bool Program::check_types() const {
-  for (const auto &definition_pair : global_definitions())
-    if (!is_hygenic(*definition_pair.second)) return false;
+  TypeGenVisitor type_visitor{{}, {}};
+  for (const std::string &definition_name : global_ids()) {
+    const std::unique_ptr<Expression> &definition =
+        global_definitions_.at(definition_name);
+    if (!is_hygenic(*definition)) return false;
+
+    type_visitor.visit(*definition);
+    Expression *type_expression_ptr = type_visitor.get_type(definition.get());
+    if (type_expression_ptr == nullptr) {
+      return false;
+    }
+
+    type_visitor.bind_global(definition.get(), definition_name);
+  }
   return true;
 }
 
@@ -55,15 +68,12 @@ bool Program::check_types() const {
     const std::string &id) {
   std::unordered_map<VariableReference, const Expression *> delta_table;
 
-  size_t n_globals = id_ordering_[id];
+  size_t const n_globals = id_ordering_[id];
   for (size_t i = 0; i < n_globals; ++i) {
-    std::string name = global_ids_[i];
-    delta_table.emplace(
-        VariableReference{name, nullptr},
-        &global(name));
+    std::string const name = global_ids_[i];
+    delta_table.emplace(VariableReference{name, nullptr}, &global(name));
   }
-  std::unique_ptr<Expression> copy = global_definitions_[id]->clone();
-  return script3025::reduce(*copy, &delta_table);
+  return script3025::reduce_copy(*global_definitions_[id], delta_table);
 }
 
 std::shared_ptr<spdlog::logger> Program::get_logger() {

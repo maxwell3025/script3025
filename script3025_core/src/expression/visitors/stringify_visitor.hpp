@@ -26,6 +26,16 @@ namespace script3025 {
 
 namespace {
 
+/**
+ * Visitor that generates metadata for identifier labelling.
+ * Usage:
+ * ```C++
+ * IdRenamer renamer = IdRenamer::create(expression);
+ * // renamer contains information needed to decide whether to mark an
+ * identifier as shadowed, inaccessible, etc. std::string description =
+ * renamer.get_description(id_expression);
+ * ```
+ */
 class IdRenamer : ConstExpressionVisitor {
  public:
   [[nodiscard]] static IdRenamer create(const Expression &e) {
@@ -65,7 +75,8 @@ class IdRenamer : ConstExpressionVisitor {
 
     const bool is_misnamed = e.source->argument_id != e.id;
     if (is_misnamed) {
-      output << "!labeled as \"" << e.id << "\"!";
+      output << "!idexpression labeled as \"" << e.id << "\" but referencing \""
+             << e.source->argument_id << "\"!";
     }
     return output.str();
   }
@@ -76,7 +87,7 @@ class IdRenamer : ConstExpressionVisitor {
   void visit_scope(const ScopeExpression &e) {
     for (const std::unique_ptr<Expression> &child : e.children) {
       if (child == e.definition()) scope_stack_.push_back(&e);
-      visit(*child);
+      if (child) visit(*child);
       if (child == e.definition()) scope_stack_.pop_back();
     }
   }
@@ -103,7 +114,7 @@ class IdRenamer : ConstExpressionVisitor {
 
   void visit_expression(const Expression &e) {
     for (const std::unique_ptr<Expression> &child : e.children) {
-      visit(*child);
+      if (child) visit(*child);
     }
   }
 
@@ -122,7 +133,7 @@ struct OperatorBindingPower {
 constexpr size_t BP_NONE = 0;
 
 struct BindingPower {
-  OperatorBindingPower application{6, 5};
+  OperatorBindingPower application{5, 6};
   OperatorBindingPower scope{BP_NONE, 3};
   // Setting these equal forces the formatter to disambiguate
   OperatorBindingPower equality{1, 1};
@@ -166,9 +177,9 @@ class BindingPowerData : ConstExpressionVisitor {
     }
     for (const std::unique_ptr<Expression> &child : e.children) {
       if (child == e.definition())
-        visit(*child, binding_power.scope.right + 1, min_bp_right_);
+        visit_safe(child, binding_power.scope.right + 1, min_bp_right_);
       else
-        visit(*child, 0, 0);
+        visit_safe(child, 0, 0);
     }
   }
 
@@ -179,8 +190,9 @@ class BindingPowerData : ConstExpressionVisitor {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
     }
-    visit(*e.argument(), min_bp_left_, binding_power.application.left + 1);
-    visit(*e.function(), binding_power.application.right + 1, min_bp_right_);
+    visit_safe(e.function(), min_bp_left_, binding_power.application.left + 1);
+    visit_safe(e.argument(), binding_power.application.right + 1,
+               min_bp_right_);
   }
 
   void visit_type_keyword(const TypeKeywordExpression &e) {
@@ -199,16 +211,18 @@ class BindingPowerData : ConstExpressionVisitor {
       min_bp_left_ = 0;
       min_bp_right_ = 0;
     }
-    visit(*e.lhs(), min_bp_left_, binding_power.equality.left + 1);
-    visit(*e.rhs(), binding_power.equality.right + 1, min_bp_right_);
+    visit_safe(e.lhs(), min_bp_left_, binding_power.equality.left + 1);
+    visit_safe(e.rhs(), binding_power.equality.right + 1, min_bp_right_);
   }
 
-  void visit(const Expression &e, size_t min_bp_left, size_t min_bp_right) {
-    const size_t prev_min_bp_left = 0;
-    const size_t prev_min_bp_right = 0;
+  void visit_safe(const std::unique_ptr<Expression> &e, size_t min_bp_left,
+                  size_t min_bp_right) {
+    if (e == nullptr) return;
+    const size_t prev_min_bp_left = min_bp_left_;
+    const size_t prev_min_bp_right = min_bp_right_;
     min_bp_left_ = min_bp_left;
     min_bp_right_ = min_bp_right;
-    ConstExpressionVisitor::visit(e);
+    ConstExpressionVisitor::visit(*e);
     min_bp_left_ = prev_min_bp_left;
     min_bp_right_ = prev_min_bp_right;
   }
@@ -229,6 +243,17 @@ class BindingPowerData : ConstExpressionVisitor {
   size_t min_bp_right_ = 0;
   std::unordered_map<const Expression *, bool> needs_parentheses_;
 };
+
+/**
+ * Formats an identifier for use in the string representation of an expression.
+ *
+ * @param input The identifier to format.
+ * @return The formatted identifier.
+ */
+std::string format_id(std::string input) {
+  if (input.empty()) return "<empty string>";
+  return input;
+}
 
 /**
   Converts an Expression into a string using the minimum number of parentheses.
@@ -270,6 +295,13 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
  private:
+  void visit_safe(const std::unique_ptr<Expression> &e) {
+    if (e != nullptr)
+      ConstExpressionVisitor::visit(*e);
+    else
+      output_ << "(&nullptr)";
+  }
+
   void visit_expression(const Expression &e) {
     SPDLOG_LOGGER_ERROR(get_logger(), "Unimplemented for {}", typeid(e).name());
   }
@@ -282,9 +314,9 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    visit(*e.function());
+    visit_safe(e.function());
     output_ << " ";
-    visit(*e.argument());
+    visit_safe(e.argument());
     if (needs_parentheses) output_ << ")";
   }
 
@@ -292,9 +324,9 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    visit(*e.lhs());
+    visit_safe(e.lhs());
     output_ << "=";
-    visit(*e.rhs());
+    visit_safe(e.rhs());
     if (needs_parentheses) output_ << ")";
   }
 
@@ -306,10 +338,10 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    output_ << "λ (" << e.argument_id << ":";
-    visit(*e.argument_type());
+    output_ << "λ(" << format_id(e.argument_id) << ": ";
+    visit_safe(e.argument_type());
     output_ << "). ";
-    visit(*e.definition());
+    visit_safe(e.definition());
     if (needs_parentheses) output_ << ")";
   }
 
@@ -317,12 +349,12 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    output_ << "let (" << e.argument_id << ":";
-    visit(*e.argument_type());
+    output_ << "let (" << format_id(e.argument_id) << ":";
+    visit_safe(e.argument_type());
     output_ << ":=";
-    visit(*e.argument_value());
+    visit_safe(e.argument_value());
     output_ << " in ";
-    visit(*e.definition());
+    visit_safe(e.definition());
     if (needs_parentheses) output_ << ")";
   }
 
@@ -336,10 +368,10 @@ class ExpressionStringifier : ConstExpressionVisitor {
     const bool needs_parentheses = parentheses_data_.needs_parentheses(e);
 
     if (needs_parentheses) output_ << "(";
-    output_ << "Π (" << e.argument_id << ":";
-    visit(*e.argument_type());
+    output_ << "Π(" << format_id(e.argument_id) << ": ";
+    visit_safe(e.argument_type());
     output_ << "). ";
-    visit(*e.definition());
+    visit_safe(e.definition());
     if (needs_parentheses) output_ << ")";
   }
 

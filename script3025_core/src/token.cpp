@@ -20,6 +20,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     case Token::DEF:
       os << "def";
       break;
+    case Token::IN:
+      os << "in";
+      break;
     case Token::ASSIGN:
       os << ":=";
       break;

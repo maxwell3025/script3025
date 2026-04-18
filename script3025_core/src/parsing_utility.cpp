@@ -18,13 +18,26 @@ namespace script3025 {
 
 namespace {
 
+// @brief
+// @param `c` - character we are testing.
+// Returns true iff `c` is an alphabetical character (upper or lower case), an
+// underscore, or a digit.
 [[nodiscard]] bool is_alphanumeric(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+         (c >= '0' && c <= '9') || c == '_';
+}
+
+// @brief
+// @param `c` - character we are testing.
+// Returns true iff `c` is an alphabetical character (upper or lower case) or an
+// underscore.
+[[nodiscard]] bool is_alpha(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
 }  // namespace
 
-std::vector<AnnotatedToken> tokenize(const std::string& text) {
+std::vector<AnnotatedToken> text_to_tokens(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::tokenize",
@@ -88,7 +101,7 @@ std::vector<AnnotatedToken> tokenize(const std::string& text) {
       continue;
     }
 
-    if (text.substr(i, 2) == "pi" &&
+    if (text.substr(i, 2) == "Pi" &&
         !(text.length() > i + 2 && is_alphanumeric(text[i + 2]))) {
       i += 2;
       new_token.text = text.substr(start, i - start);
@@ -106,10 +119,11 @@ std::vector<AnnotatedToken> tokenize(const std::string& text) {
     }
 
     // Recognize identifiers
-    while (i < text.size() && is_alphanumeric(text[i])) {
+    if (i < text.size() && is_alpha(text[i])) {
       ++i;
-    }
-    if (i > start) {
+      while (i < text.size() && is_alphanumeric(text[i])) {
+        ++i;
+      }
       new_token.text = text.substr(start, i - start);
       new_token.token = Token::ID;
       annotated_tokens.push_back(new_token);
@@ -161,69 +175,102 @@ std::vector<AnnotatedToken> tokenize(const std::string& text) {
   return annotated_tokens;
 }
 
-ParsedCode parse(const std::string& text) {
+// @brief Add the rules of script4025 grammar to the given parser builder.
+// @param input - A reference to the parser builder we want to modify.
+// @returns A reference to the parser,
+parser::ParserBuilder<Token>& with_script3025_grammar(
+    parser::ParserBuilder<Token>& input) {
+  return input.rule(Token::PROG)
+      .rule(Token::PROG, Token::PROG, Token::DEFN)
+      .rule(Token::DEFN, Token::DEF, Token::ID, Token::ASSIGN, Token::EXPR_EQ)
+
+      .rule(Token::EXPR_EQ, Token::EXPR_ABS, Token::EQ, Token::EXPR_ABS)
+      .rule(Token::EXPR_EQ, Token::EXPR_ABS)
+
+      .rule(Token::ABS, Token::LAMBDA, Token::L_PAREN, Token::ID, Token::COLON,
+            Token::EXPR, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
+      .rule(Token::ABS, Token::LAMBDA, Token::ID, Token::COLON, Token::EXPR,
+            Token::PERIOD, Token::EXPR_ABS)
+      .rule(Token::ABS, Token::PI, Token::L_PAREN, Token::ID, Token::COLON,
+            Token::EXPR, Token::R_PAREN, Token::PERIOD, Token::EXPR_ABS)
+      .rule(Token::ABS, Token::PI, Token::ID, Token::COLON, Token::EXPR,
+            Token::PERIOD, Token::EXPR_ABS)
+      .rule(Token::ABS, Token::LET, Token::L_PAREN, Token::ID, Token::COLON,
+            Token::EXPR, Token::R_PAREN, Token::ASSIGN, Token::EXPR, Token::IN,
+            Token::EXPR_ABS)
+      .rule(Token::ABS, Token::LET, Token::ID, Token::COLON, Token::EXPR,
+            Token::ASSIGN, Token::EXPR, Token::IN, Token::EXPR_ABS)
+
+      .rule(Token::EXPR_ABS, Token::ABS)
+      .rule(Token::EXPR_ABS, Token::EXPR_APP, Token::ABS)
+      .rule(Token::EXPR_ABS, Token::EXPR_APP)
+
+      .rule(Token::EXPR_APP, Token::EXPR_APP, Token::EXPR_PAREN)
+      .rule(Token::EXPR_APP, Token::EXPR_PAREN)
+
+      .rule(Token::EXPR_PAREN, Token::ID)
+      .rule(Token::EXPR_PAREN, Token::NUMBER)
+      .rule(Token::EXPR_PAREN, Token::L_PAREN, Token::EXPR, Token::R_PAREN);
+}
+
+parser::Parser<Token> make_program_parser() {
+  auto parser_builder = parser::ParserBuilder<Token>(Token::PROG, Token::END);
+  return with_script3025_grammar(parser_builder).build();
+}
+
+parser::Parser<Token> make_expression_parser() {
+  auto parser_builder = parser::ParserBuilder<Token>(Token::EXPR, Token::END);
+  return with_script3025_grammar(parser_builder).build();
+}
+
+// TODO: Break these parsing functions down further for ease of use.
+ParsedCode text_to_program_cst(const std::string& text) {
   static std::shared_ptr<spdlog::logger> logger =
       ([&]() -> std::shared_ptr<spdlog::logger> {
-        logger = spdlog::stderr_color_mt("script3025::parse",
+        logger = spdlog::stderr_color_mt("script3025::text_to_program_cst",
                                          spdlog::color_mode::always);
         logger->set_level(spdlog::level::warn);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
 
-  static const std::unique_ptr<parser::Parser<Token>> basic_parser =
-      std::make_unique<parser::Parser<Token>>(
-          parser::ParserBuilder<Token>(Token::PROG, Token::END)
-              .rule(Token::PROG)
-              .rule(Token::PROG, Token::PROG, Token::DEFN)
-              .rule(Token::DEFN, Token::DEF, Token::ID, Token::ASSIGN,
-                    Token::EXPR_ABS)
-              // This is a horrifying bag of worms I don't want to touch!
-              // .rule(Token::IDEFN, Token::INDUCTIVE, Token::ID, Token::ASSIGN,
-              //       Token::EXPR_ABS)
-
-              .rule(Token::ABS, Token::LAMBDA, Token::L_PAREN, Token::ID,
-                    Token::COLON, Token::EXPR_ABS, Token::R_PAREN,
-                    Token::PERIOD, Token::EXPR_ABS)
-              .rule(Token::ABS, Token::LAMBDA, Token::ID, Token::COLON,
-                    Token::EXPR_ABS, Token::PERIOD, Token::EXPR_ABS)
-              .rule(Token::ABS, Token::PI, Token::L_PAREN, Token::ID,
-                    Token::COLON, Token::EXPR_ABS, Token::R_PAREN,
-                    Token::PERIOD, Token::EXPR_ABS)
-              .rule(Token::ABS, Token::PI, Token::ID, Token::COLON,
-                    Token::EXPR_ABS, Token::PERIOD, Token::EXPR_ABS)
-              .rule(Token::ABS, Token::LET, Token::L_PAREN, Token::ID,
-                    Token::COLON, Token::EXPR_ABS, Token::R_PAREN,
-                    Token::ASSIGN, Token::EXPR_ABS, Token::IN, Token::EXPR_ABS)
-              .rule(Token::ABS, Token::LET, Token::ID, Token::COLON,
-                    Token::EXPR_ABS, Token::ASSIGN, Token::EXPR_ABS, Token::IN,
-                    Token::EXPR_ABS)
-
-              .rule(Token::EXPR_EQ, Token::EXPR_ABS, Token::EQ, Token::EXPR_ABS)
-
-              .rule(Token::EXPR_ABS, Token::ABS)
-              .rule(Token::EXPR_ABS, Token::EXPR_APP, Token::ABS)
-              .rule(Token::EXPR_ABS, Token::EXPR_APP)
-
-              .rule(Token::EXPR_APP, Token::EXPR_APP, Token::EXPR_PAREN)
-              .rule(Token::EXPR_APP, Token::EXPR_PAREN)
-
-              .rule(Token::EXPR_PAREN, Token::ID)
-              .rule(Token::EXPR_PAREN, Token::NUMBER)
-              .rule(Token::EXPR_PAREN, Token::L_PAREN, Token::EXPR_ABS,
-                    Token::R_PAREN)
-
-              .build());
-
   ParsedCode output;
-  output.annotated_tokens = tokenize(text);
+  output.annotated_tokens = text_to_tokens(text);
 
   std::vector<Token> token_list(output.annotated_tokens.size());
   std::transform(output.annotated_tokens.begin(), output.annotated_tokens.end(),
                  token_list.begin(), [](AnnotatedToken d) { return d.token; });
 
+  static const parser::Parser<Token> basic_parser = make_program_parser();
+
   output.cst = std::make_unique<parser::ConcreteSyntaxTree<Token>>(
-      basic_parser->parse(token_list.begin(), token_list.end()));
+      basic_parser.parse(token_list.begin(), token_list.end()));
+
+  SPDLOG_LOGGER_TRACE(logger, "Generated tree:\n{}", output.cst->to_string());
+  return output;
+}
+
+ParsedCode text_to_expression_cst(const std::string& text) {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&]() -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt("script3025::text_to_expression_cst",
+                                         spdlog::color_mode::always);
+        logger->set_level(spdlog::level::warn);
+        logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+
+  ParsedCode output;
+  output.annotated_tokens = text_to_tokens(text);
+
+  std::vector<Token> token_list(output.annotated_tokens.size());
+  std::transform(output.annotated_tokens.begin(), output.annotated_tokens.end(),
+                 token_list.begin(), [](AnnotatedToken d) { return d.token; });
+
+  static const parser::Parser<Token> basic_parser = make_expression_parser();
+
+  output.cst = std::make_unique<parser::ConcreteSyntaxTree<Token>>(
+      basic_parser.parse(token_list.begin(), token_list.end()));
 
   SPDLOG_LOGGER_TRACE(logger, "Generated tree:\n{}", output.cst->to_string());
   return output;

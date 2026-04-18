@@ -1,8 +1,11 @@
 #include "expression/visitors/equality_visitor.hpp"
 
 #include <cstddef>
+#include <sstream>
 
 #include "expression/expression.hpp"
+#include "spdlog/fmt/bundled/format.h"
+#include "spdlog/spdlog.h"
 
 namespace script3025 {
 
@@ -12,8 +15,16 @@ EqualityVisitor::EqualityVisitor(const Expression *lhs)
 void EqualityVisitor::visit_id(const IdExpression &rhs) {
   pointer_map_[lhs_] = &rhs;
 
-  if (typeid(lhs_) != typeid(IdExpression)) {
+  if (typeid(*lhs_) != typeid(IdExpression)) {
     unequal_ = true;
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Found expressions to be unequal by type.\n"
+                        "LHS expression: {}\n"
+                        "LHS type: {}\n"
+                        "RHS expression: {}\n"
+                        "RHS type: {}\n",
+                        lhs_->to_string(), typeid(*lhs_).name(),
+                        rhs.to_string(), typeid(rhs).name());
     return;
   }
 
@@ -24,6 +35,24 @@ void EqualityVisitor::visit_id(const IdExpression &rhs) {
     translated_lhs_source = pointer_map_[translated_lhs_source];
 
   if (translated_lhs_source != rhs.source) unequal_ = true;
+  if (unequal_) {
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Found expressions to be unequal by Id source.\n"
+                        "LHS expression: {}\n"
+                        "RHS expression: {}\n"
+                        "LHS source: {}\n"
+                        "RHS source: {}\n",
+                        lhs_->to_string(), rhs.to_string(),
+                        fmt::ptr(translated_lhs_source), fmt::ptr(rhs.source));
+
+    SPDLOG_LOGGER_TRACE(get_logger(), "Current pointer map:\n{}", [&]() {
+      std::stringstream ss;
+      for (const auto &[key, value] : pointer_map_) {
+        ss << fmt::ptr(key) << " -> " << fmt::ptr(value) << "\n";
+      }
+      return ss.str();
+    }());
+  }
 }
 
 void EqualityVisitor::visit_nat_literal(const NatLiteralExpression &rhs) {
@@ -41,17 +70,44 @@ void EqualityVisitor::visit_type_keyword(const TypeKeywordExpression &rhs) {
 void EqualityVisitor::visit_expression(const Expression &rhs) {
   pointer_map_[lhs_] = &rhs;
 
-  if (typeid(lhs_) != typeid(rhs)) {
+  if (typeid(*lhs_) != typeid(rhs)) {
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Found expressions to be unequal by type.\n"
+                        "LHS expression: {}\n"
+                        "LHS type: {}\n"
+                        "RHS expression: {}\n"
+                        "RHS type: {}\n",
+                        lhs_->to_string(), typeid(*lhs_).name(),
+                        rhs.to_string(), typeid(rhs).name());
     unequal_ = true;
     return;
   }
 
+  const Expression *lhs_stored = lhs_;
   for (size_t i = 0; i < rhs.children.size(); ++i) {
     if (rhs.children[i]) {
-      lhs_ = lhs_->children[i].get();
+      lhs_ = lhs_stored->children[i].get();
       visit(*rhs.children[i]);
+      if (unequal_) {
+        SPDLOG_LOGGER_TRACE(
+            get_logger(),
+            "Found expressions to be unequal by child (bubbling up).\n"
+            "LHS expression: {}\n"
+            "RHS expression: {}\n"
+            "Unequal child index: {}\n",
+            lhs_stored->to_string(), rhs.to_string(), i);
+      }
     } else {
       unequal_ |= static_cast<bool>(lhs_->children[i]);
+      if (unequal_) {
+        SPDLOG_LOGGER_TRACE(get_logger(),
+                            "Found expressions to be unequal by null child.\n"
+                            "LHS expression: {}\n"
+                            "RHS expression: {}\n"
+                            "Null child index: {}\n",
+                            lhs_->to_string(), rhs.to_string(), i);
+        return;
+      }
     }
     if (unequal_) return;
   }

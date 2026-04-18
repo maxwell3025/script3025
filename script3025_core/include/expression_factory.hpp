@@ -1,14 +1,20 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 
+#include <gmpxx.h>
+
 #include <iterator>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "expression/expression.hpp"
+#include "expression/subtypes/let_expression.hpp"
+#include "expression/visitors/normalizing_visitor.hpp"
+#include "expression/visitors/type_keyword_format_visitor.hpp"
 #include "parser.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -18,6 +24,15 @@
 
 namespace script3025 {
 
+// @brief Parse a string of text into an `Expression`
+// @param `str` - The string of text to parse.
+[[nodiscard]] std::unique_ptr<Expression> text_to_expression(
+    const std::string str);
+
+// @brief Construct a `Expression` object based on a concrete syntax tree and a
+// string iterator providing the text segments for each leaf. Note that this
+// requires that the cst is normalized using the utilities in
+// `cst_transformers.hpp`.
 template <typename Iterator>
 [[nodiscard]] std::unique_ptr<Expression> create_expression(
     const parser::ConcreteSyntaxTree<Token> &source,
@@ -26,6 +41,32 @@ template <typename Iterator>
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::create_expression",
                                          spdlog::color_mode::always);
+        logger->set_level(spdlog::level::warn);
+        logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
+        return logger;
+      })();
+
+  std::unique_ptr<Expression> expression =
+      create_expression_non_normalized(source, string_iterator);
+  NormalizingVisitor().visit(*expression);
+  expression = format_type_keywords(std::move(expression));
+  SPDLOG_LOGGER_TRACE(logger, "Parsed expression from string: {}",
+                      expression->to_string());
+  return expression;
+}
+
+// @brief An internal function that constructs an `Expression` object based on a
+// concrete syntax tree and a string iterator providing the text segments for
+// each leaf.
+template <typename Iterator>
+[[nodiscard]] std::unique_ptr<Expression> create_expression_non_normalized(
+    const parser::ConcreteSyntaxTree<Token> &source,
+    Iterator &string_iterator) {
+  static std::shared_ptr<spdlog::logger> logger =
+      ([&]() -> std::shared_ptr<spdlog::logger> {
+        logger = spdlog::stderr_color_mt(
+            "script3025::create_expression_non_normalized",
+            spdlog::color_mode::always);
         logger->set_level(spdlog::level::warn);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
@@ -56,7 +97,7 @@ template <typename Iterator>
 
     // type bound
     std::unique_ptr<Expression> argument_type =
-        create_expression(source.children[4], string_iterator);
+        create_expression_non_normalized(source.children[4], string_iterator);
 
     // )
     ++string_iterator;
@@ -66,10 +107,51 @@ template <typename Iterator>
 
     // definition
     std::unique_ptr<Expression> definition =
-        create_expression(source.children[7], string_iterator);
+        create_expression_non_normalized(source.children[7], string_iterator);
 
     return std::make_unique<LambdaExpression>(
         std::move(identifier), std::move(argument_type), std::move(definition));
+  } else if (sentential_form ==
+             std::vector({Token::LET, Token::L_PAREN, Token::ID, Token::COLON,
+                          Token::EXPR, Token::R_PAREN, Token::ASSIGN,
+                          Token::EXPR, Token::IN, Token::EXPR})) {
+    // let
+    ++string_iterator;
+
+    // (
+    ++string_iterator;
+
+    // Identifier
+    std::string identifier = *string_iterator;
+    ++string_iterator;
+
+    // :
+    ++string_iterator;
+
+    // type bound
+    std::unique_ptr<Expression> argument_type =
+        create_expression_non_normalized(source.children[4], string_iterator);
+
+    // )
+    ++string_iterator;
+
+    // :=
+    ++string_iterator;
+
+    // Value
+    std::unique_ptr<Expression> value =
+        create_expression_non_normalized(source.children[7], string_iterator);
+
+    // in
+    ++string_iterator;
+
+    // definition
+    std::unique_ptr<Expression> definition =
+        create_expression_non_normalized(source.children[9], string_iterator);
+
+    return std::make_unique<LetExpression>(
+        std::move(identifier), std::move(argument_type), std::move(value),
+        std::move(definition));
   } else if (sentential_form ==
              std::vector({Token::LAMBDA, Token::ID, Token::COLON, Token::EXPR,
                           Token::PERIOD, Token::EXPR})) {
@@ -85,14 +167,14 @@ template <typename Iterator>
 
     // type bound
     std::unique_ptr<Expression> argument_type =
-        create_expression(source.children[3], string_iterator);
+        create_expression_non_normalized(source.children[3], string_iterator);
 
     // .
     ++string_iterator;
 
     // definition
     std::unique_ptr<Expression> definition =
-        create_expression(source.children[5], string_iterator);
+        create_expression_non_normalized(source.children[5], string_iterator);
 
     return std::make_unique<LambdaExpression>(
         std::move(identifier), std::move(argument_type), std::move(definition));
@@ -115,7 +197,7 @@ template <typename Iterator>
 
     // type bound
     std::unique_ptr<Expression> argument_type =
-        create_expression(source.children[4], string_iterator);
+        create_expression_non_normalized(source.children[4], string_iterator);
 
     // )
     ++string_iterator;
@@ -125,7 +207,7 @@ template <typename Iterator>
 
     // definition
     std::unique_ptr<Expression> definition =
-        create_expression(source.children[7], string_iterator);
+        create_expression_non_normalized(source.children[7], string_iterator);
 
     return std::make_unique<PiExpression>(
         std::move(identifier), std::move(argument_type), std::move(definition));
@@ -144,14 +226,14 @@ template <typename Iterator>
 
     // type bound
     std::unique_ptr<Expression> argument_type =
-        create_expression(source.children[3], string_iterator);
+        create_expression_non_normalized(source.children[3], string_iterator);
 
     // .
     ++string_iterator;
 
     // definition
     std::unique_ptr<Expression> definition =
-        create_expression(source.children[5], string_iterator);
+        create_expression_non_normalized(source.children[5], string_iterator);
 
     return std::make_unique<PiExpression>(
         std::move(identifier), std::move(argument_type), std::move(definition));
@@ -162,7 +244,7 @@ template <typename Iterator>
 
     // expression
     std::unique_ptr<Expression> inner_expression =
-        create_expression(source.children[1], string_iterator);
+        create_expression_non_normalized(source.children[1], string_iterator);
 
     // )
     ++string_iterator;
@@ -170,20 +252,20 @@ template <typename Iterator>
     return inner_expression;
   } else if (sentential_form == std::vector({Token::EXPR, Token::EXPR})) {
     std::unique_ptr<Expression> function =
-        create_expression(source.children[0], string_iterator);
+        create_expression_non_normalized(source.children[0], string_iterator);
 
     std::unique_ptr<Expression> argument =
-        create_expression(source.children[1], string_iterator);
+        create_expression_non_normalized(source.children[1], string_iterator);
 
     return std::make_unique<ApplicationExpression>(std::move(function),
                                                    std::move(argument));
   } else if (sentential_form ==
              std::vector({Token::EXPR, Token::EQ, Token::EXPR})) {
     std::unique_ptr<Expression> lhs =
-        create_expression(source.children[0], string_iterator);
+        create_expression_non_normalized(source.children[0], string_iterator);
 
     std::unique_ptr<Expression> rhs =
-        create_expression(source.children[1], string_iterator);
+        create_expression_non_normalized(source.children[1], string_iterator);
 
     return std::make_unique<EqualityExpression>(std::move(lhs), std::move(rhs));
   } else if (sentential_form == std::vector({Token::ID})) {
