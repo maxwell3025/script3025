@@ -198,18 +198,67 @@ TEST(Program, interpreter) {
   SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
 }
 
-TEST(Program, interpreter_hard) {
-  script3025::Program program(
-      "def add := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
-      "Nat).Nat) succ a b\n"
-      "def mul := lambda (a : Nat). lambda (b: Nat). inductive (lambda (k: "
-      "Nat).Nat) (lambda (s: Nat). add s a) 0 b\n"
-      "def bar := mul 12 4");
+TEST(Program, interpreter_hard_incorrect) {
+  // The program is incorrectly typed because the minor premise of add (succ)
+  // needs to be parametric over the predecessor. This should still not segfault
+  // though.
+  std::string const program_source =
+      ("def add :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            succ\n"
+       "            a\n"
+       "            b\n"
+       "\n"
+       "def mul :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (s: Nat). add s a)\n"
+       "            0\n"
+       "            b\n"
+       "\n"
+       "def bar :=\n"
+       "  mul 12 4\n");
+  script3025::Program program(program_source);
+  SPDLOG_LOGGER_INFO(get_logger(), "Built Program:\n{}", program);
+  auto result = program.reduce("bar");
+  SPDLOG_LOGGER_INFO(get_logger(), "Computed bar:\n{}", *result);
+  auto expected_result = script3025::text_to_expression("48");
 
-  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+  // The reduction process should spin out of control and produce some
+  // O(48)-sized expression.
+  EXPECT_NE(*result, *expected_result);
+}
 
-  std::unique_ptr<script3025::Expression> result = program.reduce("bar");
-  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
+TEST(Program, interpreter_hard_correct) {
+  std::string const program_source =
+      ("def add :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (_: Nat). succ)\n"
+       "            a\n"
+       "            b\n"
+       "\n"
+       "def mul :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (_: Nat). add a)\n"
+       "            0\n"
+       "            b\n"
+       "\n"
+       "def bar :=\n"
+       "  mul 12 4\n");
+  script3025::Program program(program_source);
+  SPDLOG_LOGGER_INFO(get_logger(), "Built Program:\n{}", program);
+  auto result = program.reduce("bar");
+  SPDLOG_LOGGER_INFO(get_logger(), "Computed bar:\n{}", *result);
+  auto expected_result = script3025::text_to_expression("48");
+
+  EXPECT_EQ(*result, *expected_result);
 }
 
 TEST(Program, interpreter_hard_typed_incorrect) {
@@ -220,15 +269,22 @@ TEST(Program, interpreter_hard_typed_incorrect) {
       ("def add :=\n"
        "  lambda (a: Nat).\n"
        "  lambda (b: Nat).\n"
-       "  inductive (lambda (k: Nat). Nat) succ a b\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            succ\n"
+       "            a\n"
+       "            b\n"
        "\n"
        "def mul :=\n"
        "  lambda (a: Nat).\n"
        "  lambda (b: Nat).\n"
-       "  inductive (lambda (k: Nat). Nat) (lambda (s: Nat). add s a) 0 b\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (s: Nat). add s a)\n"
+       "            0\n"
+       "            b\n"
        "\n"
        "def bar :=\n"
        "  mul 12 4\n");
+
   script3025::Program program(program_source);
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
