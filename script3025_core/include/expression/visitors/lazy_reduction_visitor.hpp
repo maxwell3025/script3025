@@ -78,16 +78,18 @@ inline std::unique_ptr<Expression> reduce_unique_ptr(
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::reduce_unique_ptr",
                                          spdlog::color_mode::always);
-        logger->set_level(spdlog::level::warn);
+        logger->set_level(spdlog::level::trace);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
 
-  SPDLOG_LOGGER_TRACE(logger, "Reducing {}", e->to_string());
+  SPDLOG_LOGGER_TRACE(logger, "Called reduce on {}", e->to_string());
   LazyReductionVisitor visitor;
   visitor.delta_table = &delta_table;
   e->accept(visitor);
-  return visitor.get();
+  std::unique_ptr<Expression> result = visitor.get();
+  SPDLOG_LOGGER_TRACE(logger, "Value reduced to {}", result->to_string());
+  return result;
 }
 
 inline void reduce_inplace(

@@ -6,7 +6,9 @@
 #include <spdlog/spdlog.h>
 
 #include <cstddef>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -24,6 +26,26 @@
 #include "expression/visitors/replacing_visitor.hpp"
 
 namespace script3025 {
+
+namespace {
+
+std::unique_ptr<Expression> make_application_chain(
+    std::unique_ptr<Expression> head) {
+  return head;
+}
+
+// Helper function to construct a left-associative application chain from a
+// vector of arguments.
+template <typename... Tail>
+std::unique_ptr<Expression> make_application_chain(
+    std::unique_ptr<Expression> func, std::unique_ptr<Expression> arg,
+    Tail... tail) {
+  return make_application_chain(
+      std::make_unique<ApplicationExpression>(std::move(func), std::move(arg)),
+      std::move(tail)...);
+}
+
+}  // namespace
 
 class WHNFVisitor : public MutatingExpressionVisitor {
  public:
@@ -108,53 +130,102 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   void visit_induction_keyword(InductionKeywordExpression &) override {
     if (arguments.size() < 4) return;
-    reduce_inplace(arguments[arguments.size() - 4], *delta_table);
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Attempting to reduce induction expression.\n"
+                        "Current head:\n"
+                        "  {}\n"
+                        "Current arguments:\n"
+                        "{}",
+                        head->to_string(), [&]() {
+                          std::stringstream ss;
+                          for (const auto &argument : arguments) {
+                            ss << "  " << argument->to_string() << std::endl;
+                          }
+                          return ss.str();
+                        }());
 
-    Expression &target_uncasted = *arguments[arguments.size() - 4];
-    if (typeid(target_uncasted) == typeid(NatLiteralExpression)) {
-      NatLiteralExpression &target_as_natural =
-          static_cast<NatLiteralExpression &>(target_uncasted);
+    std::unique_ptr<Expression> motive_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> minor_premise_1_ptr =
+        std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> minor_premise_2_ptr =
+        std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> major_premise_ptr = std::move(arguments.back());
+    arguments.pop_back();
 
-      if (target_as_natural.value == 0) {
-        head = std::move(arguments[arguments.size() - 3]);
-        for (int i = 0; i < 4; ++i) arguments.pop_back();
+    reduce_inplace(major_premise_ptr, *delta_table);
+
+    // Here, we Expand the major premise into a succ n expression.
+    // Clang warns here to tell the user that typeid is a runtime function and
+    // not a compile time macro, as many would expect.
+    // I already know this.
+    // NOLINTNEXTLINE
+    if (typeid(*major_premise_ptr) == typeid(NatLiteralExpression)) {
+      NatLiteralExpression &major_premise =
+          static_cast<NatLiteralExpression &>(*major_premise_ptr);
+
+      if (major_premise.value == 0) {
+        head = std::move(minor_premise_2_ptr);
         visit(*head);
         return;
       }
 
       // Expand the target
-      --target_as_natural.value;
-      arguments[arguments.size() - 4] = std::make_unique<ApplicationExpression>(
+      --major_premise.value;
+      major_premise_ptr = std::make_unique<ApplicationExpression>(
           std::make_unique<SuccKeywordExpression>(),
-          std::move(arguments[arguments.size() - 4]));
+          std::move(major_premise_ptr));
     }
-    Expression &target_uncasted_new = *arguments[arguments.size() - 4];
-    if (typeid(target_uncasted_new) == typeid(ApplicationExpression)) {
-      ApplicationExpression &target =
-          static_cast<ApplicationExpression &>(target_uncasted_new);
+
+    // Clang warns here to tell the user that typeid is a runtime function and
+    // not a compile time macro, as many would expect.
+    // I already know this.
+    // NOLINTNEXTLINE
+    if (typeid(*major_premise_ptr) == typeid(ApplicationExpression)) {
+      ApplicationExpression &major_premise =
+          static_cast<ApplicationExpression &>(*major_premise_ptr);
+
+      reduce_inplace(major_premise.function(), *delta_table);
+
       // Clang warns here to tell the user that typeid is a runtime function and
       // not a compile time macro, as many would expect.
       // I already know this.
       // NOLINTNEXTLINE
-      if (typeid(*target.function()) != typeid(SuccKeywordExpression)) return;
+      if (typeid(*major_premise.function()) != typeid(SuccKeywordExpression)) {
+        arguments.emplace_back(std::move(major_premise_ptr));
+        arguments.emplace_back(std::move(minor_premise_2_ptr));
+        arguments.emplace_back(std::move(minor_premise_1_ptr));
+        arguments.emplace_back(std::move(motive_ptr));
+        return;
+      }
 
-      std::unique_ptr<Expression> target_predecessor =
-          std::move(target.argument());
+      std::unique_ptr<Expression> minor_premise_1_applied =
+          make_application_chain(minor_premise_1_ptr->clone(),
+                                 major_premise.argument()->clone());
 
-      std::unique_ptr<Expression> expanded =
-          std::make_unique<ApplicationExpression>(
-              std::make_unique<ApplicationExpression>(
-                  std::make_unique<ApplicationExpression>(
-                      std::make_unique<ApplicationExpression>(
-                          std::move(head),
-                          std::move(arguments[arguments.size() - 1])),
-                      arguments[arguments.size() - 2]->clone()),
-                  std::move(arguments[arguments.size() - 3])),
-              std::move(target_predecessor));
+      std::unique_ptr<Expression> subgoal = make_application_chain(
+          std::move(head), std::move(motive_ptr),
+          std::move(minor_premise_1_ptr), std::move(minor_premise_2_ptr),
+          std::move(major_premise.argument()));
 
-      head = std::move(arguments[arguments.size() - 2]);
-      for (int i = 0; i < 4; ++i) arguments.pop_back();
-      arguments.push_back(std::move(expanded));
+      head = std::move(minor_premise_1_applied);
+      arguments.push_back(std::move(subgoal));
+      SPDLOG_LOGGER_TRACE(
+          get_logger(),
+          "Evaluated induction expression with minor premise 1.\n"
+          "Current head:\n"
+          "  {}\n"
+          "Current arguments:\n"
+          "{}",
+          head->to_string(), [&]() {
+            std::stringstream ss;
+            for (const auto &argument : arguments) {
+              ss << "  " << argument->to_string() << std::endl;
+            }
+            return ss.str();
+          }());
       visit(*head);
     }
   }
