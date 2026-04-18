@@ -5,7 +5,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
 #include "cst_transformers.hpp"
@@ -68,13 +68,12 @@ bool Program::check_types() const {
     const std::string &id) {
   std::unordered_map<VariableReference, const Expression *> delta_table;
 
-  size_t n_globals = id_ordering_[id];
+  size_t const n_globals = id_ordering_[id];
   for (size_t i = 0; i < n_globals; ++i) {
-    std::string name = global_ids_[i];
+    std::string const name = global_ids_[i];
     delta_table.emplace(VariableReference{name, nullptr}, &global(name));
   }
-  std::unique_ptr<Expression> copy = global_definitions_[id]->clone();
-  return script3025::reduce(*copy, &delta_table);
+  return script3025::reduce_copy(*global_definitions_[id], delta_table);
 }
 
 std::shared_ptr<spdlog::logger> Program::get_logger() {

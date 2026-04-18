@@ -36,7 +36,7 @@ ParserBuilder<char> get_dyck_ruleset_lr1() {
 }
 
 TEST(Build, dyck) {
-  Parser<char> parser = get_dyck_ruleset_lr1().build();
+  Parser<char> const parser = get_dyck_ruleset_lr1().build();
   std::string my_text = "()()(())";
   parser.parse(my_text.begin(), my_text.end());
 }

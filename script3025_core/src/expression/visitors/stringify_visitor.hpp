@@ -75,7 +75,8 @@ class IdRenamer : ConstExpressionVisitor {
 
     const bool is_misnamed = e.source->argument_id != e.id;
     if (is_misnamed) {
-      output << "!labeled as \"" << e.id << "\"!";
+      output << "!idexpression labeled as \"" << e.id << "\" but referencing \""
+             << e.source->argument_id << "\"!";
     }
     return output.str();
   }

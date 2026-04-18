@@ -2,7 +2,11 @@
 
 #include <gmpxx.h>
 
+#include <algorithm>
 #include <memory>
+#include <sstream>
+#include <unordered_map>
+#include <utility>
 
 #include "expression/expression.hpp"
 #include "expression/subtypes/id_expression.hpp"
@@ -11,8 +15,10 @@
 #include "expression/subtypes/pi_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
 #include "expression/variable_reference.hpp"
+#include "expression/visitors/lazy_reduction_visitor.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
 #include "expression_factory.hpp"
+#include "spdlog/fmt/bundled/format.h"
 #include "spdlog/spdlog.h"
 
 namespace script3025 {
@@ -28,16 +34,19 @@ TypeGenVisitor::TypeGenVisitor(
 
 void TypeGenVisitor::visit_lambda(const LambdaExpression &e) {
   generate_type(*e.argument_type());
+  if (!has_type(e.argument_type().get())) return;
   variable_type_map_[{e.argument_id, const_cast<LambdaExpression *>(&e)}] =
       e.argument_type()->clone();
   generate_type(*e.definition());
+  if (!has_type(e.definition().get())) return;
+
   std::unique_ptr<PiExpression> expression_type =
       std::make_unique<PiExpression>(e.argument_id, e.argument_type()->clone(),
                                      nullptr);
   variable_type_map_[{e.argument_id, expression_type.get()}] =
       e.argument_type()->clone();
 
-  std::unique_ptr<Expression> replacement =
+  std::unique_ptr<Expression> const replacement =
       std::make_unique<IdExpression>(e.argument_id, expression_type.get());
   ReplacingVisitor replacer(const_cast<LambdaExpression *>(&e), e.argument_id,
                             replacement.get());
@@ -53,10 +62,16 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
   // https://rocq-prover.org/doc/V9.1.1/refman/language/cic.html#id4, the let
   // rule forces substitutions.
 
+  generate_type(*e.argument_type());
   generate_type(*e.argument_value());
+  if (!has_type(e.argument_type().get())) return;
+  if (!has_type(e.argument_value().get())) return;
   variable_type_map_[{e.argument_id, const_cast<LetExpression *>(&e)}] =
       e.argument_type()->clone();
+
   generate_type(*e.definition());
+  if (!has_type(e.definition().get())) return;
+
   if (*expression_type_map_[e.argument_value().get()] != *e.argument_type()) {
     SPDLOG_LOGGER_ERROR(
         get_logger(),
@@ -80,9 +95,11 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
 
 void TypeGenVisitor::visit_pi(const PiExpression &e) {
   generate_type(*e.argument_type());
+  if (!has_type(e.argument_type().get())) return;
   variable_type_map_[{e.argument_id, const_cast<PiExpression *>(&e)}] =
       e.argument_type()->clone();
   generate_type(*e.definition());
+  if (!has_type(e.definition().get())) return;
 
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
   // `e.argument_type()`.
@@ -120,28 +137,29 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
     return;
   }
 
-  mpz_class argument_level =
+  mpz_class const argument_level =
       static_cast<TypeKeywordExpression *>(
           expression_type_map_[e.argument_type().get()].get())
           ->level;
-  mpz_class definition_level =
+  mpz_class const definition_level =
       static_cast<TypeKeywordExpression *>(
           expression_type_map_[e.definition().get()].get())
           ->level;
-  if (argument_level > definition_level) {
-    SPDLOG_LOGGER_ERROR(
-        get_logger(),
-        "Error: Pi expression with higher-level argument than definition\n"
-        "Pi expression: {}\n"
-        "Type of Argument type: {}\n"
-        "Definition type: {}\n",
-        e.to_string(), e.argument_type()->to_string(),
-        e.definition()->to_string());
-    return;
-  }
+  // if (argument_level > definition_level) {
+  //   SPDLOG_LOGGER_ERROR(
+  //       get_logger(),
+  //       "Error: Pi expression with higher-level argument than definition\n"
+  //       "Pi expression: {}\n"
+  //       "Type of Argument type: {}\n"
+  //       "Definition type: {}\n",
+  //       e.to_string(), e.argument_type()->to_string(),
+  //       e.definition()->to_string());
+  //   return;
+  // }
 
-  expression_type_map_[&e] =
-      std::make_unique<TypeKeywordExpression>(definition_level);
+  // This is still implicative iirc
+  expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>(
+      std::max(definition_level, argument_level));
 }
 
 void TypeGenVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
@@ -153,8 +171,11 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   // Assert that the type of the function is a Pi type.
   generate_type(*e.function());
   generate_type(*e.argument());
+  if (!has_type(e.function().get()) || !has_type(e.argument().get())) return;
+
   std::unique_ptr<Expression> function_type =
-      expression_type_map_[e.function().get()]->clone();
+      reduce_copy(*expression_type_map_[e.function().get()], {});
+
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
   // function_type. We want side-effects to be evaluated, hence the lint ignore.
   // NOLINTNEXTLINE
@@ -168,12 +189,42 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   PiExpression &casted_function_type =
       static_cast<PiExpression &>(*function_type);
 
+  std::unique_ptr<Expression> function_argument_type =
+      reduce_copy(*casted_function_type.argument_type(), {});
+
+  std::unique_ptr<Expression> argument_type =
+      reduce_copy(*expression_type_map_[e.argument().get()], {});
+
+  if (*function_argument_type != *argument_type) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Error: argument type mismatch in application\n"
+                        "Application expression: {}\n"
+                        "Expected argument type: {}\n"
+                        "Actual argument type: {}\n",
+                        e.to_string(), function_argument_type->to_string(),
+                        argument_type->to_string());
+    return;
+  }
+
+  SPDLOG_LOGGER_TRACE(get_logger(),
+                      "Computed function type:\n"
+                      "    Application expression: {}\n"
+                      "    Function type: {}\n"
+                      "    Argument type: {}\n",
+                      e.to_string(), function_type->to_string(),
+                      argument_type->to_string());
+
   ReplacingVisitor replacer(&casted_function_type,
                             casted_function_type.argument_id,
                             e.argument().get());
   replacer.visit(*casted_function_type.definition());
 
   std::unique_ptr<Expression> application_type = replacer.get();
+
+  SPDLOG_LOGGER_TRACE(get_logger(),
+                      "Constructed type:\n"
+                      "    Application type: {}\n",
+                      application_type->to_string());
 
   expression_type_map_[&e] = std::move(application_type);
 }
@@ -185,12 +236,31 @@ void TypeGenVisitor::visit_id(const IdExpression &e) {
                         "Error: variable reference not found in variable type "
                         "map:\nid={}\nsource={}",
                         e.id, fmt::ptr(e.source));
+    SPDLOG_LOGGER_TRACE(get_logger(), "Current variable type map:\n{}", [&]() {
+      std::stringstream ss;
+      for (const auto &[var_ref, type] : variable_type_map_) {
+        ss << "Variable reference:\n"
+           << "id=" << var_ref.id << "\n"
+           << "source=" << fmt::ptr(var_ref.source) << "("
+           << ((var_ref.source != nullptr) ? var_ref.source->to_string()
+                                           : "null")
+           << ")\n"
+           << "Type:\n"
+           << type->to_string() << "\n\n";
+      }
+      return ss.str();
+    }());
+    return;
   }
   expression_type_map_[&e] =
       variable_type_map_[e.get_variable_reference()]->clone();
 }
 
 void TypeGenVisitor::generate_type(const Expression &e) {
+  SPDLOG_LOGGER_TRACE(get_logger(),
+                      "Called generate_type.\n"
+                      "    expr={} @ {}",
+                      e.to_string(), fmt::ptr(&e));
   visit(e);
   if (expression_type_map_.find(&e) == expression_type_map_.end()) {
     SPDLOG_LOGGER_ERROR(get_logger(),
@@ -198,13 +268,33 @@ void TypeGenVisitor::generate_type(const Expression &e) {
                         e.to_string());
     return;
   }
+  SPDLOG_LOGGER_TRACE(get_logger(),
+                      "Type of expression generated successfully.\n"
+                      "    expr={} @ {}\n"
+                      "    type={} @ {}\n",
+                      e.to_string(), fmt::ptr(&e),
+                      expression_type_map_[&e]->to_string(),
+                      fmt::ptr(expression_type_map_[&e].get()));
   if (typeid(e) != typeid(TypeKeywordExpression)) {
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Type tower should be extended.\n"
+                        "    expr={} @ {}\n"
+                        "    type={} @ {}\n",
+                        e.to_string(), fmt::ptr(&e),
+                        expression_type_map_[&e]->to_string(),
+                        fmt::ptr(expression_type_map_[&e].get()));
     generate_type(*expression_type_map_[&e]);
+    SPDLOG_LOGGER_TRACE(
+        get_logger(),
+        "Finished generating type tower.\n"
+        "    expr={} @ {}\n"
+        "    type={} @ {}\n",
+        "    tptp={} @ {}\n", e.to_string(), fmt::ptr(&e),
+        expression_type_map_[&e]->to_string(),
+        fmt::ptr(expression_type_map_[&e].get()),
+        expression_type_map_[expression_type_map_[&e].get()]->to_string(),
+        fmt::ptr(expression_type_map_[expression_type_map_[&e].get()].get()));
   }
-  SPDLOG_LOGGER_TRACE(
-      get_logger(),
-      "Type of expression generated successfully:\nexpr={}\ntype={}",
-      e.to_string(), expression_type_map_[&e]->to_string());
 }
 
 void TypeGenVisitor::visit_induction_keyword(

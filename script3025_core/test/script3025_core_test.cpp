@@ -5,10 +5,10 @@
 #include <memory>
 
 #include "expression/expression.hpp"
+#include "expression/visitors/lazy_reduction_visitor.hpp"
 #include "expression/visitors/type_gen_visitor.hpp"
 #include "expression_factory.hpp"
 #include "spdlog/common.h"
-#include "spdlog/fmt/bundled/format.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -75,10 +75,8 @@ TEST(type_gen_visitor, application) {
 }
 
 TEST(type_gen_visitor, Pi_basic) {
-  auto expression = script3025::text_to_expression(
-      "Pi (x: Nat). Type");
-  auto expected_type =
-      script3025::text_to_expression("Type 1");
+  auto expression = script3025::text_to_expression("Pi (x: Nat). Type");
+  auto expected_type = script3025::text_to_expression("Type 1");
   script3025::TypeGenVisitor type_gen_visitor{{}, {}};
   type_gen_visitor.visit(*expression);
   if (type_gen_visitor.get_type(expression.get()) == nullptr) {
@@ -92,10 +90,8 @@ TEST(type_gen_visitor, Pi_basic) {
 }
 
 TEST(type_gen_visitor, let_expression_easy) {
-  auto expression = script3025::text_to_expression(
-      "let (x: Nat) := 0 in x");
-  auto expected_type =
-      script3025::text_to_expression("Nat");
+  auto expression = script3025::text_to_expression("let (x: Nat) := 0 in x");
+  auto expected_type = script3025::text_to_expression("Nat");
   script3025::TypeGenVisitor type_gen_visitor{{}, {}};
   type_gen_visitor.visit(*expression);
   if (type_gen_visitor.get_type(expression.get()) == nullptr) {
@@ -106,6 +102,75 @@ TEST(type_gen_visitor, let_expression_easy) {
            << expression->to_string();
   }
   EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, induction) {
+  auto expression = script3025::text_to_expression("inductive");
+  auto expected_type = script3025::text_to_expression(
+      "Pi (motive: Pi (input: Nat). Type)."
+      "Pi (minor_premise_1: Pi (n: Nat). Pi (prev: motive n). motive (succ "
+      "n))."
+      "Pi (minor_premise_2: motive 0)."
+      "Pi (major_premise: Nat)."
+      "motive major_premise");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, complex_application) {
+  auto expression = script3025::text_to_expression(
+      "inductive (lambda (k: Nat). Nat) (lambda (k: Nat). succ) 1 1");
+  auto expected_type = script3025::text_to_expression("Nat");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, addition) {
+  auto expression = script3025::text_to_expression(
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "inductive (lambda (k: Nat). Nat) (lambda (k: Nat). succ) a b");
+  auto expected_type =
+      script3025::text_to_expression("Pi (a: Nat). Pi (b: Nat). Nat");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(lazy_reduction_visitor, simple) {
+  auto expression = script3025::text_to_expression("(lambda (x: Nat). x) 100");
+  auto expected_reduction = script3025::text_to_expression("100");
+
+  auto actual_reduction = reduce_copy(*expression, {});
+  if (actual_reduction == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(), "Reduction failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Reduction failed for expression:\n" << expression->to_string();
+  }
+  EXPECT_EQ(*actual_reduction, *expected_reduction);
 }
 
 TEST(Program, simple) {
@@ -147,8 +212,11 @@ TEST(Program, interpreter_hard) {
   SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
 }
 
-TEST(Program, interpreter_hard_typed) {
-  std::string program_source =
+TEST(Program, interpreter_hard_typed_incorrect) {
+  // The program is incorrectly typed because the minor premise of add (succ)
+  // needs to be parametric over the predecessor. This should still not segfault
+  // though.
+  std::string const program_source =
       ("def add :=\n"
        "  lambda (a: Nat).\n"
        "  lambda (b: Nat).\n"
@@ -158,6 +226,35 @@ TEST(Program, interpreter_hard_typed) {
        "  lambda (a: Nat).\n"
        "  lambda (b: Nat).\n"
        "  inductive (lambda (k: Nat). Nat) (lambda (s: Nat). add s a) 0 b\n"
+       "\n"
+       "def bar :=\n"
+       "  mul 12 4\n");
+  script3025::Program program(program_source);
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  program.check_types();
+  std::unique_ptr<script3025::Expression> result = program.reduce("bar");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
+}
+
+TEST(Program, interpreter_hard_typed_correct) {
+  std::string const program_source =
+      ("def add :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (_: Nat). succ)\n"
+       "            a\n"
+       "            b\n"
+       "\n"
+       "def mul :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (_: Nat). add a)\n"
+       "            0\n"
+       "            b\n"
        "\n"
        "def bar :=\n"
        "  mul 12 4\n");

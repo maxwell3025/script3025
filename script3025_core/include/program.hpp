@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "expression/expression.hpp"
-#include "expression/visitors/normalizing_visitor.hpp"
 #include "expression_factory.hpp"
 #include "parser.hpp"
 #include "spdlog/fmt/bundled/base.h"

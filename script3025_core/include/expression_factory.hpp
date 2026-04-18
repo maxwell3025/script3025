@@ -1,10 +1,13 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 #define SCRIPT3025_SCRIPT3025_CORE_EXPRESSION_FACTORY_HPP
 
+#include <gmpxx.h>
+
 #include <iterator>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -38,7 +41,7 @@ template <typename Iterator>
       ([&]() -> std::shared_ptr<spdlog::logger> {
         logger = spdlog::stderr_color_mt("script3025::create_expression",
                                          spdlog::color_mode::always);
-        logger->set_level(spdlog::level::trace);
+        logger->set_level(spdlog::level::warn);
         logger->set_pattern("%^[%l] [tid=%t] [%T.%F] [%s:%#] %v%$");
         return logger;
       })();
@@ -47,7 +50,8 @@ template <typename Iterator>
       create_expression_non_normalized(source, string_iterator);
   NormalizingVisitor().visit(*expression);
   expression = format_type_keywords(std::move(expression));
-  SPDLOG_LOGGER_TRACE(logger, "Parsed expression from string: {}", expression->to_string());
+  SPDLOG_LOGGER_TRACE(logger, "Parsed expression from string: {}",
+                      expression->to_string());
   return expression;
 }
 

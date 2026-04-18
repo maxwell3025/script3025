@@ -7,6 +7,8 @@
 #include "expression/expression_base.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/variable_reference.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace script3025 {
@@ -50,9 +52,14 @@ class TypeGenVisitor : public ConstExpressionVisitor {
     return expression_type_map_.at(e).get();
   }
 
-  // @brief 
-  void bind_global(const Expression* expression, std::string id) {
-    variable_type_map_[VariableReference{id, nullptr}] = expression_type_map_[expression]->clone();
+  bool has_type(const Expression *e) const {
+    return expression_type_map_.find(e) != expression_type_map_.end();
+  }
+
+  // @brief
+  void bind_global(const Expression *expression, std::string id) {
+    variable_type_map_[VariableReference{id, nullptr}] =
+        expression_type_map_[expression]->clone();
   }
 
  private:

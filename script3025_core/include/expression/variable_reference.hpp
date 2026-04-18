@@ -1,7 +1,9 @@
 #ifndef SCRIPT3025_SCRIPT3025_CORE_VARIABLE_REFERENCE
 #define SCRIPT3025_SCRIPT3025_CORE_VARIABLE_REFERENCE
 
+#include <cstddef>
 #include <functional>
+#include <string>
 
 #include "expression/subtypes/scope_expression.hpp"
 

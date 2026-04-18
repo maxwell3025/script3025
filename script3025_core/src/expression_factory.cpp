@@ -1,6 +1,11 @@
 #include "expression_factory.hpp"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "cst_transformers.hpp"
+#include "expression/expression.hpp"
 #include "parsing_utility.hpp"
 
 namespace script3025 {

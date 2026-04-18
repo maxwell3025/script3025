@@ -6,7 +6,6 @@
 #include <spdlog/spdlog.h>
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -23,7 +22,6 @@
 #include "expression/subtypes/succ_keyword_expression.hpp"
 #include "expression/variable_reference.hpp"
 #include "expression/visitors/replacing_visitor.hpp"
-#include "partial_clone_visitor.hpp"
 
 namespace script3025 {
 
@@ -43,7 +41,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
           "Eq expression:\n"
           "{}\n"
           "Expression:\n"
-          "{}\n");
+          "{}\n",
+          head->to_string(), arguments.back()->to_string());
     }
   }
 
@@ -57,6 +56,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 
   void visit_lambda(LambdaExpression &e) override {
+    if (arguments.size() < 1) return;
     ReplacingVisitor visitor(&e, e.argument_id, arguments.back().get());
     visitor.visit(*e.definition());
     arguments.pop_back();
@@ -79,7 +79,8 @@ class WHNFVisitor : public MutatingExpressionVisitor {
           "Pi expression:\n"
           "{}\n"
           "Expression:\n"
-          "{}\n");
+          "{}\n",
+          head->to_string(), arguments.back()->to_string());
     }
   }
 
@@ -89,8 +90,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     // Another perspective is that this prevents substitution using equality
     // proofs constructed by inducting through opaque symbols.
     if (arguments.size() < 6) return;
-    arguments[arguments.size() - 5] =
-        reduce(*arguments[arguments.size() - 5], delta_table);
+    reduce_inplace(arguments[arguments.size() - 5], *delta_table);
 
     const Expression &equality_proof_uncasted =
         *arguments[arguments.size() - 5];
@@ -108,8 +108,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   void visit_induction_keyword(InductionKeywordExpression &) override {
     if (arguments.size() < 4) return;
-    arguments[arguments.size() - 4] =
-        reduce(*arguments[arguments.size() - 4], delta_table);
+    reduce_inplace(arguments[arguments.size() - 4], *delta_table);
 
     Expression &target_uncasted = *arguments[arguments.size() - 4];
     if (typeid(target_uncasted) == typeid(NatLiteralExpression)) {
@@ -162,8 +161,7 @@ class WHNFVisitor : public MutatingExpressionVisitor {
 
   void visit_succ_keyword(SuccKeywordExpression &) override {
     if (arguments.size() < 1) return;
-    arguments[arguments.size() - 1] =
-        reduce(*arguments[arguments.size() - 1], delta_table);
+    reduce_inplace(arguments[arguments.size() - 1], *delta_table);
 
     Expression &target_uncasted = *arguments[arguments.size() - 1];
     if (typeid(target_uncasted) == typeid(NatLiteralExpression)) {
@@ -202,25 +200,27 @@ void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
   std::vector<std::unique_ptr<Expression>> unapplied_arguments =
       std::move(visitor.arguments);
 
-  std::unique_ptr<Expression> merged_expression =
-      reduce(*visitor.head, delta_table);
+  std::unique_ptr<Expression> merged_expression = std::move(visitor.head);
+  visit(*merged_expression);
+  merged_expression = get();
 
   // Combine everything back into the head.
   while (!unapplied_arguments.empty()) {
-    std::unique_ptr reduced_argument =
-        reduce(*unapplied_arguments.back(), delta_table);
+    std::unique_ptr<Expression> argument =
+        std::move(unapplied_arguments.back());
     unapplied_arguments.pop_back();
+    visit(*argument);
     merged_expression = std::make_unique<ApplicationExpression>(
-        std::move(merged_expression), std::move(reduced_argument));
+        std::move(merged_expression), get());
   }
 
-  reduced_expression_ = std::move(merged_expression);
+  set(std::move(merged_expression));
 }
 
 void LazyReductionVisitor::visit_id(IdExpression &e) {
   visit_expression(e);
   IdExpression &reduced_expression_casted =
-      static_cast<IdExpression &>(*reduced_expression_);
+      static_cast<IdExpression &>(get_ref());
   reduced_expression_casted.id = std::move(e.id);
   reduced_expression_casted.source = e.source;
 }
@@ -228,18 +228,21 @@ void LazyReductionVisitor::visit_id(IdExpression &e) {
 void LazyReductionVisitor::visit_nat_literal(NatLiteralExpression &e) {
   visit_expression(e);
   NatLiteralExpression &reduced_expression_casted =
-      static_cast<NatLiteralExpression &>(*reduced_expression_);
+      static_cast<NatLiteralExpression &>(get_ref());
   reduced_expression_casted.value = e.value;
 }
 
 void LazyReductionVisitor::visit_expression(Expression &e) {
-  std::unique_ptr<Expression> reduced = make_default_like(e);
+  // This uses clone instead of make_default_like to preserve non-default
+  // fields.
+  std::unique_ptr<Expression> reduced = e.clone();
 
   for (size_t i = 0; i < e.children.size(); ++i) {
-    reduced->children[i] = reduce(*e.children[i], delta_table);
+    reduced->children[i] =
+        reduce_unique_ptr(std::move(reduced->children[i]), *delta_table);
   }
 
-  reduced_expression_ = std::move(reduced);
+  set(std::move(reduced));
 }
 
 std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {

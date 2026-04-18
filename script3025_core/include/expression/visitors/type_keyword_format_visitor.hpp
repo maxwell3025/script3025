@@ -1,13 +1,17 @@
 #ifndef SCRIPT3025_CORE_EXPRESSION_VISITORS_TYPE_KEYWORD_FORMAT_VISITOR_HPP
 #define SCRIPT3025_CORE_EXPRESSION_VISITORS_TYPE_KEYWORD_FORMAT_VISITOR_HPP
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 
-#include "expression/expression_base.hpp"
+#include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
 #include "expression/subtypes/application_expression.hpp"
 #include "expression/subtypes/nat_literal_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace script3025 {

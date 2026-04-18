@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
