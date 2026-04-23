@@ -293,56 +293,31 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 };
 
-void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
+void LazyReductionVisitor::visit_expression(Expression &e) {
   WHNFVisitor visitor;
   visitor.delta_table = delta_table;
-  e.accept(visitor);
+  visitor.head = e.clone();
+  visitor.visit(*visitor.head);
   std::vector<std::unique_ptr<Expression>> unapplied_arguments =
       std::move(visitor.arguments);
 
   std::unique_ptr<Expression> merged_expression = std::move(visitor.head);
-  visit(*merged_expression);
-  merged_expression = get();
+  for (size_t i = 0; i < merged_expression->children.size(); ++i) {
+    merged_expression->children[i] = reduce_unique_ptr(
+        std::move(merged_expression->children[i]), *delta_table);
+  }
 
   // Combine everything back into the head.
   while (!unapplied_arguments.empty()) {
     std::unique_ptr<Expression> argument =
         std::move(unapplied_arguments.back());
     unapplied_arguments.pop_back();
-    visit(*argument);
+    reduce_inplace(argument, *delta_table);
     merged_expression = std::make_unique<ApplicationExpression>(
-        std::move(merged_expression), get());
+        std::move(merged_expression), std::move(argument));
   }
 
   set(std::move(merged_expression));
-}
-
-void LazyReductionVisitor::visit_id(IdExpression &e) {
-  visit_expression(e);
-  IdExpression &reduced_expression_casted =
-      static_cast<IdExpression &>(get_ref());
-  reduced_expression_casted.id = std::move(e.id);
-  reduced_expression_casted.source = e.source;
-}
-
-void LazyReductionVisitor::visit_nat_literal(NatLiteralExpression &e) {
-  visit_expression(e);
-  NatLiteralExpression &reduced_expression_casted =
-      static_cast<NatLiteralExpression &>(get_ref());
-  reduced_expression_casted.value = e.value;
-}
-
-void LazyReductionVisitor::visit_expression(Expression &e) {
-  // This uses clone instead of make_default_like to preserve non-default
-  // fields.
-  std::unique_ptr<Expression> reduced = e.clone();
-
-  for (size_t i = 0; i < e.children.size(); ++i) {
-    reduced->children[i] =
-        reduce_unique_ptr(std::move(reduced->children[i]), *delta_table);
-  }
-
-  set(std::move(reduced));
 }
 
 std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {

@@ -68,21 +68,36 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
   if (!has_type(e.argument_value().get())) return;
   variable_type_map_[{e.argument_id, const_cast<LetExpression *>(&e)}] =
       e.argument_type()->clone();
+  if (delta_table_.find({e.argument_id, const_cast<LetExpression *>(&e)}) !=
+      delta_table_.end()) {
+    SPDLOG_LOGGER_ERROR(
+        get_logger(),
+        "Error: duplicate let variable in delta table\n"
+        "Let expression: {}\n"
+        "Argument id: {}\n",
+        e.to_string(), e.argument_id);
+    return;
+  }
+  delta_table_[{e.argument_id, const_cast<LetExpression *>(&e)}] = e.argument_value().get();
 
   generate_type(*e.definition());
   if (!has_type(e.definition().get())) return;
 
-  if (*expression_type_map_[e.argument_value().get()] != *e.argument_type()) {
+  std::unique_ptr reduced_argument_type = reduce_copy(*expression_type_map_[e.argument_value().get()], delta_table_);
+  std::unique_ptr reduced_label = reduce_copy(*e.argument_type(), delta_table_);
+  if (*reduced_argument_type != *reduced_label) {
     SPDLOG_LOGGER_ERROR(
         get_logger(),
         "Error: type of let argument value did not match declared type\n"
         "Let expression: {}\n"
         "Argument value: {}\n"
-        "Type of argument value: {}\n"
-        "Declared argument type: {}\n",
+        "Type of argument value: {} (reduces to {})\n"
+        "Declared argument type: {} (reduces to {})\n",
         e.to_string(), e.argument_value()->to_string(),
         expression_type_map_[e.argument_value().get()]->to_string(),
-        e.argument_type()->to_string());
+        reduced_argument_type->to_string(),
+        e.argument_type()->to_string(),
+        reduced_label->to_string());
     return;
   }
   std::unique_ptr<Expression> type =
@@ -90,6 +105,7 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
   ReplacingVisitor replacer(const_cast<LetExpression *>(&e), e.argument_id,
                             e.argument_value().get());
   replacer.visit(*type);
+  type = replacer.get();
   expression_type_map_[&e] = std::move(type);
 }
 
@@ -174,7 +190,7 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   if (!has_type(e.function().get()) || !has_type(e.argument().get())) return;
 
   std::unique_ptr<Expression> function_type =
-      reduce_copy(*expression_type_map_[e.function().get()], {});
+      reduce_copy(*expression_type_map_[e.function().get()], delta_table_);
 
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
   // function_type. We want side-effects to be evaluated, hence the lint ignore.
@@ -190,10 +206,10 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
       static_cast<PiExpression &>(*function_type);
 
   std::unique_ptr<Expression> function_argument_type =
-      reduce_copy(*casted_function_type.argument_type(), {});
+      reduce_copy(*casted_function_type.argument_type(), delta_table_);
 
   std::unique_ptr<Expression> argument_type =
-      reduce_copy(*expression_type_map_[e.argument().get()], {});
+      reduce_copy(*expression_type_map_[e.argument().get()], delta_table_);
 
   if (*function_argument_type != *argument_type) {
     SPDLOG_LOGGER_ERROR(get_logger(),
@@ -279,7 +295,7 @@ void TypeGenVisitor::generate_type(const Expression &e) {
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Type tower should be extended.\n"
                         "    expr={} @ {}\n"
-                        "    type={} @ {}\n",
+                        "    type={} @ {}",
                         e.to_string(), fmt::ptr(&e),
                         expression_type_map_[&e]->to_string(),
                         fmt::ptr(expression_type_map_[&e].get()));
@@ -288,8 +304,8 @@ void TypeGenVisitor::generate_type(const Expression &e) {
         get_logger(),
         "Finished generating type tower.\n"
         "    expr={} @ {}\n"
-        "    type={} @ {}\n",
-        "    tptp={} @ {}\n", e.to_string(), fmt::ptr(&e),
+        "    type={} @ {}\n"
+        "    tptp={} @ {}", e.to_string(), fmt::ptr(&e),
         expression_type_map_[&e]->to_string(),
         fmt::ptr(expression_type_map_[&e].get()),
         expression_type_map_[expression_type_map_[&e].get()]->to_string(),

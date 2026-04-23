@@ -75,6 +75,9 @@ class TypeGenVisitor : public ConstExpressionVisitor {
   // Maps variables to their corresponding types.
   std::unordered_map<VariableReference, std::unique_ptr<Expression>>
       variable_type_map_;
+  // Maps variables to their values. This is used for let expressions and when generating types for variables.
+  std::unordered_map<VariableReference, const Expression *>
+      delta_table_;
 
   std::shared_ptr<spdlog::logger> get_logger() const {
     static std::shared_ptr<spdlog::logger> logger =
