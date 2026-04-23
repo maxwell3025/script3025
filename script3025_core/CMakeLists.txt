@@ -84,9 +84,40 @@ add_library(script3025_core
   include/expression_factory.hpp
   include/parsing_utility.hpp
   include/program.hpp
+  include/reference_stack.hpp
   include/token.hpp
   include/script3025_core.hpp
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_options(script3025_core
+    PRIVATE -fprofile-arcs
+    PRIVATE -ftest-coverage
+  )
+  target_link_options(script3025_core
+    PRIVATE -lgcov
+  )
+  # # Ensure testing is enabled
+  # include(CTest)
+
+  # if(WIN32)
+  #   set(OPEN_COMMAND "start")
+  # elseif(APPLE)
+  #   set(OPEN_COMMAND "open")
+  # else()
+  #   set(OPEN_COMMAND "xdg-open")
+  # endif()
+
+  # add_custom_target(coverage
+  #   COMMAND lcov --zerocounters --directory .
+  #   COMMAND ${CMAKE_CTEST_COMMAND} -C ${CMAKE_BUILD_TYPE} || true
+  #   COMMAND lcov --capture --directory . --output-file coverage.info --ignore-errors mismatch
+  #   COMMAND genhtml coverage.info --output-directory coverage_report
+  #   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  #   COMMENT "Generating HTML coverage report..."
+  #   COMMAND ${OPEN_COMMAND} coverage_report/index.html &
+  # )
+endif()
 
 target_include_directories(script3025_core
   PRIVATE src
@@ -99,6 +130,7 @@ target_link_libraries(script3025_core
 )
 
 add_executable(script3025_core_test
+  test/reference_stack_test.cpp
   test/script3025_core_test.cpp
 )
 
