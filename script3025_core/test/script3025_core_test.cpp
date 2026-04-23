@@ -160,15 +160,42 @@ TEST(type_gen_visitor, addition) {
   EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
 }
 
+TEST(type_gen_visitor, replace) {
+  auto expression = script3025::text_to_expression(
+      // clang-format off
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "lambda (eq: (b = a)).\n"
+      "  replace\n"
+      "    b\n"
+      "    (lambda (index: Nat). lambda (value: b = index). (index = b))\n"
+      "    (refl b)\n"
+      "    a\n"
+      "    eq");
+  // clang-format on
+  auto expected_type = script3025::text_to_expression(
+      "Pi (a: Nat). Pi (b: Nat). Pi (eq: (b = a)). (a = b)");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
 TEST(type_gen_visitor, delta_reduction) {
-  // This test makes sure that the type generator is able to do delta reductions when generating types.
+  // This test makes sure that the type generator is able to do delta reductions
+  // when generating types.
   auto expression = script3025::text_to_expression(
       "lambda (a: Nat).\n"
       "  let (T: Type) := Nat in\n"
       "  let (b: T) := a in\n"
       "  b");
-  auto expected_type =
-      script3025::text_to_expression("Pi (a: Nat). Nat");
+  auto expected_type = script3025::text_to_expression("Pi (a: Nat). Nat");
   script3025::TypeGenVisitor type_gen_visitor{{}, {}};
   type_gen_visitor.visit(*expression);
   if (type_gen_visitor.get_type(expression.get()) == nullptr) {
@@ -346,17 +373,44 @@ TEST(Program, interpreter_hard_typed_correct) {
 
 TEST(Program, equality_properties) {
   std::string const program_source =
+      // clang-format off
       ("def eq_comm :=\n"
        "  lambda (a: Nat).\n"
        "  lambda (b: Nat).\n"
        "  lambda (eq: (a = b)).\n"
        "    let (parameter: Nat) := a in\n"
-       "    let (motive: Pi (index: Nat). Pi (value: parameter = index). Type) := (a = index) in\n"
-       "    let (minor_premise: motive parameter (refl parameter)) := refl a in\n"
+       "    let (motive: Pi (index: Nat). Pi (value: parameter = index). Type) :=\n"
+       "      lambda (index: Nat).\n"
+       "      lambda (value: parameter = index).\n"
+       "        (a = index) in\n"
+       "    let (minor_premise: motive parameter (refl parameter)) := refl a "
+       "in\n"
        "    let (major_premise_index: Nat) := b in\n"
        "    let (major_premise: (parameter = major_premise_index)) := eq in\n"
-       "    replace parameter motive minor_premise major_premise_index major_premise"
-    );
+       "    replace parameter motive minor_premise major_premise_index "
+       "major_premise");
+  // clang-format on
+  script3025::Program program(program_source);
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  program.check_types();
+  std::unique_ptr<script3025::Expression> result = program.reduce("eq_comm");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of eq_comm:\n{}", *result);
+}
+
+TEST(Program, equality_properties_no_let) {
+  std::string const program_source =
+      ("def eq_comm :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  lambda (eq: (b = a)).\n"
+       "    replace\n"
+       "      b\n"
+       "      (lambda (index: Nat). lambda (value: b = index). (index = b))\n"
+       "      (refl b)\n"
+       "      a\n"
+       "      eq");
   script3025::Program program(program_source);
 
   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
@@ -378,12 +432,11 @@ TEST(Program, equality_properties) {
 //        "\n"
 //        "def zero_comm :=\n"
 //        "  lambda (a: Nat).\n"
-//        "    let (motive: Pi (k: Nat). Type) := lambda (k: Nat). (add 0 k = add k 0) in\n"
-//        "    let (base_case: motive 0 := refl (add 0 0) in\n"
-//        "    let (minor_premise: Pi (n: Nat). Pi (prev: motive n). motive (succ n)) :=\n"
-//        "      refl (add 0 (succ n))\n"
-//        "    in\n"
-//        "    reflexive (add 0 0)\n"
+//        "    let (motive: Pi (k: Nat). Type) := lambda (k: Nat). (add 0 k =
+//        add k 0) in\n" "    let (base_case: motive 0 := refl (add 0 0) in\n"
+//        "    let (minor_premise: Pi (n: Nat). Pi (prev: motive n). motive
+//        (succ n)) :=\n" "      refl (add 0 (succ n))\n" "    in\n" " reflexive
+//        (add 0 0)\n"
 //     );
 //   script3025::Program program(program_source);
 
