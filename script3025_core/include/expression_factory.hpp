@@ -264,8 +264,11 @@ template <typename Iterator>
     std::unique_ptr<Expression> lhs =
         create_expression_non_normalized(source.children[0], string_iterator);
 
+    // =
+    ++string_iterator;
+
     std::unique_ptr<Expression> rhs =
-        create_expression_non_normalized(source.children[1], string_iterator);
+        create_expression_non_normalized(source.children[2], string_iterator);
 
     return std::make_unique<EqualityExpression>(std::move(lhs), std::move(rhs));
   } else if (sentential_form == std::vector({Token::ID})) {
@@ -277,7 +280,7 @@ template <typename Iterator>
       return std::make_unique<NatKeywordExpression>();
     } else if (id == "refl") {
       return std::make_unique<ReflexiveKeywordExpression>();
-    } else if (id == "subst") {
+    } else if (id == "replace") {
       return std::make_unique<ReplaceKeywordExpression>();
     } else if (id == "succ") {
       return std::make_unique<SuccKeywordExpression>();

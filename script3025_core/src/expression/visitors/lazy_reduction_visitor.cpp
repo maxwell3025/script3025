@@ -111,20 +111,49 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     // reflexive proof.
     // Another perspective is that this prevents substitution using equality
     // proofs constructed by inducting through opaque symbols.
-    if (arguments.size() < 6) return;
-    reduce_inplace(arguments[arguments.size() - 5], *delta_table);
+    if (arguments.size() < 5) return;
 
-    const Expression &equality_proof_uncasted =
-        *arguments[arguments.size() - 5];
-    if (typeid(equality_proof_uncasted) != typeid(ApplicationExpression))
-      return;
-    const ApplicationExpression &equality_proof =
-        static_cast<const ApplicationExpression &>(equality_proof_uncasted);
-    if (typeid(equality_proof.function()) != typeid(ReflexiveKeywordExpression))
-      return;
+    std::unique_ptr<Expression> parameter_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> motive_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> minor_premise_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> major_premise_index_ptr =
+        std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> major_premise_ptr = std::move(arguments.back());
+    arguments.pop_back();
 
-    head = std::move(arguments[arguments.size() - 6]);
-    for (int i = 0; i < 6; ++i) arguments.pop_back();
+    reduce_inplace(major_premise_ptr, *delta_table);
+
+    // Clang warns here to tell the user that typeid is a runtime function and
+    // not a compile time macro, as many would expect.
+    // I already know this.
+    // NOLINTNEXTLINE
+    if (typeid(*major_premise_ptr) != typeid(ApplicationExpression)) {
+      arguments.emplace_back(std::move(major_premise_ptr));
+      arguments.emplace_back(std::move(major_premise_index_ptr));
+      arguments.emplace_back(std::move(minor_premise_ptr));
+      arguments.emplace_back(std::move(motive_ptr));
+      arguments.emplace_back(std::move(parameter_ptr));
+      return;
+    }
+
+    const ApplicationExpression &major_premise =
+        static_cast<const ApplicationExpression &>(*major_premise_ptr);
+
+    if (typeid(major_premise.function()) !=
+        typeid(ReflexiveKeywordExpression)) {
+      arguments.emplace_back(std::move(major_premise_ptr));
+      arguments.emplace_back(std::move(major_premise_index_ptr));
+      arguments.emplace_back(std::move(minor_premise_ptr));
+      arguments.emplace_back(std::move(motive_ptr));
+      arguments.emplace_back(std::move(parameter_ptr));
+      return;
+    }
+
+    head = std::move(minor_premise_ptr);
     visit(*head);
   }
 
