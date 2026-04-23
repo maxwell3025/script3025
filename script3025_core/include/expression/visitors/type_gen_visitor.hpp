@@ -52,6 +52,12 @@ class TypeGenVisitor : public ConstExpressionVisitor {
     return expression_type_map_.at(e).get();
   }
 
+  Expression *get_type(const std::string &id) const {
+    if (variable_type_map_.find(VariableReference{id, nullptr}) == variable_type_map_.end())
+      return nullptr;
+    return variable_type_map_.at(VariableReference{id, nullptr}).get();
+  }
+
   bool has_type(const Expression *e) const {
     return expression_type_map_.find(e) != expression_type_map_.end();
   }
