@@ -18,6 +18,7 @@
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 namespace script3025 {
 
@@ -60,6 +61,11 @@ bool Program::check_types() const {
     }
 
     type_visitor.bind_global(definition.get(), definition_name);
+    SPDLOG_LOGGER_TRACE(get_logger(),
+                        "Evaluated type for global variable.\n"
+                        "{}: {}",
+                        definition_name,
+                        type_visitor.get_type(definition_name)->to_string());
   }
   return true;
 }

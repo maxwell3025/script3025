@@ -84,9 +84,20 @@ add_library(script3025_core
   include/expression_factory.hpp
   include/parsing_utility.hpp
   include/program.hpp
+  include/reference_stack.hpp
   include/token.hpp
   include/script3025_core.hpp
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_options(script3025_core
+    PRIVATE -fprofile-arcs
+    PRIVATE -ftest-coverage
+  )
+  target_link_options(script3025_core
+    PRIVATE -lgcov
+  )
+endif()
 
 target_include_directories(script3025_core
   PRIVATE src
@@ -96,9 +107,11 @@ target_include_directories(script3025_core
 target_link_libraries(script3025_core
   PUBLIC parser
   PRIVATE gmp
+  PRIVATE gcov
 )
 
 add_executable(script3025_core_test
+  test/reference_stack_test.cpp
   test/script3025_core_test.cpp
 )
 

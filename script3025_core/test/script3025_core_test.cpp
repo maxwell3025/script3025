@@ -160,9 +160,140 @@ TEST(type_gen_visitor, addition) {
   EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
 }
 
+TEST(type_gen_visitor, eq_comm_proof) {
+  auto expression = script3025::text_to_expression(
+      // clang-format off
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "lambda (eq: (b = a)).\n"
+      "  replace\n"
+      "    b\n"
+      "    (lambda (index: Nat). lambda (value: b = index). (index = b))\n"
+      "    (refl b)\n"
+      "    a\n"
+      "    eq");
+  // clang-format on
+  auto expected_type = script3025::text_to_expression(
+      "Pi (a: Nat). Pi (b: Nat). Pi (eq: (b = a)). (a = b)");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, eq_trans_proof) {
+  auto expression = script3025::text_to_expression(
+      // clang-format off
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "lambda (c: Nat).\n"
+      "lambda (eq_2: (a = b)).\n"
+      "lambda (eq_1: (b = c)).\n"
+      "  replace\n"
+      "    b\n"
+      "    (lambda (index: Nat). lambda (value: b = index). (a = index))\n"
+      "    eq_2\n"
+      "    c\n"
+      "    eq_1");
+  // clang-format on
+  auto expected_type = script3025::text_to_expression(
+      "Pi (a: Nat). Pi (b: Nat). Pi (c: Nat). Pi (eq: (a = b)). Pi (eq: (b = "
+      "c)). (a = c)");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, add_comm_proof) {
+  auto expression = script3025::text_to_expression(
+      // clang-format off
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "lambda (c: Nat).\n"
+      "lambda (eq_2: (a = b)).\n"
+      "lambda (eq_1: (b = c)).\n"
+      "  replace\n"
+      "    b\n"
+      "    (lambda (index: Nat). lambda (value: b = index). (a = index))\n"
+      "    eq_2\n"
+      "    c\n"
+      "    eq_1");
+  // clang-format on
+  auto expected_type = script3025::text_to_expression(
+      "Pi (a: Nat). Pi (b: Nat). Pi (c: Nat). Pi (eq: (a = b)). Pi (eq: (b = "
+      "c)). (a = c)");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, delta_reduction) {
+  // This test makes sure that the type generator is able to do delta reductions
+  // when generating types.
+  auto expression = script3025::text_to_expression(
+      "lambda (a: Nat).\n"
+      "  let (T: Type) := Nat in\n"
+      "  let (b: T) := a in\n"
+      "  b");
+  auto expected_type = script3025::text_to_expression("Pi (a: Nat). Nat");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
 TEST(lazy_reduction_visitor, simple) {
   auto expression = script3025::text_to_expression("(lambda (x: Nat). x) 100");
   auto expected_reduction = script3025::text_to_expression("100");
+
+  auto actual_reduction = reduce_copy(*expression, {});
+  if (actual_reduction == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(), "Reduction failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Reduction failed for expression:\n" << expression->to_string();
+  }
+  EXPECT_EQ(*actual_reduction, *expected_reduction);
+}
+
+TEST(lazy_reduction_visitor, addition) {
+  auto expression = script3025::text_to_expression(
+      ("let add: Pi(a: Nat). Pi(b: Nat). Nat :=\n"
+      //  "  lambda (a: Nat).\n"
+      //  "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (_: Nat). succ)\n"
+      //  "            a\n"
+      //  "            b\n"
+       "in\n"
+       "\n"
+       "add 12 4\n"));
+  auto expected_reduction = script3025::text_to_expression("16");
 
   auto actual_reduction = reduce_copy(*expression, {});
   if (actual_reduction == nullptr) {
@@ -322,6 +453,82 @@ TEST(Program, interpreter_hard_typed_correct) {
   std::unique_ptr<script3025::Expression> result = program.reduce("bar");
   SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
 }
+
+TEST(Program, equality_properties) {
+  std::string const program_source =
+      // clang-format off
+      ("def eq_comm :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  lambda (eq: (a = b)).\n"
+       "    let (parameter: Nat) := a in\n"
+       "    let (motive: Pi (index: Nat). Pi (value: parameter = index). Type) :=\n"
+       "      lambda (index: Nat).\n"
+       "      lambda (value: parameter = index).\n"
+       "        (a = index) in\n"
+       "    let (minor_premise: motive parameter (refl parameter)) := refl a "
+       "in\n"
+       "    let (major_premise_index: Nat) := b in\n"
+       "    let (major_premise: (parameter = major_premise_index)) := eq in\n"
+       "    replace parameter motive minor_premise major_premise_index "
+       "major_premise");
+  // clang-format on
+  script3025::Program program(program_source);
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  program.check_types();
+  std::unique_ptr<script3025::Expression> result = program.reduce("eq_comm");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of eq_comm:\n{}", *result);
+}
+
+TEST(Program, equality_properties_no_let) {
+  std::string const program_source =
+      ("def eq_comm :=\n"
+       "  lambda (a: Nat).\n"
+       "  lambda (b: Nat).\n"
+       "  lambda (eq: (b = a)).\n"
+       "    replace\n"
+       "      b\n"
+       "      (lambda (index: Nat). lambda (value: b = index). (index = b))\n"
+       "      (refl b)\n"
+       "      a\n"
+       "      eq");
+  script3025::Program program(program_source);
+
+  SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+  program.check_types();
+  std::unique_ptr<script3025::Expression> result = program.reduce("eq_comm");
+  SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of eq_comm:\n{}", *result);
+}
+
+// TEST(Program, addition_commutativity) {
+//   std::string const program_source =
+//       ("def add :=\n"
+//        "  lambda (a: Nat).\n"
+//        "  lambda (b: Nat).\n"
+//        "  inductive (lambda (k: Nat). Nat)\n"
+//        "            (lambda (_: Nat). succ)\n"
+//        "            a\n"
+//        "            b\n"
+//        "\n"
+//        "def zero_comm :=\n"
+//        "  lambda (a: Nat).\n"
+//        "    let (motive: Pi (k: Nat). Type) := lambda (k: Nat). (add 0 k =
+//        add k 0) in\n" "    let (base_case: motive 0 := refl (add 0 0) in\n"
+//        "    let (minor_premise: Pi (n: Nat). Pi (prev: motive n). motive
+//        (succ n)) :=\n" "      refl (add 0 (succ n))\n" "    in\n" " reflexive
+//        (add 0 0)\n"
+//     );
+//   script3025::Program program(program_source);
+
+//   SPDLOG_LOGGER_INFO(get_logger(), "\n{}", program);
+
+//   program.check_types();
+//   std::unique_ptr<script3025::Expression> result = program.reduce("bar");
+//   SPDLOG_LOGGER_INFO(get_logger(), "Reduced form of bar:\n{}", *result);
+// }
 
 /*
   // induction is forall prop: prop(0) and prop(n) => prop(n + 1) implies

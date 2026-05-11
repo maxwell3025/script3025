@@ -53,6 +53,14 @@ std::vector<AnnotatedToken> text_to_tokens(const std::string& text) {
     const size_t start = i;
     AnnotatedToken new_token;
 
+    // Skip comments
+    if (text[i] == '#') {
+      while (i < text.size() && text[i] != '\n') {
+        ++i;
+      }
+      continue;
+    }
+
     // Recognize numbers
     while (i < text.size() && text[i] >= '0' && text[i] <= '9') {
       ++i;

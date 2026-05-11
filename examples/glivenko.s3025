@@ -1,0 +1,45 @@
+#!./script3025
+
+let false: Type :=
+  Pi(P: Type). P
+in
+
+let not:
+  Pi(P: Type). Type
+:=
+  lambda(P: Type). Pi(_: P). false
+in
+
+let implies:
+  Pi(A: Type). Pi(B: Type). Type
+:=
+  lambda(A: Type). lambda(B: Type). Pi(_: A). B
+in
+
+let double_negation_expansion:
+  Pi(P: Type).
+  implies
+    (P)
+    (not(not(P)))
+:=
+    lambda(P: Type).
+    lambda(p: P).
+    lambda(f: not(P)).
+    f p
+in
+
+let triple_negation_elimination:
+  Pi(P: Type).
+  implies
+    (not(not(not(P))))
+    (not(P))
+:=
+  lambda(P: Type).
+  lambda(f: not(not(not(P)))).
+  lambda(p: P).
+  f (double_negation_expansion P p)
+in
+
+0
+
+0 # placeholder

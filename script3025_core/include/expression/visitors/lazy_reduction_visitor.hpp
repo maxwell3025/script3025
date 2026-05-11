@@ -8,7 +8,6 @@
 
 #include "expression/expression.hpp"
 #include "expression/expression_visitor.hpp"
-#include "expression/subtypes/nat_literal_expression.hpp"
 #include "expression/variable_reference.hpp"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -25,9 +24,9 @@ namespace script3025 {
 // Note that this should be considered to destroy the original expression.
 class LazyReductionVisitor : public MutatingExpressionVisitor {
  public:
-  void visit_application(ApplicationExpression &e) override;
-  void visit_id(IdExpression &e) override;
-  void visit_nat_literal(NatLiteralExpression &e) override;
+  // void visit_application(ApplicationExpression &e) override;
+  // void visit_id(IdExpression &e) override;
+  // void visit_nat_literal(NatLiteralExpression &e) override;
   [[nodiscard]] std::unique_ptr<Expression> get() {
     return std::move(reduced_expression_);
   }

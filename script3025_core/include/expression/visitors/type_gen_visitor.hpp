@@ -52,6 +52,12 @@ class TypeGenVisitor : public ConstExpressionVisitor {
     return expression_type_map_.at(e).get();
   }
 
+  Expression *get_type(const std::string &id) const {
+    if (variable_type_map_.find(VariableReference{id, nullptr}) == variable_type_map_.end())
+      return nullptr;
+    return variable_type_map_.at(VariableReference{id, nullptr}).get();
+  }
+
   bool has_type(const Expression *e) const {
     return expression_type_map_.find(e) != expression_type_map_.end();
   }
@@ -69,6 +75,9 @@ class TypeGenVisitor : public ConstExpressionVisitor {
   // Maps variables to their corresponding types.
   std::unordered_map<VariableReference, std::unique_ptr<Expression>>
       variable_type_map_;
+  // Maps variables to their values. This is used for let expressions and when generating types for variables.
+  std::unordered_map<VariableReference, const Expression *>
+      delta_table_;
 
   std::shared_ptr<spdlog::logger> get_logger() const {
     static std::shared_ptr<spdlog::logger> logger =

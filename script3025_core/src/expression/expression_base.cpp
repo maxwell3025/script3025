@@ -5,6 +5,7 @@
 #include <spdlog/logger.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -49,6 +50,9 @@ std::shared_ptr<spdlog::logger> Expression::get_logger() {
 }
 
 std::string Expression::to_string() const {
+  if (this == nullptr){
+    return "<to_string() called on nullptr>";
+  }
   return stringify_expression(*this);
 }
 

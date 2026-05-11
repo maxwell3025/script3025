@@ -111,20 +111,49 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     // reflexive proof.
     // Another perspective is that this prevents substitution using equality
     // proofs constructed by inducting through opaque symbols.
-    if (arguments.size() < 6) return;
-    reduce_inplace(arguments[arguments.size() - 5], *delta_table);
+    if (arguments.size() < 5) return;
 
-    const Expression &equality_proof_uncasted =
-        *arguments[arguments.size() - 5];
-    if (typeid(equality_proof_uncasted) != typeid(ApplicationExpression))
-      return;
-    const ApplicationExpression &equality_proof =
-        static_cast<const ApplicationExpression &>(equality_proof_uncasted);
-    if (typeid(equality_proof.function()) != typeid(ReflexiveKeywordExpression))
-      return;
+    std::unique_ptr<Expression> parameter_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> motive_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> minor_premise_ptr = std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> major_premise_index_ptr =
+        std::move(arguments.back());
+    arguments.pop_back();
+    std::unique_ptr<Expression> major_premise_ptr = std::move(arguments.back());
+    arguments.pop_back();
 
-    head = std::move(arguments[arguments.size() - 6]);
-    for (int i = 0; i < 6; ++i) arguments.pop_back();
+    reduce_inplace(major_premise_ptr, *delta_table);
+
+    // Clang warns here to tell the user that typeid is a runtime function and
+    // not a compile time macro, as many would expect.
+    // I already know this.
+    // NOLINTNEXTLINE
+    if (typeid(*major_premise_ptr) != typeid(ApplicationExpression)) {
+      arguments.emplace_back(std::move(major_premise_ptr));
+      arguments.emplace_back(std::move(major_premise_index_ptr));
+      arguments.emplace_back(std::move(minor_premise_ptr));
+      arguments.emplace_back(std::move(motive_ptr));
+      arguments.emplace_back(std::move(parameter_ptr));
+      return;
+    }
+
+    const ApplicationExpression &major_premise =
+        static_cast<const ApplicationExpression &>(*major_premise_ptr);
+
+    if (typeid(major_premise.function()) !=
+        typeid(ReflexiveKeywordExpression)) {
+      arguments.emplace_back(std::move(major_premise_ptr));
+      arguments.emplace_back(std::move(major_premise_index_ptr));
+      arguments.emplace_back(std::move(minor_premise_ptr));
+      arguments.emplace_back(std::move(motive_ptr));
+      arguments.emplace_back(std::move(parameter_ptr));
+      return;
+    }
+
+    head = std::move(minor_premise_ptr);
     visit(*head);
   }
 
@@ -132,14 +161,13 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     if (arguments.size() < 4) return;
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Attempting to reduce induction expression.\n"
-                        "Current head:\n"
-                        "  {}\n"
-                        "Current arguments:\n"
-                        "{}",
+                        "    Current head: {}\n"
+                        "    Current arguments:{}",
                         head->to_string(), [&]() {
                           std::stringstream ss;
                           for (const auto &argument : arguments) {
-                            ss << "  " << argument->to_string() << std::endl;
+                            ss << std::endl
+                               << "    - " << argument->to_string();
                           }
                           return ss.str();
                         }());
@@ -227,7 +255,14 @@ class WHNFVisitor : public MutatingExpressionVisitor {
             return ss.str();
           }());
       visit(*head);
+      return;
     }
+
+    arguments.emplace_back(std::move(major_premise_ptr));
+    arguments.emplace_back(std::move(minor_premise_2_ptr));
+    arguments.emplace_back(std::move(minor_premise_1_ptr));
+    arguments.emplace_back(std::move(motive_ptr));
+    return;
   }
 
   void visit_succ_keyword(SuccKeywordExpression &) override {
@@ -264,56 +299,31 @@ class WHNFVisitor : public MutatingExpressionVisitor {
   }
 };
 
-void LazyReductionVisitor::visit_application(ApplicationExpression &e) {
+void LazyReductionVisitor::visit_expression(Expression &e) {
   WHNFVisitor visitor;
   visitor.delta_table = delta_table;
-  e.accept(visitor);
+  visitor.head = e.clone();
+  visitor.visit(*visitor.head);
   std::vector<std::unique_ptr<Expression>> unapplied_arguments =
       std::move(visitor.arguments);
 
   std::unique_ptr<Expression> merged_expression = std::move(visitor.head);
-  visit(*merged_expression);
-  merged_expression = get();
+  for (size_t i = 0; i < merged_expression->children.size(); ++i) {
+    merged_expression->children[i] = reduce_unique_ptr(
+        std::move(merged_expression->children[i]), *delta_table);
+  }
 
   // Combine everything back into the head.
   while (!unapplied_arguments.empty()) {
     std::unique_ptr<Expression> argument =
         std::move(unapplied_arguments.back());
     unapplied_arguments.pop_back();
-    visit(*argument);
+    reduce_inplace(argument, *delta_table);
     merged_expression = std::make_unique<ApplicationExpression>(
-        std::move(merged_expression), get());
+        std::move(merged_expression), std::move(argument));
   }
 
   set(std::move(merged_expression));
-}
-
-void LazyReductionVisitor::visit_id(IdExpression &e) {
-  visit_expression(e);
-  IdExpression &reduced_expression_casted =
-      static_cast<IdExpression &>(get_ref());
-  reduced_expression_casted.id = std::move(e.id);
-  reduced_expression_casted.source = e.source;
-}
-
-void LazyReductionVisitor::visit_nat_literal(NatLiteralExpression &e) {
-  visit_expression(e);
-  NatLiteralExpression &reduced_expression_casted =
-      static_cast<NatLiteralExpression &>(get_ref());
-  reduced_expression_casted.value = e.value;
-}
-
-void LazyReductionVisitor::visit_expression(Expression &e) {
-  // This uses clone instead of make_default_like to preserve non-default
-  // fields.
-  std::unique_ptr<Expression> reduced = e.clone();
-
-  for (size_t i = 0; i < e.children.size(); ++i) {
-    reduced->children[i] =
-        reduce_unique_ptr(std::move(reduced->children[i]), *delta_table);
-  }
-
-  set(std::move(reduced));
 }
 
 std::shared_ptr<spdlog::logger> LazyReductionVisitor::get_logger() {

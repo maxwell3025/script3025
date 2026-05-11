@@ -55,5 +55,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   )
 endif()
 
+enable_testing()
+
 include(GoogleTest)
 gtest_discover_tests(parser_test)

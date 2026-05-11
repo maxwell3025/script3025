@@ -1,0 +1,489 @@
+#!./script3025_impred
+
+let False: Type :=
+  Pi(P: Type). P
+in
+
+let implies:
+  Pi(A: Type).
+  Pi(B: Type).
+    Type
+:=
+  lambda(A: Type).
+  lambda(B: Type).
+    Pi(_: A). B
+in
+
+let mapsto:
+  Pi(A: Type 1).
+  Pi(B: Type 1).
+    Type 1
+:=
+  lambda(A: Type 1).
+  lambda(B: Type 1).
+    Pi(_: A). B
+in
+
+let set_builder_generic:
+  Pi(A: Type 1).
+  Pi(B: Type 1).
+  Pi(mapping: mapsto A B).
+  Pi(condition: mapsto A Type).
+  mapsto B Type
+:=
+  lambda(A: Type 1).
+  lambda(B: Type 1).
+  lambda(mapping: mapsto A B).
+  lambda(condition: mapsto A Type).
+  lambda(b: B).
+    Pi(P: mapsto B Type).
+    Pi(_: Pi(x: A). implies (condition x) (P(mapping x))).
+    P b
+in
+
+let U: Type 1 :=
+  Pi(X: Type 1).
+  mapsto (mapsto (mapsto X Type)(X))
+  (mapsto X Type)
+in
+
+let set_builder:
+  Pi(mapping: mapsto U U).
+  Pi(condition: mapsto U Type).
+  mapsto U Type
+:=
+  set_builder_generic U U
+in
+
+let tau:
+  Pi(X: mapsto U Type). U
+:=
+  lambda(X: mapsto U Type).
+  lambda(A: Type 1).
+  lambda(c: mapsto (mapsto A Type) A).
+  set_builder_generic U A (lambda x: U. c(x A c)) (X) 
+in
+
+let sigma:
+  mapsto U (mapsto U Type)
+:=
+  lambda x: U.
+    x U tau
+in
+
+################################################################################
+# paradoxical_leibniz_equality_proof
+#
+# This is a "dead" proof in the sense that it only exists to check Leibniz with
+# the type checker.
+# This is not usable for conversions.
+################################################################################
+let paradoxical_leibniz_equality_proof: Pi(X: mapsto U Type). Nat :=
+  lambda X: mapsto U Type.
+  let comp_type: Type 1 := (mapsto U Type) in
+  
+  let Predicate: Type 1 := mapsto comp_type Type in
+
+  let A: comp_type :=
+    sigma(tau(X))
+  in
+
+  let B: comp_type :=
+    set_builder (lambda u: U. tau(sigma(u))) (X)
+  in
+
+  let forward: Pi(P: Predicate). implies (P A) (P B) :=
+    lambda P: Predicate.
+    lambda p: (P A).
+      p
+  in
+
+  let backward: Pi(P: Predicate). implies (P B) (P A) :=
+    lambda P: Predicate.
+    lambda p: (P B).
+      p
+  in
+
+  0
+in
+
+let set_builder_membership:
+  Pi(value: U).
+  Pi(mapping: mapsto U U).
+  Pi(condition: mapsto U Type).
+  Pi(value_satisfies_condition: condition value).
+    set_builder mapping condition (mapping value)
+:=
+  lambda(value: U).
+  lambda(mapping: mapsto U U).
+  lambda(condition: mapsto U Type).
+  lambda(value_satisfies_condition: condition value).
+  lambda(P: mapsto U Type).
+  lambda(P_contains_every_member: (Pi(x: U). implies (condition x) (P(mapping x)))).
+    P_contains_every_member value value_satisfies_condition
+in
+
+let endomorphism:
+  Pi(u: U).
+  Pi(v: U).
+  Pi(v_pred_of_u: sigma u v).
+    (sigma(tau(sigma(u))) (tau(sigma(v))))
+:=
+  lambda(u: U).
+  lambda(v: U).
+  lambda(v_pred_of_u: sigma u v).
+    set_builder_membership v (lambda k: U. tau(sigma(k))) (sigma(u)) v_pred_of_u
+in
+
+let set_inductive:
+  Pi(P: mapsto U Type). Type
+:=
+  lambda(P: mapsto U Type).
+  Pi(u: U).
+    let all_predecessors_satisfy_P:
+      Type
+    :=
+      Pi(v: U).
+      implies (sigma u v) (P v)
+    in
+    implies all_predecessors_satisfy_P (P u)
+in
+
+################################################################################
+# inductive_endomorphism_preimage
+#
+# This lemma proves that 
+################################################################################
+let inductive_endomorphism_preimage:
+  Pi(P: mapsto U Type).
+  Pi(P_is_inductive: set_inductive(P)).
+    set_inductive(lambda(u: U). P(tau(sigma(u))))
+:=
+  lambda P: mapsto U Type.
+
+  let Q:
+    mapsto U Type
+  :=
+    lambda(u: U). P(tau(sigma(u)))
+  in
+
+  lambda P_is_inductive: set_inductive(P).
+
+  lambda u: U.
+
+  lambda all_predecessors_satisfy_preimage:
+    Pi(v: U). implies (sigma u v) (Q(v)).
+
+  let all_predecessors_of_tsu_in_P:
+    Pi(w: U).
+    implies
+      (sigma(tau(sigma(u))) w)
+      (P w)
+  :=
+    lambda(w: U).
+
+    lambda(w_pred_of_tsu: sigma(tau(sigma(u)))(w)).
+
+    let w_in_pred_image:
+      (set_builder (lambda x: U. tau(sigma(x))) (sigma(u)))
+      w
+    :=
+      w_pred_of_tsu
+    in
+    
+    let pred_image_subset_P_antecedent:
+      Pi(x: U).
+      implies
+        (sigma u x)
+        (P(tau(sigma(x))))
+    :=
+      lambda x: U.
+
+      lambda x_pred_of_u: sigma u x.
+
+      let x_in_Q:
+        Q x
+      :=
+        all_predecessors_satisfy_preimage x x_pred_of_u
+      in
+
+      let tau_sigma_x_in_P:
+        P(tau(sigma(x)))
+      :=
+        x_in_Q
+      in
+
+      tau_sigma_x_in_P
+    in
+
+    let pred_image_subset_P:
+      Pi(x: U).
+      implies
+        (set_builder
+          (lambda x: U. tau(sigma(x)))
+          (sigma(u))
+          (x))
+        (P(x))
+    :=
+      lambda x: U.
+      lambda x_in_pred_image: (set_builder (lambda x: U. tau(sigma(x))) (sigma(u))) x.
+      
+      let x_in_every_set_containing_pred_image:
+        Pi(P: mapsto U Type).
+        implies
+          (Pi(x: U). implies (sigma u x) (P(tau(sigma(x)))))
+          (P x)
+      :=
+        x_in_pred_image
+      in
+
+      let x_in_P:
+        P x
+      :=
+        x_in_every_set_containing_pred_image P pred_image_subset_P_antecedent
+      in
+
+      x_in_P
+    in
+
+    let w_in_P:
+      P w
+    :=
+      pred_image_subset_P w w_in_pred_image
+    in
+
+    w_in_P
+  in
+
+  let tsu_in_P:
+    P(tau(sigma(u)))
+  :=
+    P_is_inductive (tau(sigma(u))) all_predecessors_of_tsu_in_P
+  in
+
+  let u_in_Q:
+    Q u
+  :=
+    tsu_in_P
+  in
+
+  u_in_Q
+in
+
+let well_founded:
+  mapsto U Type
+:=
+  lambda(u: U).
+  Pi(P: mapsto U Type).
+    implies (set_inductive(P)) (P(u))
+in
+
+let Omega: U :=
+  tau (lambda(u: U). well_founded u)
+in
+
+################################################################################
+# omega_is_well_founded
+#
+# This lemma proves that Omega is well-founded.
+################################################################################
+let omega_is_well_founded:
+  well_founded Omega
+:=
+  lambda(P: mapsto U Type).
+
+  lambda(P_is_inductive: set_inductive(P)).
+
+  let image_of_P:
+    mapsto U Type
+  :=
+    lambda(u: U). P(tau(sigma(u)))
+  in
+
+  let image_of_P_is_inductive:
+    set_inductive(image_of_P)
+  :=
+    inductive_endomorphism_preimage P P_is_inductive
+  in
+
+  let all_predecessors_of_omega_in_P:
+    Pi(k: U).
+    implies
+      (sigma Omega k)
+      (P k)
+  :=
+    lambda(k: U).
+
+    lambda(k_pred_of_Omega: sigma Omega k).
+
+    let goal_set:
+      mapsto U Type
+    :=
+      set_builder
+       (lambda w: U. tau(sigma(w)))
+       (lambda w: U. well_founded w)
+    in
+
+    let subset_relation:
+      Pi(w: U).
+      implies
+        (goal_set w)
+        (P w)
+    :=
+      let antecedent_of_set_builder_subset:
+        Pi(w: U).
+        implies (well_founded w) (P(tau(sigma(w))))
+      :=
+        lambda w: U.
+        lambda w_well_founded: well_founded w.
+          let P_preimage:
+            mapsto U Type
+          :=
+            lambda u: U. P(tau(sigma(u)))
+          in
+
+          let P_preimage_is_inductive:
+            set_inductive P_preimage
+          :=
+            inductive_endomorphism_preimage P P_is_inductive
+          in
+
+          let w_in_P_preimage:
+            P_preimage w
+          :=
+            w_well_founded P_preimage P_preimage_is_inductive
+          in
+
+          let tau_sigma_w_in_P:
+            P(tau(sigma(w)))
+          :=
+            w_in_P_preimage
+          in
+
+          tau_sigma_w_in_P
+      in
+
+      let goal:
+        Pi(w: U).
+        implies
+          (goal_set w)
+          (P w)
+      :=
+        lambda set_builder_member: U.
+        lambda set_builder_member_in_goal_set: goal_set set_builder_member.
+          # By definition, set_builder_member_in_goal_set is a function that
+          # gives evidence that set_builder_member is in every set that contains
+          # all tau sigma images of well-founded sets.
+          let set_builder_member_in_P:
+            P set_builder_member
+          :=
+            set_builder_member_in_goal_set P antecedent_of_set_builder_subset
+          in
+          set_builder_member_in_P
+      in
+
+      goal
+    in
+
+    # Remember that sigma Omega is beta equal to set_builder (lambda u: U. tau(sigma(u))) (lambda u: U. well_founded u)
+    let k_in_P:
+      P k
+    :=
+      subset_relation k k_pred_of_Omega
+    in
+
+    k_in_P
+  in
+
+  let omega_in_P:
+    P Omega
+  :=
+    P_is_inductive
+      Omega
+      all_predecessors_of_omega_in_P
+  in
+
+  omega_in_P
+in
+
+################################################################################
+# endomorphism_non_predecessor
+#
+# This vertex set is the set of vertices that do not map to any of their
+# predecessors under tau sigma.
+################################################################################
+let endomorphism_non_predecessor: mapsto U Type :=
+  lambda(u: U).
+    implies
+      (sigma
+        (u)
+        (tau(sigma(u))))
+      (False)
+in
+
+################################################################################
+# omega_maps_to_predecessor
+#
+# This lemma proves that Omega maps to one of its predecessors.
+################################################################################
+let omega_maps_to_predecessor:
+  sigma (Omega) (tau(sigma(Omega)))
+:=
+  # We know that sigma(Omega) is beta equal to set_builder (lambda u: U. tau(sigma(u))) (lambda u: U. well_founded u)
+  set_builder_membership
+    Omega
+    (lambda u: U. tau(sigma(u)))
+    (lambda u: U. well_founded u) omega_is_well_founded
+in
+
+################################################################################
+# endomorphism_non_predecessor_inductive
+#
+# This lemma proves that endomorphism_non_predecessor is an inductive set 
+################################################################################
+let endomorphism_non_predecessor_inductive:
+  set_inductive endomorphism_non_predecessor
+:=
+  lambda(x: U).
+  lambda all_predecessors_satisfy_endomorphism_non_predecessor: 
+    (Pi(y: U).
+    implies (sigma x y) (endomorphism_non_predecessor y)).
+  # Suppose x's image is a predecessor of x, i.e. sigma x (tau(sigma(x))).
+  lambda x_image_is_pred: sigma(x)(tau(sigma(x))).
+    let big_inclusion: sigma
+      (tau(sigma(x)))
+      (tau(sigma(tau(sigma(x)))))
+    :=
+      endomorphism x (tau(sigma(x))) x_image_is_pred
+    in
+
+    let contradiction_imp:
+      implies (
+        sigma
+          (tau(sigma(x)))
+          (tau(sigma(tau(sigma(x)))))
+      ) (False)
+    :=
+      all_predecessors_satisfy_endomorphism_non_predecessor
+        (tau(sigma(x)))
+        (x_image_is_pred)
+    in
+
+    let contradiction:
+      False
+    :=
+      contradiction_imp big_inclusion
+    in
+
+    contradiction
+in
+
+let paradox: False :=
+  let omega_in_endomorphism_non_predecessor: endomorphism_non_predecessor Omega :=
+    omega_is_well_founded endomorphism_non_predecessor endomorphism_non_predecessor_inductive
+  in
+  
+  omega_in_endomorphism_non_predecessor omega_maps_to_predecessor
+in
+
+paradox

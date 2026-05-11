@@ -1,0 +1,9 @@
+#!/bin/bash
+
+kitten @ launch --type=tab --cwd="$(pwd)" --tab-title="Bash"
+kitten @ launch --type=tab --cwd="$(pwd)/build" --tab-title="Build"
+kitten @ launch --type=tab --cwd="$(pwd)/build" --tab-title="Test"
+kitten @ launch --type=tab --cwd="$(pwd)" --tab-title="Debug"
+kitten @ launch --type=tab --cwd="$(pwd)" --tab-title="Lazygit" lazygit
+
+exit
