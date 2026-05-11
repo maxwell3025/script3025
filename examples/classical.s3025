@@ -1,0 +1,93 @@
+#!./script3025
+
+let Prop: Type 1 := Type in
+
+let False: Prop := Pi(A: Prop). A in
+
+let implies:
+  Pi(A: Prop).
+  Pi(B: Prop).
+    Prop
+:=
+  lambda A: Prop.
+  lambda B: Prop.
+  Pi(a: A). B
+in
+
+let not:
+  Pi(A: Prop).
+    Prop
+:=
+  lambda A: Prop.
+  implies A False
+in
+
+let or:
+  Pi(A: Prop).
+  Pi(B: Prop).
+    Prop
+:=
+  lambda A: Prop.
+  lambda B: Prop.
+  implies (not A) B
+in
+
+let and:
+  Pi(A: Prop).
+  Pi(B: Prop).
+    Prop
+:=
+  lambda A: Prop.
+  lambda B: Prop.
+  not (or (not A) (not B))
+in
+
+lambda double_elim: Pi(P: Prop). implies (not(not(P))) P.
+
+let or_comm:
+  Pi(A: Prop).
+  Pi(B: Prop).
+  implies (or A B) (or B A)
+:=
+  lambda A: Prop.
+  lambda B: Prop.
+  lambda A_or_B: (or A B).
+
+  let not_not_A_from_not_B: implies (not B) (not(not(A))) :=
+    lambda not_B: not B.
+
+    let not_not_A: not(not(A)) :=
+      lambda not_A: not A.
+
+      let proof_B: B :=
+        A_or_B not_A
+      in
+
+      let contradiction: False :=
+        not_B proof_B
+      in
+      contradiction
+    in
+
+    not_not_A
+  in
+
+  let not_B_implies_A: implies (not B) (A) :=
+    lambda not_B: not B.
+    
+    double_elim A (not_not_A_from_not_B not_B)
+  in
+
+  not_B_implies_A
+in
+
+let excluded_middle:
+  Pi (P: Prop).
+  or (P) (not P)
+:=
+  lambda P: Prop.
+  lambda x: not P. x
+in
+
+0
+
