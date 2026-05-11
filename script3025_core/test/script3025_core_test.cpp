@@ -160,7 +160,7 @@ TEST(type_gen_visitor, addition) {
   EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
 }
 
-TEST(type_gen_visitor, replace) {
+TEST(type_gen_visitor, eq_comm_proof) {
   auto expression = script3025::text_to_expression(
       // clang-format off
       "lambda (a: Nat).\n"
@@ -175,6 +175,66 @@ TEST(type_gen_visitor, replace) {
   // clang-format on
   auto expected_type = script3025::text_to_expression(
       "Pi (a: Nat). Pi (b: Nat). Pi (eq: (b = a)). (a = b)");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, eq_trans_proof) {
+  auto expression = script3025::text_to_expression(
+      // clang-format off
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "lambda (c: Nat).\n"
+      "lambda (eq_2: (a = b)).\n"
+      "lambda (eq_1: (b = c)).\n"
+      "  replace\n"
+      "    b\n"
+      "    (lambda (index: Nat). lambda (value: b = index). (a = index))\n"
+      "    eq_2\n"
+      "    c\n"
+      "    eq_1");
+  // clang-format on
+  auto expected_type = script3025::text_to_expression(
+      "Pi (a: Nat). Pi (b: Nat). Pi (c: Nat). Pi (eq: (a = b)). Pi (eq: (b = "
+      "c)). (a = c)");
+  script3025::TypeGenVisitor type_gen_visitor{{}, {}};
+  type_gen_visitor.visit(*expression);
+  if (type_gen_visitor.get_type(expression.get()) == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Type generation failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Type generation failed for expression:\n"
+           << expression->to_string();
+  }
+  EXPECT_EQ(*type_gen_visitor.get_type(expression.get()), *expected_type);
+}
+
+TEST(type_gen_visitor, add_comm_proof) {
+  auto expression = script3025::text_to_expression(
+      // clang-format off
+      "lambda (a: Nat).\n"
+      "lambda (b: Nat).\n"
+      "lambda (c: Nat).\n"
+      "lambda (eq_2: (a = b)).\n"
+      "lambda (eq_1: (b = c)).\n"
+      "  replace\n"
+      "    b\n"
+      "    (lambda (index: Nat). lambda (value: b = index). (a = index))\n"
+      "    eq_2\n"
+      "    c\n"
+      "    eq_1");
+  // clang-format on
+  auto expected_type = script3025::text_to_expression(
+      "Pi (a: Nat). Pi (b: Nat). Pi (c: Nat). Pi (eq: (a = b)). Pi (eq: (b = "
+      "c)). (a = c)");
   script3025::TypeGenVisitor type_gen_visitor{{}, {}};
   type_gen_visitor.visit(*expression);
   if (type_gen_visitor.get_type(expression.get()) == nullptr) {
@@ -211,6 +271,29 @@ TEST(type_gen_visitor, delta_reduction) {
 TEST(lazy_reduction_visitor, simple) {
   auto expression = script3025::text_to_expression("(lambda (x: Nat). x) 100");
   auto expected_reduction = script3025::text_to_expression("100");
+
+  auto actual_reduction = reduce_copy(*expression, {});
+  if (actual_reduction == nullptr) {
+    SPDLOG_LOGGER_ERROR(get_logger(), "Reduction failed for expression:\n{}",
+                        expression->to_string());
+    FAIL() << "Reduction failed for expression:\n" << expression->to_string();
+  }
+  EXPECT_EQ(*actual_reduction, *expected_reduction);
+}
+
+TEST(lazy_reduction_visitor, addition) {
+  auto expression = script3025::text_to_expression(
+      ("let add: Pi(a: Nat). Pi(b: Nat). Nat :=\n"
+      //  "  lambda (a: Nat).\n"
+      //  "  lambda (b: Nat).\n"
+       "  inductive (lambda (k: Nat). Nat)\n"
+       "            (lambda (_: Nat). succ)\n"
+      //  "            a\n"
+      //  "            b\n"
+       "in\n"
+       "\n"
+       "add 12 4\n"));
+  auto expected_reduction = script3025::text_to_expression("16");
 
   auto actual_reduction = reduce_copy(*expression, {});
   if (actual_reduction == nullptr) {

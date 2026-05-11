@@ -1,0 +1,32 @@
+let add: Pi(a: Nat). Pi(b: Nat). Nat :=
+  inductive
+    (lambda (_: Nat). Nat)
+    (lambda (_: Nat). succ)
+in
+
+let inductive_case:
+  Pi (a: Nat).
+  Pi (IH: ((add 0 a) = a)).
+  ((add 0 (succ a)) = (succ a))
+:=
+  lambda (a: Nat).
+  lambda (IH: ((add 0 a) = a)). (
+    replace
+      (add 0 a)
+      (
+        lambda (index: Nat).
+        lambda (value: ((add 0 a) = index)).
+        ((succ (add 0 a)) = (succ index))
+      )
+      (refl (succ (add 0 a)))
+      a
+      IH
+  ) 
+in
+
+
+#Pi (a: Nat).
+#Pi (IH: ((add 0 a) = a)).
+#((add 0 (succ a)) = (succ a))
+
+0

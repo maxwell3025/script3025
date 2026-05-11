@@ -161,14 +161,13 @@ class WHNFVisitor : public MutatingExpressionVisitor {
     if (arguments.size() < 4) return;
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Attempting to reduce induction expression.\n"
-                        "Current head:\n"
-                        "  {}\n"
-                        "Current arguments:\n"
-                        "{}",
+                        "    Current head: {}\n"
+                        "    Current arguments:{}",
                         head->to_string(), [&]() {
                           std::stringstream ss;
                           for (const auto &argument : arguments) {
-                            ss << "  " << argument->to_string() << std::endl;
+                            ss << std::endl
+                               << "    - " << argument->to_string();
                           }
                           return ss.str();
                         }());
@@ -256,7 +255,14 @@ class WHNFVisitor : public MutatingExpressionVisitor {
             return ss.str();
           }());
       visit(*head);
+      return;
     }
+
+    arguments.emplace_back(std::move(major_premise_ptr));
+    arguments.emplace_back(std::move(minor_premise_2_ptr));
+    arguments.emplace_back(std::move(minor_premise_1_ptr));
+    arguments.emplace_back(std::move(motive_ptr));
+    return;
   }
 
   void visit_succ_keyword(SuccKeywordExpression &) override {

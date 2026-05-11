@@ -97,26 +97,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_link_options(script3025_core
     PRIVATE -lgcov
   )
-  # # Ensure testing is enabled
-  # include(CTest)
-
-  # if(WIN32)
-  #   set(OPEN_COMMAND "start")
-  # elseif(APPLE)
-  #   set(OPEN_COMMAND "open")
-  # else()
-  #   set(OPEN_COMMAND "xdg-open")
-  # endif()
-
-  # add_custom_target(coverage
-  #   COMMAND lcov --zerocounters --directory .
-  #   COMMAND ${CMAKE_CTEST_COMMAND} -C ${CMAKE_BUILD_TYPE} || true
-  #   COMMAND lcov --capture --directory . --output-file coverage.info --ignore-errors mismatch
-  #   COMMAND genhtml coverage.info --output-directory coverage_report
-  #   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  #   COMMENT "Generating HTML coverage report..."
-  #   COMMAND ${OPEN_COMMAND} coverage_report/index.html &
-  # )
 endif()
 
 target_include_directories(script3025_core
@@ -127,6 +107,7 @@ target_include_directories(script3025_core
 target_link_libraries(script3025_core
   PUBLIC parser
   PRIVATE gmp
+  PRIVATE gcov
 )
 
 add_executable(script3025_core_test

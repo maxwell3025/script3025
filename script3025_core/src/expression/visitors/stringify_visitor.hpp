@@ -331,7 +331,7 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_induction_keyword(const InductionKeywordExpression &) {
-    output_ << "induction";
+    output_ << "inductive";
   }
 
   void visit_lambda(const LambdaExpression &e) {
@@ -376,7 +376,7 @@ class ExpressionStringifier : ConstExpressionVisitor {
   }
 
   void visit_replace_keyword(const ReplaceKeywordExpression &) {
-    output_ << "subst";
+    output_ << "replace";
   }
 
   void visit_reflexive_keyword(const ReflexiveKeywordExpression &) {

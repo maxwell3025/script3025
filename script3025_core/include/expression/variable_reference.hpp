@@ -20,6 +20,10 @@ struct VariableReference {
   bool operator==(const VariableReference &rhs) const {
     return id == rhs.id && source == rhs.source;
   }
+
+  bool operator!=(const VariableReference &rhs) const {
+    return !(*this == rhs);
+  }
 };
 
 }  // namespace script3025

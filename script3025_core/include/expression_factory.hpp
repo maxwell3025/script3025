@@ -153,6 +153,41 @@ template <typename Iterator>
         std::move(identifier), std::move(argument_type), std::move(value),
         std::move(definition));
   } else if (sentential_form ==
+             std::vector({Token::LET, Token::ID, Token::COLON, Token::EXPR,
+                          Token::ASSIGN, Token::EXPR, Token::IN,
+                          Token::EXPR})) {
+    // let
+    ++string_iterator;
+
+    // Identifier
+    std::string identifier = *string_iterator;
+    ++string_iterator;
+
+    // :
+    ++string_iterator;
+
+    // type bound
+    std::unique_ptr<Expression> argument_type =
+        create_expression_non_normalized(source.children[3], string_iterator);
+
+    // :=
+    ++string_iterator;
+
+    // Value
+    std::unique_ptr<Expression> value =
+        create_expression_non_normalized(source.children[5], string_iterator);
+
+    // in
+    ++string_iterator;
+
+    // definition
+    std::unique_ptr<Expression> definition =
+        create_expression_non_normalized(source.children[7], string_iterator);
+
+    return std::make_unique<LetExpression>(
+        std::move(identifier), std::move(argument_type), std::move(value),
+        std::move(definition));
+  } else if (sentential_form ==
              std::vector({Token::LAMBDA, Token::ID, Token::COLON, Token::EXPR,
                           Token::PERIOD, Token::EXPR})) {
     // Lambda

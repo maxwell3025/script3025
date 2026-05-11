@@ -12,6 +12,7 @@
 #include "expression/subtypes/id_expression.hpp"
 #include "expression/subtypes/lambda_expression.hpp"
 #include "expression/subtypes/nat_keyword_expression.hpp"
+#include "expression/subtypes/nat_literal_expression.hpp"
 #include "expression/subtypes/pi_expression.hpp"
 #include "expression/subtypes/type_keyword_expression.hpp"
 #include "expression/variable_reference.hpp"
@@ -66,26 +67,33 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
   generate_type(*e.argument_value());
   if (!has_type(e.argument_type().get())) return;
   if (!has_type(e.argument_value().get())) return;
-  variable_type_map_[{e.argument_id, const_cast<LetExpression *>(&e)}] =
-      e.argument_type()->clone();
-  if (delta_table_.find({e.argument_id, const_cast<LetExpression *>(&e)}) !=
-      delta_table_.end()) {
-    SPDLOG_LOGGER_ERROR(
-        get_logger(),
-        "Error: duplicate let variable in delta table\n"
-        "Let expression: {}\n"
-        "Argument id: {}\n",
-        e.to_string(), e.argument_id);
+
+  VariableReference expression_reference{e.argument_id,
+                                         const_cast<LetExpression *>(&e)};
+  variable_type_map_[expression_reference] = e.argument_type()->clone();
+
+  if (delta_table_.find(expression_reference) != delta_table_.end()) {
+    SPDLOG_LOGGER_ERROR(get_logger(),
+                        "Error: duplicate let variable in delta table\n"
+                        "Let expression: {}\n"
+                        "Argument id: {}\n",
+                        e.to_string(), e.argument_id);
     return;
   }
-  delta_table_[{e.argument_id, const_cast<LetExpression *>(&e)}] = e.argument_value().get();
+  delta_table_[expression_reference] = e.argument_value().get();
 
   generate_type(*e.definition());
+
   if (!has_type(e.definition().get())) return;
 
-  std::unique_ptr reduced_argument_type = reduce_copy(*expression_type_map_[e.argument_value().get()], delta_table_);
-  std::unique_ptr reduced_label = reduce_copy(*e.argument_type(), delta_table_);
-  if (*reduced_argument_type != *reduced_label) {
+  std::unique_ptr inferred_argument_type = reduce_copy(
+      *expression_type_map_[e.argument_value().get()], delta_table_);
+  std::unique_ptr given_argument_type =
+      reduce_copy(*e.argument_type(), delta_table_);
+
+  // label of 0 means we infer
+  if (*given_argument_type != *inferred_argument_type &&
+      *given_argument_type != NatLiteralExpression(0)) {
     SPDLOG_LOGGER_ERROR(
         get_logger(),
         "Error: type of let argument value did not match declared type\n"
@@ -95,9 +103,8 @@ void TypeGenVisitor::visit_let(const LetExpression &e) {
         "Declared argument type: {} (reduces to {})\n",
         e.to_string(), e.argument_value()->to_string(),
         expression_type_map_[e.argument_value().get()]->to_string(),
-        reduced_argument_type->to_string(),
-        e.argument_type()->to_string(),
-        reduced_label->to_string());
+        inferred_argument_type->to_string(), e.argument_type()->to_string(),
+        given_argument_type->to_string());
     return;
   }
   std::unique_ptr<Expression> type =
@@ -117,11 +124,13 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
   generate_type(*e.definition());
   if (!has_type(e.definition().get())) return;
 
+  auto reduced_argument_type =
+      reduce_copy(*expression_type_map_[e.argument_type().get()], delta_table_);
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
   // `e.argument_type()`.
   // We want side-effects to be evaluated, hence the lint ignore.
   // NOLINTNEXTLINE
-  if (typeid(*expression_type_map_[e.argument_type().get()]) !=
+  if (typeid(*reduced_argument_type) !=
       typeid(TypeKeywordExpression)) {
     SPDLOG_LOGGER_ERROR(
         get_logger(),
@@ -131,15 +140,17 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
         "Argument type: {}\n"
         "Type of argument type: {}\n",
         e.to_string(), e.argument_type()->to_string(),
-        expression_type_map_[e.argument_type().get()]->to_string());
+        reduced_argument_type->to_string());
     return;
   }
 
+  auto reduced_definition_type =
+      reduce_copy(*expression_type_map_[e.definition().get()], delta_table_);
   // Here, we are intentionally doing a RTTI lookup to get the runtime type of
   // `e.definition()`.
   // We want side-effects to be evaluated, hence the lint ignore.
   // NOLINTNEXTLINE
-  if (typeid(*expression_type_map_[e.definition().get()]) !=
+  if (typeid(*reduced_definition_type) !=
       typeid(TypeKeywordExpression)) {
     SPDLOG_LOGGER_ERROR(
         get_logger(),
@@ -149,17 +160,17 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
         "Definition: {}\n"
         "Type of definition type: {}\n",
         e.to_string(), e.definition()->to_string(),
-        expression_type_map_[e.definition().get()]->to_string());
+        reduced_definition_type->to_string());
     return;
   }
 
   mpz_class const argument_level =
       static_cast<TypeKeywordExpression *>(
-          expression_type_map_[e.argument_type().get()].get())
+          reduced_argument_type.get())
           ->level;
   mpz_class const definition_level =
       static_cast<TypeKeywordExpression *>(
-          expression_type_map_[e.definition().get()].get())
+          reduced_definition_type.get())
           ->level;
   // if (argument_level > definition_level) {
   //   SPDLOG_LOGGER_ERROR(
@@ -173,9 +184,19 @@ void TypeGenVisitor::visit_pi(const PiExpression &e) {
   //   return;
   // }
 
-  // This is still implicative iirc
-  expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>(
-      std::max(definition_level, argument_level));
+  // EVIL!
+  // expression_type_map_[&e] =
+  //     std::make_unique<TypeKeywordExpression>(definition_level);
+
+  // This is still predicative iirc
+  auto expected_level = std::max(definition_level, argument_level);
+
+  // impredicative prop
+  if (definition_level == 0) {
+    expected_level = 0;
+  }
+
+  expression_type_map_[&e] = std::make_unique<TypeKeywordExpression>(expected_level);
 }
 
 void TypeGenVisitor::visit_type_keyword(const TypeKeywordExpression &e) {
@@ -214,9 +235,9 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   if (*function_argument_type != *argument_type) {
     SPDLOG_LOGGER_ERROR(get_logger(),
                         "Error: argument type mismatch in application\n"
-                        "Application expression: {}\n"
-                        "Expected argument type: {}\n"
-                        "Actual argument type: {}\n",
+                        "    Application expression: {}\n"
+                        "    Expected argument type: {}\n"
+                        "    Actual argument type: {}",
                         e.to_string(), function_argument_type->to_string(),
                         argument_type->to_string());
     return;
@@ -226,7 +247,7 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
                       "Computed function type:\n"
                       "    Application expression: {}\n"
                       "    Function type: {}\n"
-                      "    Argument type: {}\n",
+                      "    Argument type: {}",
                       e.to_string(), function_type->to_string(),
                       argument_type->to_string());
 
@@ -236,11 +257,6 @@ void TypeGenVisitor::visit_application(const ApplicationExpression &e) {
   replacer.visit(*casted_function_type.definition());
 
   std::unique_ptr<Expression> application_type = replacer.get();
-
-  SPDLOG_LOGGER_TRACE(get_logger(),
-                      "Constructed type:\n"
-                      "    Application type: {}\n",
-                      application_type->to_string());
 
   expression_type_map_[&e] = std::move(application_type);
 }
@@ -277,7 +293,7 @@ void TypeGenVisitor::generate_type(const Expression &e) {
                       "Called generate_type.\n"
                       "    expr={} @ {}",
                       e.to_string(), fmt::ptr(&e));
-  visit(e);
+  e.accept(*this);
   if (expression_type_map_.find(&e) == expression_type_map_.end()) {
     SPDLOG_LOGGER_ERROR(get_logger(),
                         "Error: no type generated for expression {}",
@@ -287,7 +303,7 @@ void TypeGenVisitor::generate_type(const Expression &e) {
   SPDLOG_LOGGER_TRACE(get_logger(),
                       "Type of expression generated successfully.\n"
                       "    expr={} @ {}\n"
-                      "    type={} @ {}\n",
+                      "    type={} @ {}",
                       e.to_string(), fmt::ptr(&e),
                       expression_type_map_[&e]->to_string(),
                       fmt::ptr(expression_type_map_[&e].get()));
@@ -300,13 +316,25 @@ void TypeGenVisitor::generate_type(const Expression &e) {
                         expression_type_map_[&e]->to_string(),
                         fmt::ptr(expression_type_map_[&e].get()));
     generate_type(*expression_type_map_[&e]);
+    if (expression_type_map_.find(expression_type_map_[&e].get()) ==
+        expression_type_map_.end()) {
+      SPDLOG_LOGGER_ERROR(get_logger(),
+                          "Failed to generate type tower.\n"
+                          "    expr={} @ {}\n"
+                          "    type={} @ {}",
+                          e.to_string(), fmt::ptr(&e),
+                          expression_type_map_[&e]->to_string(),
+                          fmt::ptr(expression_type_map_[&e].get()));
+      expression_type_map_.erase(&e);
+      return;
+    }
     SPDLOG_LOGGER_TRACE(
         get_logger(),
         "Finished generating type tower.\n"
         "    expr={} @ {}\n"
         "    type={} @ {}\n"
-        "    tptp={} @ {}", e.to_string(), fmt::ptr(&e),
-        expression_type_map_[&e]->to_string(),
+        "    tptp={} @ {}",
+        e.to_string(), fmt::ptr(&e), expression_type_map_[&e]->to_string(),
         fmt::ptr(expression_type_map_[&e].get()),
         expression_type_map_[expression_type_map_[&e].get()]->to_string(),
         fmt::ptr(expression_type_map_[expression_type_map_[&e].get()].get()));

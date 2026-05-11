@@ -13,6 +13,7 @@
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 namespace script3025 {
 
@@ -40,7 +41,7 @@ class TypeKeywordFormatVisitor : public MutatingExpressionVisitor {
   }
 
   void visit_expression(Expression &e) override {
-    for (size_t i = 9; i < e.children.size(); ++i) {
+    for (size_t i = 0; i < e.children.size(); ++i) {
       Expression &child = *e.children[i];
       visit(child);
       if (replacement != nullptr) {

@@ -11,11 +11,12 @@ add_compile_options(-Wall -Wextra -pedantic)
 enable_testing()
 
 # Here, we configure the spdlog level
-add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_WARN)
 
 # Here, we add subdirectories
 add_subdirectory(parser)
 add_subdirectory(script3025_core)
+add_subdirectory(script3025_bin)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # Ensure testing is enabled

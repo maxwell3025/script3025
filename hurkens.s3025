@@ -1,0 +1,272 @@
+#!./build/script3025_bin/script3025
+
+let implies:
+  Pi(A: Type).
+  Pi(B: Type).
+    Type
+:=
+  lambda(A: Type).
+  lambda(B: Type).
+    Pi(_: A). B
+in
+
+let mapsto:
+  Pi(A: Type 1).
+  Pi(B: Type 1).
+    Type 1
+:=
+  lambda(A: Type 1).
+  lambda(B: Type 1).
+    Pi(_: A). B
+in
+
+let set_builder_generic:
+  Pi(A: Type 1).
+  Pi(B: Type 1).
+  Pi(mapping: mapsto A B).
+  Pi(condition: mapsto A Type).
+  mapsto B Type
+:=
+  lambda(A: Type 1).
+  lambda(B: Type 1).
+  lambda(mapping: mapsto A B).
+  lambda(condition: mapsto A Type).
+  lambda(b: B).
+    Pi(P: mapsto B Type).
+    Pi(_: Pi(x: A). implies (condition x) (P(mapping x))).
+    P b
+in
+
+let U: Type 1 :=
+  Pi(X: Type 1).
+  mapsto (mapsto (mapsto X Type)(X))
+  (mapsto X Type)
+in
+
+# let set_builder:
+#   Pi(mapping: mapsto U U).
+#   Pi(condition: mapsto U Type).
+#   mapsto U Type
+# :=
+#   lambda(mapping: mapsto U U).
+#   lambda(condition: mapsto U Type).
+#   lambda(u: U).
+#     Pi(P: mapsto U Type).
+#     Pi(_: Pi(x: U). implies (condition x) (P(mapping x))).
+#     P u
+# in
+
+let set_builder:
+  Pi(mapping: mapsto U U).
+  Pi(condition: mapsto U Type).
+  mapsto U Type
+:=
+  set_builder_generic U U
+in
+
+# let tau:
+#   Pi(X: mapsto U Type). U
+# :=
+#   lambda(X: mapsto U Type).
+#   lambda(A: Type 1).
+#   lambda(c: mapsto (mapsto A Type) A).
+#   lambda(a: A).
+#   Pi(P: mapsto A Type).
+#   Pi(_:
+#     Pi(x: U). implies (X x) (P(c(x A c)))
+#   ).
+#   P a
+# in
+
+let tau:
+  Pi(X: mapsto U Type). U
+:=
+  lambda(X: mapsto U Type).
+  lambda(A: Type 1).
+  lambda(c: mapsto (mapsto A Type) A).
+  set_builder_generic U A (lambda x: U. c(x A c)) (X) 
+in
+
+let sigma:
+  mapsto U (mapsto U Type)
+:=
+  lambda x: U.
+    x U tau
+in
+
+let set_builder_membership:
+  Pi(value: U).
+  Pi(mapping: mapsto U U).
+  Pi(condition: mapsto U Type).
+  Pi(value_satisfies_condition: condition value).
+    set_builder mapping condition (mapping value)
+:=
+  lambda(value: U).
+  lambda(mapping: mapsto U U).
+  lambda(condition: mapsto U Type).
+  lambda(value_satisfies_condition: condition value).
+  lambda(P: mapsto U Type).
+  lambda(P_contains_every_member: (Pi(x: U). implies (condition x) (P(mapping x)))).
+    P_contains_every_member value value_satisfies_condition
+in
+
+# let endomorphism:
+#   Pi(u: U).
+#   Pi(v: U).
+#   Pi(v_pred_of_u: sigma u v).
+#     set_builder (lambda k: U. tau(sigma(k))) (sigma(u)) (tau(sigma(v)))
+# :=
+#   lambda(u: U).
+#   lambda(v: U).
+#   lambda(v_pred_of_u: sigma u v).
+#     set_builder_membership v (lambda k: U. tau(sigma(k))) (sigma(u)) v_pred_of_u
+# in
+
+let endomorphism:
+  Pi(u: U).
+  Pi(v: U).
+  Pi(v_pred_of_u: sigma u v).
+    (sigma(tau(sigma(u))) (tau(sigma(v))))
+:=
+  lambda(u: U).
+  lambda(v: U).
+  lambda(v_pred_of_u: sigma u v).
+    set_builder_membership v (lambda k: U. tau(sigma(k))) (sigma(u)) v_pred_of_u
+in
+
+let inductive:
+  Pi(P: mapsto U Type). Type
+:=
+  lambda(P: mapsto U Type).
+  Pi(u: U).
+    let all_predecessors_satisfy_P:
+      Type
+    :=
+      Pi(v: U).
+      implies (sigma u v) (P v)
+    in
+    implies all_predecessors_satisfy_P (P u)
+in
+
+# let inductive_endomophism_preimage:
+#   Pi(P: mapsto U Type).
+#   Pi(P_is_inductive: inductive(P)).
+#     inductive(lambda(u: U). P(tau(sigma(u))))
+# :=
+let inductive_endomophism_preimage:
+  Pi(P: mapsto U Type).
+  Pi(P_is_inductive: inductive(P)).
+  Pi(u: U).
+    let all_predecessors_satisfy_preimage: Type :=
+      Pi(v: U).
+      implies (sigma(u)(v)) (P(tau(sigma(v))))
+    in
+    implies all_predecessors_satisfy_preimage (P(tau(sigma(u))))
+:=
+  lambda(P: mapsto U Type).
+  lambda(P_is_inductive: inductive(P)).
+  lambda(u: U).
+  lambda(all_predecessors_satisfy_preimage:
+    Pi(v: U).
+      implies (sigma u v) (P(tau(sigma(v))))
+  ).
+
+    let all_predecessors_of_tsu_in_P:
+      Pi(w: U).
+      implies (sigma(tau(sigma(u))) w)
+      (P w)
+    :=
+      lambda(w: U).
+      lambda(w_pred_of_tsu: sigma(tau(sigma(u)))(w)).
+        let mapped_pred_set_u:
+          mapsto U Type
+        :=
+          set_builder (lambda x: U. tau(sigma(k))) (sigma(u))
+        in
+        
+        let mapped_pred_set_u_subset_P:
+          Pi(x: U).
+          implies (mapped_pred_set_u(x))
+          (P(x))
+        :=
+          lambda x: U.
+          lambda x_in_mapped_pred_set_u: mapped_pred_set_u x.
+          # By the structure of the set builder notation, x_in_mapped_pred_set_u is a function that gives evidence that
+          # x is in every set that contains all mapped elements.
+          let P_satisfies_superset:
+            Pi 
+          :=
+            TODO
+          in
+          TODO
+        in
+
+        let w_in_mapped_pred_set_u:
+          mapped_pred_set_u w
+        :=
+          # Remember that this just beta-reduces
+          w_pred_of_tsu
+        in
+
+        set_builder_membership w
+    in
+
+    let tsu_in_P:
+      P(tau(sigma(u)))
+    :=
+      P_is_inductive (tau(sigma(u))) stsu_subset_P
+    in
+
+    tsu_in_P
+in
+
+let well_founded:
+  mapsto U Type
+:=
+  lambda(u: U).
+  Pi(P: mapsto U Type).
+    implies (inductive(P)) (P(u))
+in
+
+0
+
+# Paradoxicality is just a beta-reduction
+# lambda (X: (mapsto U Type)).
+# (
+#   sigma(tau(X))
+# 
+#   # EQUALITY CONFIRMED
+# 
+#   # tau X U tau
+# 
+#   # EQUALITY CONFIRMED
+# 
+#   # lambda(a: U).
+#   # Pi(P: mapsto U Type).
+#   # Pi(x: U).
+#   # implies (implies (X x) (P(tau(x U tau))))
+#   # (P a)
+# 
+#   # EQUALITY CONFIRMED
+# 
+#   # lambda(a: U).
+#   # Pi(P: mapsto U Type).
+#   # Pi(x: U).
+#   # implies (implies (X x) (P(tau(sigma(x)))))
+#   # (P a)
+# 
+#   # lambda(a: U).
+#   # Pi(P: mapsto U Type).
+#   # Pi(x: U).
+#   # Pi(_: (implies (X x) (P(tau(sigma(x)))))).
+#   # (P a)
+# 
+#   # lambda u: U.
+#   # Pi(P: mapsto U Type).
+#   # Pi(_: (Pi(x: U). implies (X x) (P(tau(sigma(x)))))).
+#   # P u
+# 
+#   # EQUALITY CONFIRMED
+# 
+#   # set_builder (lambda u: U. tau(sigma(u))) (X)
+# )

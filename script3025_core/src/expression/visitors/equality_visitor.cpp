@@ -19,10 +19,10 @@ void EqualityVisitor::visit_id(const IdExpression &rhs) {
     unequal_ = true;
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Found expressions to be unequal by type.\n"
-                        "LHS expression: {}\n"
-                        "LHS type: {}\n"
-                        "RHS expression: {}\n"
-                        "RHS type: {}\n",
+                        "    lhs: {}\n"
+                        "    type of lhs: {}\n"
+                        "    rhs: {}\n"
+                        "    type of rhs: {}",
                         lhs_->to_string(), typeid(*lhs_).name(),
                         rhs.to_string(), typeid(rhs).name());
     return;
@@ -38,12 +38,12 @@ void EqualityVisitor::visit_id(const IdExpression &rhs) {
   if (unequal_) {
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Found expressions to be unequal by Id source.\n"
-                        "LHS expression: {}\n"
-                        "RHS expression: {}\n"
-                        "LHS source: {}\n"
-                        "RHS source: {}\n",
-                        lhs_->to_string(), rhs.to_string(),
-                        fmt::ptr(translated_lhs_source), fmt::ptr(rhs.source));
+                        "    lhs: {}\n"
+                        "    lhs source: {}\n"
+                        "    rhs: {}\n"
+                        "    rhs source: {}",
+                        lhs_->to_string(), fmt::ptr(translated_lhs_source),
+                        rhs.to_string(), fmt::ptr(rhs.source));
 
     SPDLOG_LOGGER_TRACE(get_logger(), "Current pointer map:\n{}", [&]() {
       std::stringstream ss;
@@ -73,10 +73,10 @@ void EqualityVisitor::visit_expression(const Expression &rhs) {
   if (typeid(*lhs_) != typeid(rhs)) {
     SPDLOG_LOGGER_TRACE(get_logger(),
                         "Found expressions to be unequal by type.\n"
-                        "LHS expression: {}\n"
-                        "LHS type: {}\n"
-                        "RHS expression: {}\n"
-                        "RHS type: {}\n",
+                        "    lhs: {}\n"
+                        "    type of lhs: {}\n"
+                        "    rhs: {}\n"
+                        "    type of rhs: {}",
                         lhs_->to_string(), typeid(*lhs_).name(),
                         rhs.to_string(), typeid(rhs).name());
     unequal_ = true;
@@ -92,9 +92,9 @@ void EqualityVisitor::visit_expression(const Expression &rhs) {
         SPDLOG_LOGGER_TRACE(
             get_logger(),
             "Found expressions to be unequal by child (bubbling up).\n"
-            "LHS expression: {}\n"
-            "RHS expression: {}\n"
-            "Unequal child index: {}\n",
+            "    lhs expression: {}\n"
+            "    rhs expression: {}\n"
+            "    index: {}",
             lhs_stored->to_string(), rhs.to_string(), i);
       }
     } else {
@@ -102,9 +102,9 @@ void EqualityVisitor::visit_expression(const Expression &rhs) {
       if (unequal_) {
         SPDLOG_LOGGER_TRACE(get_logger(),
                             "Found expressions to be unequal by null child.\n"
-                            "LHS expression: {}\n"
-                            "RHS expression: {}\n"
-                            "Null child index: {}\n",
+                            "    lhs expression: {}\n"
+                            "    rhs expression: {}\n"
+                            "    index: {}",
                             lhs_->to_string(), rhs.to_string(), i);
         return;
       }
